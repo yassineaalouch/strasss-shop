@@ -62,25 +62,25 @@ const ServicesSection: React.FC = () => {
 const CategoriesSection: React.FC = () => {
   const categories: Category[] = [
     {
-      id: 1,
+      id: "1",
       name: "Tissus",
       image: "https://www.tissus-price.com/img/cms/IMG%20BLOG/tissu-burlington-pas-cher.jpg",
       productCount: 120
     },
     {
-      id: 2,
+      id: "2",
       name: "Fils et Aiguilles",
       image: "https://www.lerobert.com/sites/default/files/scald_image/dico-en-ligne-le-robert-de-fil-en-aiguille-marcelle-ratafia.jpg",
       productCount: 75
     },
     {
-      id: 3,
+      id: "3",
       name: "Boutons et Fermetures",
       image: "https://img.leboncoin.fr/api/v1/lbcpb1/images/1b/9a/d2/1b9ad2c9d7b8c8841a1f0e84104f648308aa6d60.jpg?rule=ad-large",
       productCount: 50
     },
     {
-      id: 4,
+      id: "4",
       name: "Accessoires de Couture",
       image: "https://www.coutureenfant.fr/wp-content/uploads/2017/05/materiel-de-couture.jpg",
       productCount: 90
@@ -129,7 +129,7 @@ const CategoriesSection: React.FC = () => {
 const FeaturedProducts: React.FC = () => {
   const products: Product[] = [
     {
-      id: 1,
+      id: "1",
       name: "Bobines de fil multicolores",
       price: 25,
       originalPrice: 30,
@@ -146,7 +146,7 @@ const FeaturedProducts: React.FC = () => {
       description: "Un assortiment de belles bobines de fil multicolores, parfaites pour tous vos projets de couture."
     },
     {
-      id: 2,
+      id: "2",
       name: "Fournitures de couture ",
       price: 40,
       image: "https://static.mapetitemercerie.com/241747-large_default/ciseaux-classic-cranteurs-23-cm-droitier-fiskars.jpg",
@@ -160,7 +160,7 @@ const FeaturedProducts: React.FC = () => {
       description: "Collection d’outils de couture (fils, boutons, etc.) idéal pour atelier et DIY."
     },
     {
-      id: 3,
+      id: "3",
       name: "Fils colorés dans un tiroir",
       price: 30,
       image: "https://static.mapetitemercerie.com/99298-large_default/kit-de-11-fils-a-coudre-guetermann-accessoires.jpg",
@@ -176,7 +176,7 @@ const FeaturedProducts: React.FC = () => {
       description: "Vue rapprochée de fils à coudre colorés bien rangés dans un tiroir."
     },
     {
-      id: 4,
+      id: "4",
       name: "Tissus assortis colorés",
       price: 35,
       image: "https://static.mapetitemercerie.com/48913-large_default/machine-a-coudre-smarter-260c-pfaff.jpg",
@@ -204,49 +204,6 @@ const FeaturedProducts: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product) => (
             <ProductCardStandard key={product.id} product ={product}/>
-            // <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-lg transition-shadow duration-300">
-            //   <div className="relative">
-            //     <img
-            //       src={product.image}
-            //       alt={product.name}
-            //       className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-            //     />
-            //     <div className="absolute top-2 left-2 flex flex-col space-y-1">
-            //       {product.isNew && (
-            //         <span className="bg-blue-500 text-white px-2 py-1 text-xs rounded">Nouveau</span>
-            //       )}
-            //       {product.isOnSale && (
-            //         <span className="bg-red-500 text-white px-2 py-1 text-xs rounded">Promo</span>
-            //       )}
-            //     </div>
-            //   </div>
-
-            //   <div className="p-4">
-            //     <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">{product.name}</h3>
-
-            //     <div className="flex items-center mb-2">
-            //       <div className="flex text-yellow-400 mr-2">
-            //         {[...Array(5)].map((_, i) => (
-            //           <Star key={i} size={16} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} />
-            //         ))}
-            //       </div>
-            //       <span className="text-sm text-gray-600">({product.reviews})</span>
-            //     </div>
-
-            //     <div className="flex items-center justify-between">
-            //       <div className="flex items-center space-x-2">
-            //         <span className="text-lg font-bold text-green-600">{product.price} DH</span>
-            //         {product.originalPrice && (
-            //           <span className="text-sm text-gray-500 line-through">{product.originalPrice} DH</span>
-            //         )}
-            //       </div>
-            //     </div>
-
-            //     <button className="w-full mt-4 bg-orange-600 text-white py-2 rounded hover:bg-orange-700 transition-colors duration-300">
-            //       Ajouter au panier
-            //     </button>
-            //   </div>
-            // </div>
           ))}
         </div>
       </div>

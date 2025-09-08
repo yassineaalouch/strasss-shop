@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
   originalPrice?: number;
@@ -96,7 +96,7 @@ export interface ProductSorterProps {
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   image: string;
   productCount: number;
@@ -109,7 +109,7 @@ export interface Service {
 }
 
 export interface FAQ {
-  id: number;
+  id: string;
   question: string;
   answer: string;
 }
@@ -136,8 +136,8 @@ export interface CartContextType {
   isCartOpen: boolean;
   FREE_SHIPPING_THRESHOLD: number;
   addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
-  updateQuantity: (id: number, quantity: number, color?: string, size?: string) => void;
-  removeItem: (id: number, color?: string, size?: string) => void;
+  updateQuantity: (id: string, quantity: number, color?: string, size?: string) => void;
+  removeItem: (id: string, color?: string, size?: string) => void;
   clearCart: () => void;
   toggleCart: () => void;
   openCart: () => void;

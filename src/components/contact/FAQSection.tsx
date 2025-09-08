@@ -7,53 +7,53 @@ import { FAQ } from '@/types/type';
 
 
 const FAQSection: React.FC = () => {
-  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [openFAQ, setOpenFAQ] = useState<string | null>(null);
 
   const faqs: FAQ[] = [
   {
-    id: 1,
+    id: "1",
     question: "Quels types d’accessoires de couture proposez-vous ?",
     answer: "Nous proposons une large gamme d’accessoires de couture : fils, aiguilles, boutons, fermetures, ciseaux, machines à coudre, kits DIY, et bien plus encore. Tous nos produits sont sélectionnés pour leur qualité et durabilité."
   },
   {
-    id: 2,
+    id: "2",
     question: "Comment passer commande ?",
     answer: "Vous pouvez commander directement sur notre site en ajoutant les produits à votre panier et en suivant le processus de paiement sécurisé. Vous pouvez également nous contacter par téléphone ou email pour des commandes spéciales."
   },
   {
-    id: 3,
+    id: "3",
     question: "Quels sont les délais de livraison ?",
     answer: "Pour les produits en stock, la livraison est généralement effectuée sous 2 à 5 jours ouvrables au Maroc. Les commandes personnalisées ou kits sur mesure peuvent nécessiter 7 à 10 jours selon la disponibilité."
   },
   {
-    id: 4,
+    id: "4",
     question: "Proposez-vous des produits sur mesure ?",
     answer: "Oui, nous pouvons créer des kits de couture sur mesure et vous fournir des accessoires spécifiques selon vos besoins. Contactez-nous avec votre projet et nous vous conseillerons sur les meilleures options."
   },
   {
-    id: 5,
+    id: "5",
     question: "Quels moyens de paiement acceptez-vous ?",
     answer: "Nous acceptons le paiement par carte bancaire, virement, et paiement mobile. Pour les commandes importantes, des paiements échelonnés peuvent être négociés."
   },
   {
-    id: 6,
+    id: "6",
     question: "Les produits sont-ils de bonne qualité ?",
     answer: "Tous nos accessoires de couture proviennent de fournisseurs fiables et sont soigneusement vérifiés avant expédition pour garantir une qualité optimale et une longue durée de vie."
   },
   {
-    id: 7,
+    id: "7",
     question: "Puis-je retourner un produit si je ne suis pas satisfait ?",
     answer: "Oui, nous acceptons les retours sous 14 jours après réception, à condition que le produit soit dans son état d’origine et non utilisé. Les frais de retour sont à la charge du client sauf en cas de défaut de fabrication."
   },
   {
-    id: 8,
+    id: "8",
     question: "Proposez-vous des conseils ou tutoriels de couture ?",
     answer: "Absolument ! Nous partageons régulièrement des guides, tutoriels et astuces de couture sur notre blog et notre chaîne YouTube pour vous aider à réaliser vos projets facilement."
   }
 ];
 
 
-  const toggleFAQ = (id: number) => {
+  const toggleFAQ = (id: string) => {
     setOpenFAQ(openFAQ === id ? null : id);
   };
 

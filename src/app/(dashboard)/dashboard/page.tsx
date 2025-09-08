@@ -6,7 +6,7 @@ export default function HomePage() {
   // Données des promotions en cours (bannières visuelles)
   const promotions = [
     {
-      id: 1,
+      id: "1",
       title: "Nouvelle Collection Automne",
       description: "Découvrez nos derniers accessoires de couture",
       discount: "20% de réduction",
@@ -14,7 +14,7 @@ export default function HomePage() {
       ctaText: "Découvrir"
     },
     {
-      id: 2,
+      id: "2",
       title: "Pack Débutant Couture",
       description: "Tout ce qu'il faut pour commencer",
       discount: "Prix spécial",
@@ -66,7 +66,7 @@ export default function HomePage() {
   // Quelques produits populaires ou nouveaux
   const featuredProducts = [
     {
-      id: 1,
+      id: "1",
       name: "Kit Couture Professionnel",
       price: "299.00",
       originalPrice: "350.00",
@@ -75,7 +75,7 @@ export default function HomePage() {
       rating: 4.8
     },
     {
-      id: 2,
+      id: "2",
       name: "Fils Premium Polyester x50",
       price: "45.00", 
       image: "/images/fils-premium.jpg",
@@ -83,14 +83,14 @@ export default function HomePage() {
       rating: 4.9
     },
     {
-      id: 3,
+      id: "3",
       name: "Ciseaux Professionnels Inox",
       price: "89.00",
       image: "/images/ciseaux-pro.jpg",
       rating: 4.7
     },
     {
-      id: 4,
+      id: "4",
       name: "Machine à Coudre Singer Start",
       price: "199.00",
       originalPrice: "249.00", 
@@ -243,7 +243,7 @@ export default function HomePage() {
                 <div className="relative aspect-square bg-gray-100 flex items-center justify-center">
                   <div className="text-center">
                     <span className="text-4xl mb-2 block">
-                      {product.id === 1 ? '🧰' : product.id === 2 ? '🧵' : product.id === 3 ? '✂️' : '🪡'}
+                      {product.id === "1" ? '🧰' : product.id === "2" ? '🧵' : product.id === "3" ? '✂️' : '🪡'}
                     </span>
                     <p className="text-xs text-gray-500">Image: {product.image}</p>
                   </div>

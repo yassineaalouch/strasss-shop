@@ -53,7 +53,7 @@ export const useCart = () => {
   };
 
   // Mettre à jour la quantité d'un article
-  const updateQuantity = (id: number, quantity: number, color?: string, size?: string) => {
+  const updateQuantity = (id: string, quantity: number, color?: string, size?: string) => {
     if (quantity <= 0) {
       removeItem(id, color, size);
       return;
@@ -69,7 +69,7 @@ export const useCart = () => {
   };
 
   // Supprimer un article du panier
-  const removeItem = (id: number, color?: string, size?: string) => {
+  const removeItem = (id: string, color?: string, size?: string) => {
     setCartItems(currentItems =>
       currentItems.filter(item => 
         !(item.id === id && item.color === color && item.size === size)

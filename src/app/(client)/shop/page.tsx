@@ -3,7 +3,7 @@ import { Product } from "@/types/type";
 const getAllProducts = (): Product[] => {
   return[
   {
-    id: 1,
+    id: "1",
     name: "Bobines de fil multicolores",
     price: 25,
     originalPrice: 30,
@@ -20,7 +20,7 @@ const getAllProducts = (): Product[] => {
     description: "Un assortiment de belles bobines de fil multicolores, parfaites pour tous vos projets de couture."
   },
   {
-    id: 2,
+    id: "2",
     name: "Fournitures de couture ",
     price: 40,
     image: "https://static.mapetitemercerie.com/241747-large_default/ciseaux-classic-cranteurs-23-cm-droitier-fiskars.jpg",
@@ -34,7 +34,7 @@ const getAllProducts = (): Product[] => {
     description: "Collection d’outils de couture (fils, boutons, etc.) idéal pour atelier et DIY."
   },
   {
-    id: 3,
+    id: "3",
     name: "Fils colorés dans un tiroir",
     price: 30,
     image: "https://static.mapetitemercerie.com/99298-large_default/kit-de-11-fils-a-coudre-guetermann-accessoires.jpg",
@@ -50,7 +50,7 @@ const getAllProducts = (): Product[] => {
     description: "Vue rapprochée de fils à coudre colorés bien rangés dans un tiroir."
   },
   {
-    id: 4,
+    id: "4",
     name: "Tissus assortis colorés",
     price: 35,
     image: "https://static.mapetitemercerie.com/48913-large_default/machine-a-coudre-smarter-260c-pfaff.jpg",
@@ -63,10 +63,10 @@ const getAllProducts = (): Product[] => {
     height: "-",
     color: "Multicolore",
     inStock: true,
-    description: "Collection de tissus 100% coton, idéals pour patchwork, quilting et projets créatifs."
+    description: "Collection de tissus 100% coton, idéal s pour patchwork, quilting et projets créatifs."
   },
   {
-    id: 5,
+    id: "5",
     name: "Ciseaux de couture professionnels",
     price: 45,
     originalPrice: 55,
@@ -83,7 +83,7 @@ const getAllProducts = (): Product[] => {
     description: "Ciseaux de tailleur en acier inoxydable, lames affûtées pour une coupe précise et nette."
   },
   {
-    id: 6,
+    id: "6",
     name: "Boutons vintage assortis",
     price: 18,
     image: "https://static.mapetitemercerie.com/86898-large_default/bobine-de-fil-pour-tout-coudre-gutermann-100-m-n280.jpg",
@@ -99,7 +99,7 @@ const getAllProducts = (): Product[] => {
     description: "Assortiment de boutons vintage dans différentes tailles et couleurs pour personnaliser vos créations."
   },
   {
-    id: 7,
+    id: "7",
     name: "Épingles à tête colorée",
     price: 12,
     image: "https://static.mapetitemercerie.com/157135-large_default/super-laine-100-merinos-storm.jpg",
@@ -115,7 +115,7 @@ const getAllProducts = (): Product[] => {
     description: "Épingles droites avec têtes colorées, parfaites pour le bâti et l'assemblage de tissus."
   },
   {
-    id: 8,
+    id: "8",
     name: "Mètre ruban rétractable",
     price: 8,
     originalPrice: 12,
@@ -132,7 +132,7 @@ const getAllProducts = (): Product[] => {
     description: "Mètre ruban de 150cm avec système rétractable automatique, idéal pour prendre les mesures."
   },
   {
-    id: 9,
+    id: "9",
     name: "Tissus liberty imprimés",
     price: 65,
     image: "https://static.mapetitemercerie.com/56855-large_default/mannequin-de-couture-prymadonna-multi-taille-s.jpg",
@@ -148,7 +148,7 @@ const getAllProducts = (): Product[] => {
     description: "Tissus Liberty authentiques avec motifs floraux délicats, parfaits pour vêtements et accessoires."
   },
   {
-    id: 10,
+    id: "10",
     name: "Dé à coudre ajustable",
     price: 15,
     image: "https://static.mapetitemercerie.com/191023-large_default/aiguille-circulaire-bois-d-erable-80-cm-n15.jpg",
@@ -164,7 +164,7 @@ const getAllProducts = (): Product[] => {
     description: "Dé à coudre en métal ajustable, protège efficacement le doigt lors de la couture à la main."
   },
   {
-    id: 11,
+    id: "11",
     name: "Surjeteuse 4 fils",
     price: 320,
     originalPrice: 380,
@@ -181,7 +181,7 @@ const getAllProducts = (): Product[] => {
     description: "Surjeteuse professionnelle 4 fils pour finitions parfaites et coutures stretch."
   },
   {
-    id: 12,
+    id: "12",
     name: "Patron de robe vintage",
     price: 25,
     image: "https://static.mapetitemercerie.com/75645-large_default/tapis-de-decoupe.jpg",
