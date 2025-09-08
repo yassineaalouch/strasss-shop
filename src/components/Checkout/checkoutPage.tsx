@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import CheckoutForm from '@/components/Checkout/CheckoutForm'
 import CartSummary from '@/components/Checkout/CartSummary'
-import { ShoppingBag, Lock, Truck } from 'lucide-react'
+import { ShoppingBag } from 'lucide-react'
 import { CartItem, CheckoutFormData } from '@/types/type'
 
 // Données d'exemple du panier

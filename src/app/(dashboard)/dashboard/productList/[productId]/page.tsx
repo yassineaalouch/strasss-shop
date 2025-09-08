@@ -16,6 +16,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import Image from 'next/image';
 
 // Composant pour les champs de saisie avec icône
 const InputField: React.FC<{
@@ -117,9 +118,11 @@ const ProductPreview: React.FC<{ formData: FormData }> = ({ formData }) => {
         {/* Image */}
         <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
           {formData.image ? (
-            <img
+            <Image
               src={formData.image}
               alt={formData.name || 'Produit'}
+              width={500}
+              height = {500}
               className="w-full h-full object-cover"
             />
           ) : (
