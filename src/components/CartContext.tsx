@@ -5,7 +5,7 @@ import { X, Plus, Minus, Trash2, ShoppingBag, Truck } from 'lucide-react';
 import { SideCartProps } from '@/types/type';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FREE_SHIPPING_THRESHOLD } from '@/data';
+import { FREE_SHIPPING_THRESHOLD } from '@/data/data';
 
 
 

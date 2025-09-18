@@ -1,108 +1,118 @@
-'use client'
-import { Mail, Phone, Scissors, ShoppingCart, Globe, Menu, X } from "lucide-react";
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import SideCart from "./CartContext";
-import { CartItem } from "@/types/type";
-import { FREE_SHIPPING_THRESHOLD } from "@/data";
+"use client"
+import { Mail, Phone, ShoppingCart, Globe, Menu, X } from "lucide-react"
+import Link from "next/link"
+import { useState, useEffect } from "react"
+import SideCart from "./CartContext"
+import { CartItem } from "@/types/type"
+import { FREE_SHIPPING_THRESHOLD } from "@/data/data"
+import Image from "next/image"
 
 const Header: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState<'fr' | 'ar'>('fr');
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [currentLanguage, setCurrentLanguage] = useState<"fr" | "ar">("fr")
+  const [isCartOpen, setIsCartOpen] = useState(false)
 
   // État pour le scroll (seulement pour savoir si on a scrollé)
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false)
 
   // État du panier
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
-      id: '1',
+      id: "1",
       name: "Fil à coudre polyester - Lot de 10 bobines",
-      price: 45.00,
+      price: 45.0,
       quantity: 2,
-      category: 'Tissus',
-      image: "https://static.mapetitemercerie.com/241747-large_default/ciseaux-classic-cranteurs-23-cm-droitier-fiskars.jpg",
+      category: "Tissus",
+      image:
+        "https://static.mapetitemercerie.com/241747-large_default/ciseaux-classic-cranteurs-23-cm-droitier-fiskars.jpg",
       color: "Multicolore"
     },
     {
-      id: '2',
+      id: "2",
       name: "Ciseaux de couture professionnels 25cm",
-      price: 120.00,
+      price: 120.0,
       quantity: 1,
-      category: 'Boutons et Fermetures',
-      image: "https://static.mapetitemercerie.com/99298-large_default/kit-de-11-fils-a-coudre-guetermann-accessoires.jpg",
+      category: "Boutons et Fermetures",
+      image:
+        "https://static.mapetitemercerie.com/99298-large_default/kit-de-11-fils-a-coudre-guetermann-accessoires.jpg"
     },
     {
-      id: '3',
+      id: "3",
       name: "Épingles à tête colorée - 100 pièces",
-      price: 25.00,
+      price: 25.0,
       quantity: 3,
-      category: 'Fils et Aiguilles',
-      image: "https://static.mapetitemercerie.com/48913-large_default/machine-a-coudre-smarter-260c-pfaff.jpg",
+      category: "Fils et Aiguilles",
+      image:
+        "https://static.mapetitemercerie.com/48913-large_default/machine-a-coudre-smarter-260c-pfaff.jpg",
       size: "Standard"
     }
-  ]);
+  ])
 
   // Gestion du scroll (simplifié - pas de masquage)
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setIsScrolled(currentScrollY > 50);
-    };
+      const currentScrollY = window.scrollY
+      setIsScrolled(currentScrollY > 50)
+    }
 
     // Throttle pour optimiser les performances
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout
     const throttledHandleScroll = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleScroll, 10);
-    };
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(handleScroll, 10)
+    }
 
-    window.addEventListener('scroll', throttledHandleScroll);
+    window.addEventListener("scroll", throttledHandleScroll)
     return () => {
-      window.removeEventListener('scroll', throttledHandleScroll);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, []);
+      window.removeEventListener("scroll", throttledHandleScroll)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [])
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+    setIsMenuOpen(!isMenuOpen)
+  }
 
   const toggleLanguage = () => {
-    setCurrentLanguage(currentLanguage === 'fr' ? 'ar' : 'fr');
-  };
+    setCurrentLanguage(currentLanguage === "fr" ? "ar" : "fr")
+  }
 
   const toggleCart = () => {
-    setIsCartOpen(!isCartOpen);
-  };
+    setIsCartOpen(!isCartOpen)
+  }
 
   const updateQuantity = (id: string, quantity: number) => {
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
-  };
+    setCartItems((items) =>
+      items.map((item) => (item.id === id ? { ...item, quantity } : item))
+    )
+  }
 
   const removeItem = (id: string) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-  };
+    setCartItems((items) => items.filter((item) => item.id !== id))
+  }
 
   // Calcul du nombre total d'articles
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
     <>
-      <header className={`
+      <header
+        className={`
         bg-white shadow-lg transition-all duration-300 ease-in-out z-50
-        ${isScrolled ? 'fixed top-0 left-0 right-0 shadow-xl' : 'relative shadow-lg'}
-      `}>
+        ${
+          isScrolled
+            ? "fixed top-0 left-0 right-0 shadow-xl"
+            : "relative shadow-lg"
+        }
+      `}
+      >
         {/* Top Bar - Se masque au scroll */}
-        <div className={`
+        <div
+          className={`
           bg-firstColor text-white transition-all duration-300 ease-in-out overflow-hidden
-          ${isScrolled ? 'max-h-0 py-0' : 'max-h-20 py-2'}
-        `}>
+          ${isScrolled ? "max-h-0 py-0" : "max-h-20 py-2"}
+        `}
+        >
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-center text-xs sm:text-sm space-y-2 sm:space-y-0">
               <div className="flex items-center space-x-2 sm:space-x-4">
@@ -126,41 +136,60 @@ const Header: React.FC = () => {
         </div>
 
         {/* Main Header - Plus compact au scroll */}
-        <div className={`
+        <div
+          className={`
           container mx-auto px-4 transition-all duration-300 ease-in-out
-          ${isScrolled ? 'py-2' : 'py-4'}
-        `}>
+          ${isScrolled ? "py-2" : "py-4"}
+        `}
+        >
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
-              <div className={`
-                bg-firstColor text-white rounded-lg mr-3 transition-all duration-300 ease-in-out
-                ${isScrolled ? 'p-1.5' : 'p-2'}
-              `}>
-                <Scissors size={isScrolled ? 24 : 28} className="sm:w-8 sm:h-8" />
+              <div
+                className={`
+             text-white rounded-lg mr-3 transition-all duration-300 ease-in-out
+                ${isScrolled ? "p-1.5" : "p-2"}
+              `}
+              >
+                <Image
+                  src="/logo.png"
+                  alt="logo"
+                  height={40}
+                  width={40}
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
               <div className="hidden sm:block">
-                <h1 className={`
+                <h1
+                  className={`
                   font-bold font-lux text-gray-800 transition-all duration-300 ease-in-out
-                  ${isScrolled ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}
-                `}>
+                  ${isScrolled ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"}
+                `}
+                >
                   STRASS SHOP
                 </h1>
-                <p className={`
+                <p
+                  className={`
                   text-gray-400 transition-all duration-300 ease-in-out
-                  ${isScrolled ? 'text-xs opacity-75' : 'text-xs sm:text-sm opacity-100'}
-                `}>
-                  {currentLanguage === 'fr'
-                    ? 'Tout pour vos créations couture'
-                    : 'كل ما تحتاجينه للخياطة'
+                  ${
+                    isScrolled
+                      ? "text-xs opacity-75"
+                      : "text-xs sm:text-sm opacity-100"
                   }
+                `}
+                >
+                  {currentLanguage === "fr"
+                    ? "Tout pour vos créations couture"
+                    : "كل ما تحتاجينه للخياطة"}
                 </p>
               </div>
               <div className="sm:hidden">
-                <h1 className={`
+                <h1
+                  className={`
                   font-bold text-gray-800 transition-all duration-300 ease-in-out
-                  ${isScrolled ? 'text-base' : 'text-lg'}
-                `}>
+                  ${isScrolled ? "text-base" : "text-lg"}
+                `}
+                >
                   Strass Shop
                 </h1>
               </div>
@@ -207,60 +236,93 @@ const Header: React.FC = () => {
         </div>
 
         {/* Navigation - Reste visible */}
-        <nav className= "bg-firstColor text-white transition-all duration-300 ease-in-out">
+        <nav className="bg-firstColor text-white transition-all duration-300 ease-in-out">
           <div className="container mx-auto px-4">
             {/* Desktop Navigation */}
-            <ul className={`
+            <ul
+              className={`
               hidden lg:flex lg:justify-center items-center space-x-6 xl:space-x-8 transition-all duration-300 ease-in-out
-              ${isScrolled ? 'py-2' : 'py-3'}
-            `}>
+              ${isScrolled ? "py-2" : "py-3"}
+            `}
+            >
               <li>
-                <Link href="/" className="hover:text-secondColor transition-colors duration-200 font-medium">
-                  {currentLanguage === 'fr' ? 'Accueil' : 'الرئيسية'}
+                <Link
+                  href="/"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium"
+                >
+                  {currentLanguage === "fr" ? "Accueil" : "الرئيسية"}
                 </Link>
               </li>
               <li>
-                <Link href="shop" className="hover:text-secondColor transition-colors duration-200 font-medium">
-                  {currentLanguage === 'fr' ? 'Boutique' : 'المتجر'}
+                <Link
+                  href="shop"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium"
+                >
+                  {currentLanguage === "fr" ? "Boutique" : "المتجر"}
                 </Link>
               </li>
               <li>
-                <Link href="/shop" className="hover:text-secondColor transition-colors duration-200 font-medium">
-                  {currentLanguage === 'fr' ? 'Tissus' : 'الأقمشة'}
+                <Link
+                  href="/shop"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium"
+                >
+                  {currentLanguage === "fr" ? "Tissus" : "الأقمشة"}
                 </Link>
               </li>
               <li>
-                <Link href="/shop" className="hover:text-secondColor transition-colors duration-200 font-medium">
-                  {currentLanguage === 'fr' ? 'Fils & Mercerie' : 'الخيوط والخردوات'}
+                <Link
+                  href="/shop"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium"
+                >
+                  {currentLanguage === "fr"
+                    ? "Fils & Mercerie"
+                    : "الخيوط والخردوات"}
                 </Link>
               </li>
               <li>
-                <Link href="/shop" className="hover:text-secondColor transition-colors duration-200 font-medium">
-                  {currentLanguage === 'fr' ? 'Machines à Coudre' : 'ماكينات الخياطة'}
+                <Link
+                  href="/shop"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium"
+                >
+                  {currentLanguage === "fr"
+                    ? "Machines à Coudre"
+                    : "ماكينات الخياطة"}
                 </Link>
               </li>
               <li>
-                <Link href="/shop" className="hover:text-secondColor transition-colors duration-200 font-medium">
-                  {currentLanguage === 'fr' ? 'Outils de Coupe' : 'أدوات القص'}
+                <Link
+                  href="/shop"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium"
+                >
+                  {currentLanguage === "fr" ? "Outils de Coupe" : "أدوات القص"}
                 </Link>
               </li>
               <li>
-                <Link href="/shop" className="hover:text-secondColor transition-colors duration-200 font-medium">
-                  {currentLanguage === 'fr' ? 'Patrons' : 'الباترونات'}
+                <Link
+                  href="/shop"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium"
+                >
+                  {currentLanguage === "fr" ? "Patrons" : "الباترونات"}
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-secondColor transition-colors duration-200 font-medium">
-                  {currentLanguage === 'fr' ? 'Contact' : 'اتصل بنا'}
+                <Link
+                  href="/contact"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium"
+                >
+                  {currentLanguage === "fr" ? "Contact" : "اتصل بنا"}
                 </Link>
               </li>
             </ul>
 
             {/* Mobile Navigation */}
-            <div className={`lg:hidden transition-all duration-300 ease-in-out ${isMenuOpen
-                ? 'max-h-96 opacity-100'
-                : 'max-h-0 opacity-0 overflow-hidden'
-              }`}>
+            <div
+              className={`lg:hidden transition-all duration-300 ease-in-out ${
+                isMenuOpen
+                  ? "max-h-96 opacity-100"
+                  : "max-h-0 opacity-0 overflow-hidden"
+              }`}
+            >
               <ul className="py-4 space-y-2">
                 <li>
                   <Link
@@ -268,7 +330,7 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === 'fr' ? 'Accueil' : 'الرئيسية'}
+                    {currentLanguage === "fr" ? "Accueil" : "الرئيسية"}
                   </Link>
                 </li>
                 <li>
@@ -277,7 +339,7 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === 'fr' ? 'Boutique' : 'المتجر'}
+                    {currentLanguage === "fr" ? "Boutique" : "المتجر"}
                   </Link>
                 </li>
                 <li>
@@ -286,7 +348,7 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === 'fr' ? 'Tissus' : 'الأقمشة'}
+                    {currentLanguage === "fr" ? "Tissus" : "الأقمشة"}
                   </Link>
                 </li>
                 <li>
@@ -295,7 +357,9 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === 'fr' ? 'Fils & Mercerie' : 'الخيوط والخردوات'}
+                    {currentLanguage === "fr"
+                      ? "Fils & Mercerie"
+                      : "الخيوط والخردوات"}
                   </Link>
                 </li>
                 <li>
@@ -304,7 +368,9 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === 'fr' ? 'Machines à Coudre' : 'ماكينات الخياطة'}
+                    {currentLanguage === "fr"
+                      ? "Machines à Coudre"
+                      : "ماكينات الخياطة"}
                   </Link>
                 </li>
                 <li>
@@ -313,7 +379,9 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === 'fr' ? 'Outils de Coupe' : 'أدوات القص'}
+                    {currentLanguage === "fr"
+                      ? "Outils de Coupe"
+                      : "أدوات القص"}
                   </Link>
                 </li>
                 <li>
@@ -322,7 +390,7 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === 'fr' ? 'Patrons' : 'الباترونات'}
+                    {currentLanguage === "fr" ? "Patrons" : "الباترونات"}
                   </Link>
                 </li>
                 <li>
@@ -331,7 +399,7 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === 'fr' ? 'Contact' : 'اتصل بنا'}
+                    {currentLanguage === "fr" ? "Contact" : "اتصل بنا"}
                   </Link>
                 </li>
               </ul>
@@ -352,7 +420,7 @@ const Header: React.FC = () => {
         onRemoveItem={removeItem}
       />
     </>
-  );
-};
+  )
+}
 
-export default Header;
+export default Header

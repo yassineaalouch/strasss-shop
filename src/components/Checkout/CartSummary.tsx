@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Minus, Plus, Trash2, ShoppingCart, Gift, Phone } from 'lucide-react'
 import { CartSummaryProps } from '@/types/type'
 import Link from 'next/link'
-import { FREE_SHIPPING_THRESHOLD } from '@/data'
+import { FREE_SHIPPING_THRESHOLD } from '@/data/data'
 
 export default function CartSummary({ 
   items, 

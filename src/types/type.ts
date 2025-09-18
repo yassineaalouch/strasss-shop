@@ -198,3 +198,60 @@ export interface FormErrors {
   city?: string
   phoneNumber?: string
 }
+
+
+export interface BaseEntity {
+  id: string;
+  name: string;
+}
+
+export interface EntityTableAction {
+  type: 'view' | 'edit' | 'delete';
+  label: string;
+  icon: React.ReactNode;
+  className?: string;
+  onClick: (item: BaseEntity) => void;
+}
+
+export interface EntityTableProps {
+  data: BaseEntity[];
+  title: string;
+  actions?: EntityTableAction[];
+  onSearch?: (query: string) => void;
+  loading?: boolean;
+  emptyMessage?: string;
+}
+
+
+
+
+
+
+export interface NavigationItem {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  href: string;
+  badge?: number;
+  isActive?: boolean;
+  submenu?: NavigationSubItem[];
+}
+
+export interface NavigationSubItem {
+  id: string;
+  label: string;
+  href: string;
+  isActive?: boolean;
+}
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  avatar?: string;
+  role: string;
+}
+
+export interface DashboardLayoutProps {
+  children: React.ReactNode;
+  currentPath?: string;
+}

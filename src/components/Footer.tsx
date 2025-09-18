@@ -1,5 +1,6 @@
-import { Mail, MapPin, Phone, Shield } from "lucide-react";
-import Link from "next/link";
+import { Mail, MapPin, Phone } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 
 const Footer: React.FC = () => {
   return (
@@ -9,13 +10,20 @@ const Footer: React.FC = () => {
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
-              <div className="bg-green-600 text-white p-2 rounded-lg mr-3">
-                <Shield size={24} />
+              <div className="text-white p-2 rounded-lg mr-3">
+                <Image
+                  src="/logo.png"
+                  alt="logo"
+                  height={40}
+                  width={40}
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
               <span className="text-xl font-bold">Strass Shop</span>
             </div>
             <p className="text-gray-400 mb-4">
-              Votre partenaire de confiance pour tous vos projets de clôture au Maroc.
+              Votre partenaire de confiance pour tous vos projets de clôture au
+              Maroc.
             </p>
             <div className="flex items-center mb-2">
               <MapPin size={16} className="mr-2" />
@@ -35,9 +43,21 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Liens Rapides</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><Link href="/" className="hover:text-white">Accueil</Link></li>
-              <li><Link href="/shop" className="hover:text-white">Boutique</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
+              <li>
+                <Link href="/" className="hover:text-white">
+                  Accueil
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop" className="hover:text-white">
+                  Boutique
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white">
+                  Contact
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -45,11 +65,31 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Catégories</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><Link href="/shop" className="hover:text-white">CotureRigides</Link></li>
-              <li><Link href="/shop" className="hover:text-white">Grillages Souples</Link></li>
-              <li><Link href="/shop" className="hover:text-white">Portails</Link></li>
-              <li><Link href="/shop" className="hover:text-white">Accessoires</Link></li>
-              <li><Link href="/shop" className="hover:text-white">Packs Complets</Link></li>
+              <li>
+                <Link href="/shop" className="hover:text-white">
+                  CotureRigides
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop" className="hover:text-white">
+                  Grillages Souples
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop" className="hover:text-white">
+                  Portails
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop" className="hover:text-white">
+                  Accessoires
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop" className="hover:text-white">
+                  Packs Complets
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -57,10 +97,26 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Service Client</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><Link href="#" className="hover:text-white">Conditions de Vente</Link></li>
-              <li><Link href="#" className="hover:text-white">Politique de Livraison</Link></li>
-              <li><Link href="#" className="hover:text-white">Retours & Échanges</Link></li>
-              <li><Link href="/contact" className="hover:text-white">FAQ</Link></li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Conditions de Vente
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Politique de Livraison
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Retours & Échanges
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white">
+                  FAQ
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -79,6 +135,6 @@ const Footer: React.FC = () => {
         </div>
       </div>
     </footer>
-  );
-};
+  )
+}
 export default Footer

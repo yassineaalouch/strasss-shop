@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import LegalLayout from '@/components/conditions-utilisation/LegalLayout'
-import { FREE_SHIPPING_THRESHOLD } from '@/data'
+import { FREE_SHIPPING_THRESHOLD } from '@/data/data'
 
 export const metadata: Metadata = {
   title: 'Conditions de Vente | Accessoires de Couture Premium',

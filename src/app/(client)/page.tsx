@@ -4,7 +4,7 @@ import { Category, Product, Service } from '@/types/type';
 import HeroSection from '@/components/home/HeroSection';
 import Image from 'next/image';
 import { ProductCardStandard } from '@/components/shop/ProductCard';
-import { FREE_SHIPPING_THRESHOLD } from '@/data';
+import { FREE_SHIPPING_THRESHOLD } from '@/data/data';
 
 // Composant Services
 const ServicesSection: React.FC = () => {
