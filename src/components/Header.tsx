@@ -1,15 +1,15 @@
 "use client"
-import { Mail, Phone, ShoppingCart, Globe, Menu, X } from "lucide-react"
+import { Mail, Phone, ShoppingCart, Menu, X } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import SideCart from "./CartContext"
 import { CartItem } from "@/types/type"
 import { FREE_SHIPPING_THRESHOLD } from "@/data/data"
 import Image from "next/image"
+import LanguageToggle from "./LanguageToggle"
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [currentLanguage, setCurrentLanguage] = useState<"fr" | "ar">("fr")
   const [isCartOpen, setIsCartOpen] = useState(false)
 
   // État pour le scroll (seulement pour savoir si on a scrollé)
@@ -71,10 +71,6 @@ const Header: React.FC = () => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
-  }
-
-  const toggleLanguage = () => {
-    setCurrentLanguage(currentLanguage === "fr" ? "ar" : "fr")
   }
 
   const toggleCart = () => {
@@ -178,9 +174,7 @@ const Header: React.FC = () => {
                   }
                 `}
                 >
-                  {currentLanguage === "fr"
-                    ? "Tout pour vos créations couture"
-                    : "كل ما تحتاجينه للخياطة"}
+                  Tout pour vos créations couture
                 </p>
               </div>
               <div className="sm:hidden">
@@ -190,7 +184,7 @@ const Header: React.FC = () => {
                   ${isScrolled ? "text-base" : "text-lg"}
                 `}
                 >
-                  Strass Shop
+                  STRASS SHOP
                 </h1>
               </div>
             </div>
@@ -199,7 +193,7 @@ const Header: React.FC = () => {
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Language Selector */}
               <div className="relative">
-                <button
+                {/* <button
                   onClick={toggleLanguage}
                   className="flex items-center text-gray-700 hover:text-firstColor px-2 py-1 rounded-lg border border-gray-300 hover:border-firstColor transition-colors duration-200"
                 >
@@ -207,7 +201,8 @@ const Header: React.FC = () => {
                   <span className="text-sm font-medium">
                     {currentLanguage.toUpperCase()}
                   </span>
-                </button>
+                </button> */}
+                <LanguageToggle />
               </div>
 
               {/* Shopping Cart */}
@@ -250,7 +245,7 @@ const Header: React.FC = () => {
                   href="/"
                   className="hover:text-secondColor transition-colors duration-200 font-medium"
                 >
-                  {currentLanguage === "fr" ? "Accueil" : "الرئيسية"}
+                  Accueil
                 </Link>
               </li>
               <li>
@@ -258,7 +253,7 @@ const Header: React.FC = () => {
                   href="shop"
                   className="hover:text-secondColor transition-colors duration-200 font-medium"
                 >
-                  {currentLanguage === "fr" ? "Boutique" : "المتجر"}
+                  Boutique
                 </Link>
               </li>
               <li>
@@ -266,51 +261,7 @@ const Header: React.FC = () => {
                   href="/shop"
                   className="hover:text-secondColor transition-colors duration-200 font-medium"
                 >
-                  {currentLanguage === "fr" ? "Tissus" : "الأقمشة"}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/shop"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium"
-                >
-                  {currentLanguage === "fr"
-                    ? "Fils & Mercerie"
-                    : "الخيوط والخردوات"}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/shop"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium"
-                >
-                  {currentLanguage === "fr"
-                    ? "Machines à Coudre"
-                    : "ماكينات الخياطة"}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/shop"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium"
-                >
-                  {currentLanguage === "fr" ? "Outils de Coupe" : "أدوات القص"}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/shop"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium"
-                >
-                  {currentLanguage === "fr" ? "Patrons" : "الباترونات"}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium"
-                >
-                  {currentLanguage === "fr" ? "Contact" : "اتصل بنا"}
+                  Tissus
                 </Link>
               </li>
             </ul>
@@ -330,7 +281,7 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === "fr" ? "Accueil" : "الرئيسية"}
+                    Accueil
                   </Link>
                 </li>
                 <li>
@@ -339,7 +290,7 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === "fr" ? "Boutique" : "المتجر"}
+                    Boutique
                   </Link>
                 </li>
                 <li>
@@ -348,58 +299,7 @@ const Header: React.FC = () => {
                     className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {currentLanguage === "fr" ? "Tissus" : "الأقمشة"}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop"
-                    className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {currentLanguage === "fr"
-                      ? "Fils & Mercerie"
-                      : "الخيوط والخردوات"}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop"
-                    className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {currentLanguage === "fr"
-                      ? "Machines à Coudre"
-                      : "ماكينات الخياطة"}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop"
-                    className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {currentLanguage === "fr"
-                      ? "Outils de Coupe"
-                      : "أدوات القص"}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop"
-                    className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {currentLanguage === "fr" ? "Patrons" : "الباترونات"}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/contact"
-                    className="block py-3 px-4 hover:bg-secondColor rounded transition-colors duration-200 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {currentLanguage === "fr" ? "Contact" : "اتصل بنا"}
+                    Tissus
                   </Link>
                 </li>
               </ul>

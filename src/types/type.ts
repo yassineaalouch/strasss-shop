@@ -2,7 +2,7 @@ import { ReactNode } from "react"
 
 export interface Product {
   id: string
-  name: string
+  name: { arabicName: string; franshName: string }
   price: number
   originalPrice?: number
   image: string
@@ -16,7 +16,7 @@ export interface Product {
   color: string
   inStock: boolean
   quantity: number
-  description: string
+  description: { arabicDescription: string; franshDescription: string }
 }
 
 export interface FormData {

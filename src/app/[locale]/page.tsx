@@ -139,7 +139,10 @@ const FeaturedProducts: React.FC = () => {
   const products: Product[] = [
     {
       id: "1",
-      name: "Bobines de fil multicolores",
+      name: {
+        arabicName: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        franshName: "Bobines de fil multicolores"
+      },
       price: 25,
       originalPrice: 30,
       image:
@@ -154,12 +157,18 @@ const FeaturedProducts: React.FC = () => {
       color: "Multicolore",
       inStock: true,
       quantity: 20,
-      description:
-        "Un assortiment de belles bobines de fil multicolores, parfaites pour tous vos projets de couture."
+      description: {
+        arabicDescription: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        franshDescription:
+          "Un assortiment de belles bobines de fil multicolores, parfaites pour tous vos projets de couture."
+      }
     },
     {
       id: "2",
-      name: "Fournitures de couture ",
+      name: {
+        arabicName: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        franshName: "Fournitures de couture "
+      },
       price: 40,
       image:
         "https://static.mapetitemercerie.com/241747-large_default/ciseaux-classic-cranteurs-23-cm-droitier-fiskars.jpg",
@@ -171,12 +180,18 @@ const FeaturedProducts: React.FC = () => {
       color: "Multicolore",
       inStock: true,
       quantity: 50,
-      description:
-        "Collection d’outils de couture (fils, boutons, etc.) idéal pour atelier et DIY."
+      description: {
+        arabicDescription: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        franshDescription:
+          "Collection d’outils de couture (fils, boutons, etc.) idéal pour atelier et DIY."
+      }
     },
     {
       id: "3",
-      name: "Fils colorés dans un tiroir",
+      name: {
+        arabicName: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        franshName: "Fils colorés dans un tiroir"
+      },
       price: 30,
       image:
         "https://static.mapetitemercerie.com/99298-large_default/kit-de-11-fils-a-coudre-guetermann-accessoires.jpg",
@@ -190,12 +205,18 @@ const FeaturedProducts: React.FC = () => {
       color: "Multicolore",
       inStock: true,
       quantity: 70,
-      description:
-        "Vue rapprochée de fils à coudre colorés bien rangés dans un tiroir."
+      description: {
+        arabicDescription: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        franshDescription:
+          "Vue rapprochée de fils à coudre colorés bien rangés dans un tiroir."
+      }
     },
     {
       id: "4",
-      name: "Tissus assortis colorés",
+      name: {
+        arabicName: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        franshName: "Tissus assortis colorés"
+      },
       price: 35,
       image:
         "https://static.mapetitemercerie.com/48913-large_default/machine-a-coudre-smarter-260c-pfaff.jpg",
@@ -209,8 +230,11 @@ const FeaturedProducts: React.FC = () => {
       color: "Multicolore",
       inStock: true,
       quantity: 80,
-      description:
-        "Collection de tissus 100% coton, idéals pour patchwork, quilting et projets créatifs."
+      description: {
+        arabicDescription: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        franshDescription:
+          "Collection de tissus 100% coton, idéals pour patchwork, quilting et projets créatifs."
+      }
     }
   ]
 
