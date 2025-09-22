@@ -1,14 +1,21 @@
-'use client'
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { User, MapPin, Phone, ShoppingCart, Truck } from 'lucide-react'
-import { CheckoutFormProps, CheckoutFormData, FormErrors } from '@/types/type'
+"use client"
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { useTranslations } from "next-intl"
+import { User, MapPin, Phone, ShoppingCart, Truck } from "lucide-react"
+import { CheckoutFormProps, CheckoutFormData, FormErrors } from "@/types/type"
 
-export default function CheckoutForm({ onSubmit, isProcessing, total }: CheckoutFormProps) {
+export default function CheckoutForm({
+  onSubmit,
+  isProcessing,
+  total
+}: CheckoutFormProps) {
+  const t = useTranslations("CheckoutForm")
+
   const [formData, setFormData] = useState<CheckoutFormData>({
-    customerName: '',
-    city: '',
-    phoneNumber: ''
+    customerName: "",
+    city: "",
+    phoneNumber: ""
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -18,23 +25,27 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
 
     // Validation nom du client
     if (!formData.customerName.trim()) {
-      newErrors.customerName = 'Le nom du client est requis'
+      newErrors.customerName = t("validation.customerName.required")
     } else if (formData.customerName.trim().length < 2) {
-      newErrors.customerName = 'Le nom doit contenir au moins 2 caractères'
+      newErrors.customerName = t("validation.customerName.minLength")
     }
 
     // Validation ville
     if (!formData.city.trim()) {
-      newErrors.city = 'La ville est requise'
+      newErrors.city = t("validation.city.required")
     } else if (formData.city.trim().length < 2) {
-      newErrors.city = 'Le nom de la ville doit contenir au moins 2 caractères'
+      newErrors.city = t("validation.city.minLength")
     }
 
     // Validation numéro de téléphone
     if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Le numéro de téléphone est requis'
-    } else if (!/^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/.test(formData.phoneNumber.trim())) {
-      newErrors.phoneNumber = 'Format de téléphone invalide (ex: 06 12 34 56 78)'
+      newErrors.phoneNumber = t("validation.phoneNumber.required")
+    } else if (
+      !/^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/.test(
+        formData.phoneNumber.trim()
+      )
+    ) {
+      newErrors.phoneNumber = t("validation.phoneNumber.invalid")
     }
 
     setErrors(newErrors)
@@ -49,10 +60,10 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
   }
 
   const handleChange = (field: keyof CheckoutFormData, value: string): void => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
     // Effacer l'erreur quand l'utilisateur commence à taper
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
+      setErrors((prev) => ({ ...prev, [field]: undefined }))
     }
   }
 
@@ -60,11 +71,13 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
     <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
       <div className="flex items-center mb-6">
         <div className="bg-orange-100 p-3 rounded-lg mr-4">
-          <User className="text-orange-600" size={24} />
+          <User className="text-secondColor" size={24} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Vos informations</h2>
-          <p className="text-gray-600">Rapide et simple, 3 champs seulement !</p>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {t("header.title")}
+          </h2>
+          <p className="text-gray-600">{t("header.subtitle")}</p>
         </div>
       </div>
 
@@ -73,20 +86,22 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             <User className="inline w-4 h-4 mr-2" />
-            Nom complet *
+            {t("fields.customerName.label")}
           </label>
           <input
             type="text"
             value={formData.customerName}
-            onChange={(e) => handleChange('customerName', e.target.value)}
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all ${
-              errors.customerName ? 'border-red-500' : 'border-gray-300 hover:border-orange-300'
+            onChange={(e) => handleChange("customerName", e.target.value)}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-firstColor focus:border-transparent transition-all ${
+              errors.customerName
+                ? "border-red-500"
+                : "border-gray-300 hover:border-orange-300"
             }`}
-            placeholder="Prénom et nom"
+            placeholder={t("fields.customerName.placeholder")}
             disabled={isProcessing}
           />
           {errors.customerName && (
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-red-500 text-sm mt-2 flex items-center"
@@ -101,20 +116,22 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             <MapPin className="inline w-4 h-4 mr-2" />
-            Ville *
+            {t("fields.city.label")}
           </label>
           <input
             type="text"
             value={formData.city}
-            onChange={(e) => handleChange('city', e.target.value)}
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all ${
-              errors.city ? 'border-red-500' : 'border-gray-300 hover:border-orange-300'
+            onChange={(e) => handleChange("city", e.target.value)}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-firstColor focus:border-transparent transition-all ${
+              errors.city
+                ? "border-red-500"
+                : "border-gray-300 hover:border-orange-300"
             }`}
-            placeholder="Votre ville de livraison"
+            placeholder={t("fields.city.placeholder")}
             disabled={isProcessing}
           />
           {errors.city && (
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-red-500 text-sm mt-2 flex items-center"
@@ -129,20 +146,22 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             <Phone className="inline w-4 h-4 mr-2" />
-            Téléphone *
+            {t("fields.phoneNumber.label")}
           </label>
           <input
             type="tel"
             value={formData.phoneNumber}
-            onChange={(e) => handleChange('phoneNumber', e.target.value)}
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all ${
-              errors.phoneNumber ? 'border-red-500' : 'border-gray-300 hover:border-orange-300'
+            onChange={(e) => handleChange("phoneNumber", e.target.value)}
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-firstColor focus:border-transparent transition-all ${
+              errors.phoneNumber
+                ? "border-red-500"
+                : "border-gray-300 hover:border-orange-300"
             }`}
-            placeholder="06 12 34 56 78"
+            placeholder={t("fields.phoneNumber.placeholder")}
             disabled={isProcessing}
           />
           {errors.phoneNumber && (
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-red-500 text-sm mt-2 flex items-center"
@@ -156,22 +175,28 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
         {/* Informations de livraison */}
         <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
           <h3 className="font-semibold text-gray-800 mb-2 flex items-center">
-            <Truck className="w-5 h-5 mr-2 text-orange-600" />
-            Livraison
+            <Truck className="w-5 h-5 mr-2 text-secondColor" />
+            {t("delivery.title")}
           </h3>
           <p className="text-gray-600 text-sm">
-            Votre commande sera livrée à <strong>{formData.city || '[Votre ville]'}</strong> sous 2-3 jours ouvrés. 
-            Nous vous contacterons au <strong>{formData.phoneNumber || '[Votre numéro]'}</strong> 
-            pour organiser la livraison.
+            {t("delivery.description", {
+              city: formData.city || t("delivery.placeholderCity"),
+              phoneNumber:
+                formData.phoneNumber || t("delivery.placeholderPhone")
+            })}
           </p>
         </div>
 
         {/* Résumé de commande mobile */}
         <div className="lg:hidden bg-gray-50 p-4 rounded-lg">
-          <h3 className="font-semibold text-gray-800 mb-2">Récapitulatif</h3>
+          <h3 className="font-semibold text-gray-800 mb-2">
+            {t("summary.title")}
+          </h3>
           <div className="flex justify-between items-center">
-            <span>Total à payer :</span>
-            <span className="text-xl font-bold text-orange-600">{total.toFixed(2)}€</span>
+            <span>{t("summary.total")}</span>
+            <span className="text-xl font-bold text-secondColor">
+              {total.toFixed(2)}€
+            </span>
           </div>
         </div>
 
@@ -181,17 +206,17 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
           disabled={isProcessing}
           whileHover={{ scale: isProcessing ? 1 : 1.02 }}
           whileTap={{ scale: isProcessing ? 1 : 0.98 }}
-          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          className="w-full bg-firstColor text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           {isProcessing ? (
             <div className="flex items-center justify-center space-x-3">
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Traitement en cours...</span>
+              <span>{t("button.processing")}</span>
             </div>
           ) : (
             <div className="flex items-center justify-center space-x-2">
               <ShoppingCart size={20} />
-              <span>Confirmer ma commande - {total.toFixed(2)}€</span>
+              <span>{t("button.confirm", { total: total.toFixed(2) })}</span>
             </div>
           )}
         </motion.button>
@@ -200,7 +225,7 @@ export default function CheckoutForm({ onSubmit, isProcessing, total }: Checkout
         <div className="text-center text-sm text-gray-500">
           <p className="flex items-center justify-center">
             <span className="mr-1">🔒</span>
-            Vos informations sont sécurisées et ne seront pas partagées
+            {t("security.message")}
           </p>
         </div>
       </form>

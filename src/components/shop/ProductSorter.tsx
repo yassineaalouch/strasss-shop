@@ -1,14 +1,8 @@
-'use client';
+"use client"
 
-import React from 'react';
-import { Grid, List, SlidersHorizontal } from 'lucide-react';
-import { ProductSorterProps, SortOption } from '@/types/type';
-
-
-
-
-
-
+import React from "react"
+import { Grid, List, SlidersHorizontal } from "lucide-react"
+import { ProductSorterProps, SortOption } from "@/types/type"
 
 const ProductSorter: React.FC<ProductSorterProps> = ({
   totalProducts,
@@ -22,21 +16,24 @@ const ProductSorter: React.FC<ProductSorterProps> = ({
   onPageChange
 }) => {
   const sortOptions: SortOption[] = [
-    { value: 'name-asc', label: 'Nom A-Z' },
-    { value: 'name-desc', label: 'Nom Z-A' },
-    { value: 'price-asc', label: 'Prix croissant' },
-    { value: 'price-desc', label: 'Prix décroissant' },
-    { value: 'rating-desc', label: 'Mieux notés' },
-    { value: 'newest', label: 'Plus récents' }
-  ];
+    { value: "name-asc", label: "Nom A-Z" },
+    { value: "name-desc", label: "Nom Z-A" },
+    { value: "price-asc", label: "Prix croissant" },
+    { value: "price-desc", label: "Prix décroissant" },
+    { value: "rating-desc", label: "Mieux notés" },
+    { value: "newest", label: "Plus récents" }
+  ]
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Notre Boutique</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            Notre Boutique
+          </h1>
           <p className="text-gray-600">
-            {totalProducts} produit{totalProducts > 1 ? 's' : ''} trouvé{totalProducts > 1 ? 's' : ''}
+            {totalProducts} produit{totalProducts > 1 ? "s" : ""} trouvé
+            {totalProducts > 1 ? "s" : ""}
           </p>
         </div>
 
@@ -69,14 +66,22 @@ const ProductSorter: React.FC<ProductSorterProps> = ({
           {/* Sélecteur de vue */}
           <div className="flex items-center border border-gray-300 rounded">
             <button
-              onClick={() => onViewModeChange('grid')}
-              className={`p-2 ${viewMode === 'grid' ? 'bg-green-600 text-white' : 'text-gray-600 hover:text-green-600'}`}
+              onClick={() => onViewModeChange("grid")}
+              className={`p-2 ${
+                viewMode === "grid"
+                  ? "bg-green-600 text-white"
+                  : "text-gray-600 hover:text-green-600"
+              }`}
             >
               <Grid size={20} />
             </button>
             <button
-              onClick={() => onViewModeChange('list')}
-              className={`p-2 ${viewMode === 'list' ? 'bg-green-600 text-white' : 'text-gray-600 hover:text-green-600'}`}
+              onClick={() => onViewModeChange("list")}
+              className={`p-2 ${
+                viewMode === "list"
+                  ? "bg-green-600 text-white"
+                  : "text-gray-600 hover:text-green-600"
+              }`}
             >
               <List size={20} />
             </button>
@@ -94,39 +99,41 @@ const ProductSorter: React.FC<ProductSorterProps> = ({
                 disabled={currentPage === 1}
                 className={`px-4 py-2 rounded ${
                   currentPage === 1
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 Précédent
               </button>
 
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
-                if (pageNum > totalPages) return null;
-                
+                const pageNum = currentPage <= 3 ? i + 1 : currentPage - 2 + i
+                if (pageNum > totalPages) return null
+
                 return (
                   <button
                     key={pageNum}
                     onClick={() => onPageChange(pageNum)}
                     className={`px-4 py-2 rounded ${
                       currentPage === pageNum
-                        ? 'bg-green-600 text-white'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        ? "bg-green-600 text-white"
+                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                     }`}
                   >
                     {pageNum}
                   </button>
-                );
+                )
               })}
 
               <button
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                onClick={() =>
+                  onPageChange(Math.min(totalPages, currentPage + 1))
+                }
                 disabled={currentPage === totalPages}
                 className={`px-4 py-2 rounded ${
                   currentPage === totalPages
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 Suivant
@@ -136,7 +143,7 @@ const ProductSorter: React.FC<ProductSorterProps> = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ProductSorter;
+export default ProductSorter

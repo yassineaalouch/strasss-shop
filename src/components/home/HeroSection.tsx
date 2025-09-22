@@ -39,8 +39,7 @@ const HeroSection: React.FC = () => {
               {t("title")}
             </h1>
             <p className="text-xl mb-8 text-firstColor/80">
-              Fils, aiguilles, ciseaux et tout le nécessaire pour vos projets de
-              couture. Livraison rapide et fiable.
+              {t("description")}
             </p>
             <div className="flex space-x-4">
               <button className="bg-firstColor text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:border-firstColor hover:text-firstColor border-2 flex items-center">

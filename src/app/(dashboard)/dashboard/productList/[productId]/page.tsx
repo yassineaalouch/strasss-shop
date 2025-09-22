@@ -1,512 +1,784 @@
-'use client';
+"use client"
 
-import React, { useState } from 'react';
-import { FormData, FormErrors } from '@/types/type';
-import { 
-  Save, 
-  Upload, 
-  Eye, 
-  Star, 
-  Package, 
-  DollarSign, 
-  Tag, 
-  Palette, 
-  Ruler, 
-  FileText,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react';
-import Image from 'next/image';
+import React, { useState } from "react"
+import { Save, Upload, X, Plus } from "lucide-react"
+import Image from "next/image"
+import { Product, ProductForm } from "@/types/type"
 
-// Composant pour les champs de saisie avec icône
-const InputField: React.FC<{
-  label: string;
-  name: string;
-  value: string | boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  type?: string;
-  placeholder?: string;
-  icon?: React.ReactNode;
-  error?: string;
-  options?: string[];
-  isTextArea?: boolean;
-  isCheckbox?: boolean;
-}> = ({ label, name, value, onChange, type = 'text', placeholder, icon, error, options, isTextArea, isCheckbox }) => {
-  if (isCheckbox) {
-    return (
-      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-        <input
-          type="checkbox"
-          id={name}
-          name={name}
-          checked={value as boolean}
-          onChange={onChange}
-          className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-        />
-        <label htmlFor={name} className="text-sm font-medium text-gray-700 cursor-pointer">
-          {label}
-        </label>
-      </div>
-    );
+const AdminAddProduct: React.FC = () => {
+  const [formData, setFormData] = useState<ProductForm>({
+    name: { ar: "", fr: "" },
+    price: 0,
+    originalPrice: undefined,
+    images: [],
+    isNew: false,
+    isOnSale: false,
+    category: "",
+    material: "",
+    height: "",
+    color: "",
+    inStock: true,
+    quantity: 0,
+    description: { ar: "", fr: "" }
+  })
+
+  const [imageUrl, setImageUrl] = useState("")
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [previewMode, setPreviewMode] = useState<"fr" | "ar">("fr")
+  const [uploadMethod, setUploadMethod] = useState<"url" | "file">("url")
+
+  // Liste des catégories (à remplacer par des données dynamiques)
+  const categories = [
+    "Tissus",
+    "Fils et Aiguilles",
+    "Boutons et Fermetures",
+    "Accessoires de Couture",
+    "Machines à Coudre",
+    "Outils de Mesure"
+  ]
+
+  const materials = [
+    "Coton",
+    "Polyester",
+    "Laine",
+    "Soie",
+    "Lin",
+    "Synthétique",
+    "Métal",
+    "Plastique"
+  ]
+  const colors = [
+    "Rouge",
+    "Bleu",
+    "Vert",
+    "Jaune",
+    "Noir",
+    "Blanc",
+    "Rose",
+    "Violet",
+    "Orange",
+    "Multicolore"
+  ]
+
+  type ProductFormValue = ProductForm[keyof ProductForm]
+
+  const handleInputChange = (
+    field: keyof ProductForm,
+    value: ProductFormValue
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }))
+    }
+  }
+
+  const handleNameChange = (lang: "ar" | "fr", value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: { ...prev.name, [lang]: value }
+    }))
+  }
+
+  const handleDescriptionChange = (lang: "ar" | "fr", value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: { ...prev.description, [lang]: value }
+    }))
+  }
+
+  const addImage = () => {
+    if (imageUrl.trim() && !formData.images.includes(imageUrl.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, imageUrl.trim()]
+      }))
+      setImageUrl("")
+    }
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      Array.from(files).forEach((file) => {
+        // Validation du fichier
+        if (!file.type.startsWith("image/")) {
+          alert("Seules les images sont autorisées")
+          return
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          // 5MB max
+          alert("La taille de l'image ne doit pas dépasser 5MB")
+          return
+        }
+
+        // Créer une URL temporaire pour l'aperçu
+        const imageUrl = URL.createObjectURL(file)
+
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, imageUrl]
+        }))
+      })
+    }
+
+    // Reset input
+    event.target.value = ""
+  }
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }))
+  }
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.name.fr.trim()) newErrors.nameFr = "Nom en français requis"
+    if (!formData.name.ar.trim()) newErrors.nameAr = "Nom en arabe requis"
+    if (formData.price <= 0) newErrors.price = "Prix doit être supérieur à 0"
+    if (formData.images.length === 0)
+      newErrors.images = "Au moins une image requise"
+    if (!formData.category) newErrors.category = "Catégorie requise"
+    if (!formData.material.trim()) newErrors.material = "Matériau requis"
+    if (!formData.color.trim()) newErrors.color = "Couleur requise"
+    if (formData.quantity < 0)
+      newErrors.quantity = "Quantité ne peut pas être négative"
+    if (!formData.description.fr.trim())
+      newErrors.descriptionFr = "Description en français requise"
+    if (!formData.description.ar.trim())
+      newErrors.descriptionAr = "Description en arabe requise"
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateForm()) return
+
+    setIsSubmitting(true)
+
+    try {
+      // Simulation d'API call
+      const productData: Product = {
+        ...formData,
+        id: `prod_${Date.now()}`,
+        rating: 0,
+        reviews: 0
+      }
+
+      console.log("Produit à sauvegarder:", productData)
+
+      // Simulated API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      alert("Produit ajouté avec succès!")
+
+      // Reset form
+      setFormData({
+        name: { ar: "", fr: "" },
+        price: 0,
+        originalPrice: undefined,
+        images: [],
+        isNew: false,
+        isOnSale: false,
+        category: "",
+        material: "",
+        height: "",
+        color: "",
+        inStock: true,
+        quantity: 0,
+        description: { ar: "", fr: "" }
+      })
+    } catch (error) {
+      console.error("Erreur:", error)
+      alert("Erreur lors de l'ajout du produit")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <div className="space-y-2">
-      <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-        {icon}
-        <span>{label}</span>
-      </label>
-      <div className="relative">
-        {isTextArea ? (
-          <textarea
-            name={name}
-            value={value as string}
-            onChange={onChange}
-            placeholder={placeholder}
-            rows={4}
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none ${
-              error ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          />
-        ) : options ? (
-          <select
-            name={name}
-            value={value as string}
-            onChange={onChange}
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-white ${
-              error ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <option value="">Sélectionner {label.toLowerCase()}</option>
-            {options.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-        ) : (
-          <input
-            type={type}
-            name={name}
-            value={value as string}
-            onChange={onChange}
-            placeholder={placeholder}
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-              error ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          />
-        )}
-      </div>
-      {error && (
-        <p className="flex items-center space-x-1 text-sm text-red-600">
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </p>
-      )}
-    </div>
-  );
-};
-
-// Composant de prévisualisation du produit
-const ProductPreview: React.FC<{ formData: FormData }> = ({ formData }) => {
-  return (
-    <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-      <div className="flex items-center space-x-2 mb-4">
-        <Eye className="w-5 h-5 text-blue-600" />
-        <h3 className="text-lg font-semibold text-gray-800">Aperçu du produit</h3>
-      </div>
-      
-      <div className="space-y-4">
-        {/* Image */}
-        <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
-          {formData.image ? (
-            <Image
-              src={formData.image}
-              alt={formData.name || 'Produit'}
-              width={500}
-              height = {500}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <Package size={48} />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Ajouter un Produit
+            </h1>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Aperçu:</span>
+              <button
+                onClick={() => setPreviewMode("fr")}
+                className={`px-3 py-1 rounded text-sm ${
+                  previewMode === "fr"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
+              >
+                FR
+              </button>
+              <button
+                onClick={() => setPreviewMode("ar")}
+                className={`px-3 py-1 rounded text-sm ${
+                  previewMode === "ar"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
+              >
+                AR
+              </button>
             </div>
-          )}
-        </div>
-        
-        {/* Informations produit */}
-        <div className="space-y-2">
-          <h4 className="font-semibold text-gray-800">{formData.name || 'Nom du produit'}</h4>
-          <div className="flex items-center space-x-2">
-            {Array.from({ length: 5 }, (_, i) => (
-              <Star
-                key={i}
-                size={16}
-                className={i < Number(formData.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
-              />
-            ))}
-            <span className="text-sm text-gray-600">({formData.reviews || 0} avis)</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-xl font-bold text-green-600">
-              {formData.price ? `${formData.price}€` : '0€'}
-            </span>
-            {formData.originalPrice && (
-              <span className="text-sm text-gray-500 line-through">
-                {formData.originalPrice}€
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {formData.isNew && (
-              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Nouveau</span>
-            )}
-            {formData.isOnSale && (
-              <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">En promo</span>
-            )}
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              formData.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
-              {formData.inStock ? 'En stock' : 'Rupture'}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
-// Composant principal de la page
-export default function AdminProductPage() {
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    price: '',
-    originalPrice: '',
-    image: '',
-    rating: '',
-    reviews: '',
-    isNew: false,
-    isOnSale: false,
-    category: '',
-    material: '',
-    height: '',
-    color: '',
-    inStock: true,
-    description: '',
-  });
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Informations de base */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
+                  Informations de base
+                </h2>
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+                {/* Nom du produit */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom (Français) *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name.fr}
+                      onChange={(e) => handleNameChange("fr", e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errors.nameFr ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="Nom du produit en français"
+                    />
+                    {errors.nameFr && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.nameFr}
+                      </p>
+                    )}
+                  </div>
 
-  const categories = ['Chaises', 'Tables', 'Canapés', 'Luminaires', 'Décoration', 'Rangement'];
-  const colors = ['Blanc', 'Noir', 'Gris', 'Beige', 'Marron', 'Bleu', 'Vert', 'Rouge', 'Jaune'];
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    
-    // Effacer l'erreur si le champ est maintenant rempli
-    if (errors[name as keyof FormErrors] && value.trim()) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined
-      }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.name.trim()) newErrors.name = 'Le nom du produit est requis';
-    if (!formData.price.trim()) newErrors.price = 'Le prix est requis';
-    if (!formData.category.trim()) newErrors.category = 'La catégorie est requise';
-    if (!formData.material.trim()) newErrors.material = 'Le matériau est requis';
-    if (!formData.height.trim()) newErrors.height = 'La hauteur est requise';
-    if (!formData.color.trim()) newErrors.color = 'La couleur est requise';
-    if (!formData.description.trim()) newErrors.description = 'La description est requise';
-
-    if (formData.price && isNaN(Number(formData.price))) {
-      newErrors.price = 'Le prix doit être un nombre valide';
-    }
-
-    if (formData.originalPrice && isNaN(Number(formData.originalPrice))) {
-      newErrors.originalPrice = 'Le prix original doit être un nombre valide';
-    }
-
-    if (formData.rating && (isNaN(Number(formData.rating)) || Number(formData.rating) < 0 || Number(formData.rating) > 5)) {
-      newErrors.rating = 'La note doit être entre 0 et 5';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      // Simuler un appel API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Ici vous pouvez ajouter votre logique d'API
-      console.log('Données du produit:', formData);
-      
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        name: '',
-        price: '',
-        originalPrice: '',
-        image: '',
-        rating: '',
-        reviews: '',
-        isNew: false,
-        isOnSale: false,
-        category: '',
-        material: '',
-        height: '',
-        color: '',
-        inStock: true,
-        description: '',
-      });
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout du produit:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* En-tête */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Administration des Produits
-          </h1>
-          <p className="text-gray-600">Ajoutez un nouveau produit à votre catalogue</p>
-        </div>
-
-        {/* Message de succès */}
-        {showSuccess && (
-          <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg flex items-center space-x-2 z-50">
-            <CheckCircle size={20} />
-            <span>Produit ajouté avec succès!</span>
-          </div>
-        )}
-
-        {/* Contenu principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-          {/* Formulaire */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Informations de base */}
-                <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2">
-                    <Package className="w-6 h-6 text-blue-600" />
-                    <span>Informations de base</span>
-                  </h2>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom (Arabe) *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name.ar}
+                      onChange={(e) => handleNameChange("ar", e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errors.nameAr ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="اسم المنتج بالعربية"
+                      dir="rtl"
+                    />
+                    {errors.nameAr && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.nameAr}
+                      </p>
+                    )}
+                  </div>
                 </div>
-
-                <InputField
-                  label="Nom du produit"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Chaise moderne en bois"
-                  icon={<Tag size={16} />}
-                  error={errors.name}
-                />
-
-                <InputField
-                  label="Catégorie"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  icon={<Package size={16} />}
-                  options={categories}
-                  error={errors.category}
-                />
 
                 {/* Prix */}
-                <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 mt-6 flex items-center space-x-2">
-                    <DollarSign className="w-6 h-6 text-green-600" />
-                    <span>Tarification</span>
-                  </h2>
-                </div>
-
-                <InputField
-                  label="Prix actuel (€)"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  type="number"
-                  placeholder="99.99"
-                  icon={<DollarSign size={16} />}
-                  error={errors.price}
-                />
-
-                <InputField
-                  label="Prix original (€)"
-                  name="originalPrice"
-                  value={formData.originalPrice}
-                  onChange={handleInputChange}
-                  type="number"
-                  placeholder="129.99"
-                  icon={<DollarSign size={16} />}
-                  error={errors.originalPrice}
-                />
-
-                {/* Caractéristiques */}
-                <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 mt-6 flex items-center space-x-2">
-                    <Ruler className="w-6 h-6 text-purple-600" />
-                    <span>Caractéristiques</span>
-                  </h2>
-                </div>
-
-                <InputField
-                  label="Matériau"
-                  name="material"
-                  value={formData.material}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Bois de chêne"
-                  icon={<Package size={16} />}
-                  error={errors.material}
-                />
-
-                <InputField
-                  label="Hauteur"
-                  name="height"
-                  value={formData.height}
-                  onChange={handleInputChange}
-                  placeholder="Ex: 85cm"
-                  icon={<Ruler size={16} />}
-                  error={errors.height}
-                />
-
-                <InputField
-                  label="Couleur"
-                  name="color"
-                  value={formData.color}
-                  onChange={handleInputChange}
-                  icon={<Palette size={16} />}
-                  options={colors}
-                  error={errors.color}
-                />
-
-                <InputField
-                  label="URL de l'image"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  placeholder="https://example.com/image.jpg"
-                  icon={<Upload size={16} />}
-                  error={errors.image}
-                />
-
-                {/* Évaluations */}
-                <InputField
-                  label="Note (0-5)"
-                  name="rating"
-                  value={formData.rating}
-                  onChange={handleInputChange}
-                  type="number"
-                  placeholder="4.5"
-                  icon={<Star size={16} />}
-                  error={errors.rating}
-                />
-
-                <InputField
-                  label="Nombre d'avis"
-                  name="reviews"
-                  value={formData.reviews}
-                  onChange={handleInputChange}
-                  type="number"
-                  placeholder="127"
-                  icon={<Star size={16} />}
-                  error={errors.reviews}
-                />
-
-                {/* Description */}
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="Décrivez votre produit en détail..."
-                    icon={<FileText size={16} />}
-                    isTextArea={true}
-                    error={errors.description}
-                  />
-                </div>
-
-                {/* Options */}
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Options du produit</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <InputField
-                      label="Nouveau produit"
-                      name="isNew"
-                      value={formData.isNew}
-                      onChange={handleInputChange}
-                      isCheckbox={true}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prix (DH) *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.price}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "price",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errors.price ? "border-red-500" : "border-gray-300"
+                      }`}
+                      min="0"
+                      step="0.01"
                     />
-                    <InputField
-                      label="En promotion"
-                      name="isOnSale"
-                      value={formData.isOnSale}
-                      onChange={handleInputChange}
-                      isCheckbox={true}
-                    />
-                    <InputField
-                      label="En stock"
-                      name="inStock"
-                      value={formData.inStock}
-                      onChange={handleInputChange}
-                      isCheckbox={true}
+                    {errors.price && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.price}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prix original (DH)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.originalPrice || ""}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "originalPrice",
+                          e.target.value
+                            ? parseFloat(e.target.value)
+                            : undefined
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                      step="0.01"
                     />
                   </div>
                 </div>
 
-                {/* Bouton de soumission */}
-                <div className="md:col-span-2">
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
-                  >
-                    <Save size={20} />
-                    <span>{isSubmitting ? 'Ajout en cours...' : 'Ajouter le produit'}</span>
-                  </button>
+                {/* Catégorie et Stock */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Catégorie *
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) =>
+                        handleInputChange("category", e.target.value)
+                      }
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errors.category ? "border-red-500" : "border-gray-300"
+                      }`}
+                    >
+                      <option value="">Sélectionner...</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.category && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.category}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quantité *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "quantity",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errors.quantity ? "border-red-500" : "border-gray-300"
+                      }`}
+                      min="0"
+                    />
+                    {errors.quantity && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.quantity}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Options booléennes */}
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.inStock}
+                      onChange={(e) =>
+                        handleInputChange("inStock", e.target.checked)
+                      }
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 text-sm text-gray-700">
+                      En stock
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.isNew}
+                      onChange={(e) =>
+                        handleInputChange("isNew", e.target.checked)
+                      }
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 text-sm text-gray-700">
+                      Nouveau produit
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.isOnSale}
+                      onChange={(e) =>
+                        handleInputChange("isOnSale", e.target.checked)
+                      }
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 text-sm text-gray-700">
+                      En promotion
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Aperçu du produit */}
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
+                  Aperçu
+                </h2>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                    {formData.images.length > 0 && (
+                      <div className="relative h-48">
+                        <Image
+                          src={formData.images[0]}
+                          alt={formData.name[previewMode]}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute top-2 left-2 flex flex-col space-y-1">
+                          {formData.isNew && (
+                            <span className="bg-blue-500 text-white px-2 py-1 text-xs rounded">
+                              Nouveau
+                            </span>
+                          )}
+                          {formData.isOnSale && (
+                            <span className="bg-red-500 text-white px-2 py-1 text-xs rounded">
+                              Promo
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-800 mb-2">
+                        {formData.name[previewMode] ||
+                          `Nom (${previewMode.toUpperCase()})`}
+                      </h3>
+
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-lg font-bold text-orange-600">
+                          {formData.price} DH
+                        </span>
+                        {formData.originalPrice && (
+                          <span className="text-sm text-gray-500 line-through">
+                            {formData.originalPrice} DH
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-gray-600 mb-3">
+                        {formData.description[previewMode] ||
+                          `Description (${previewMode.toUpperCase()})`}
+                      </p>
+
+                      <button
+                        type="button"
+                        className={`w-full py-2 rounded font-medium ${
+                          formData.inStock
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-400 text-white cursor-not-allowed"
+                        }`}
+                        disabled={!formData.inStock}
+                      >
+                        {formData.inStock
+                          ? "Ajouter au panier"
+                          : "Indisponible"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Aperçu */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              <ProductPreview formData={formData} />
+            {/* Images */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
+                Images du produit
+              </h2>
+
+              {/* Sélecteur de méthode d'upload */}
+              <div className="flex space-x-4 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setUploadMethod("url")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    uploadMethod === "url"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  URL de image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMethod("file")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    uploadMethod === "file"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  Fichier local
+                </button>
+              </div>
+
+              {/* Upload par URL */}
+              {uploadMethod === "url" && (
+                <div className="flex space-x-2">
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://exemple.com/image.jpg"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={addImage}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center"
+                  >
+                    <Plus size={20} className="mr-2" />
+                    Ajouter
+                  </button>
+                </div>
+              )}
+
+              {/* Upload de fichier */}
+              {uploadMethod === "file" && (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="cursor-pointer flex flex-col items-center space-y-2"
+                  >
+                    <Upload size={48} className="text-gray-400" />
+                    <div>
+                      <span className="text-blue-500 font-medium">
+                        Cliquez pour sélectionner
+                      </span>
+                      <span className="text-gray-500">
+                        {" "}
+                        ou glissez-déposez vos images
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      PNG, JPG, GIF jusqu&apos;à 5MB chacune
+                    </p>
+                  </label>
+                </div>
+              )}
+
+              {errors.images && (
+                <p className="text-red-500 text-sm">{errors.images}</p>
+              )}
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {formData.images.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100">
+                      <Image
+                        src={image}
+                        alt={`Image ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 text-center truncate">
+                      Image {index + 1}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+
+            {/* Détails du produit */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Matériau *
+                </label>
+                <select
+                  value={formData.material}
+                  onChange={(e) =>
+                    handleInputChange("material", e.target.value)
+                  }
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.material ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Sélectionner...</option>
+                  {materials.map((material) => (
+                    <option key={material} value={material}>
+                      {material}
+                    </option>
+                  ))}
+                </select>
+                {errors.material && (
+                  <p className="text-red-500 text-sm mt-1">{errors.material}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur *
+                </label>
+                <select
+                  value={formData.color}
+                  onChange={(e) => handleInputChange("color", e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.color ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Sélectionner...</option>
+                  {colors.map((color) => (
+                    <option key={color} value={color}>
+                      {color}
+                    </option>
+                  ))}
+                </select>
+                {errors.color && (
+                  <p className="text-red-500 text-sm mt-1">{errors.color}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Hauteur
+                </label>
+                <input
+                  type="text"
+                  value={formData.height}
+                  onChange={(e) => handleInputChange("height", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="ex: 20cm, -"
+                />
+              </div>
+            </div>
+
+            {/* Descriptions */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
+                Descriptions
+              </h2>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description (Français) *
+                  </label>
+                  <textarea
+                    value={formData.description.fr}
+                    onChange={(e) =>
+                      handleDescriptionChange("fr", e.target.value)
+                    }
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32 ${
+                      errors.descriptionFr
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                    placeholder="Description détaillée du produit en français"
+                  />
+                  {errors.descriptionFr && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.descriptionFr}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description (Arabe) *
+                  </label>
+                  <textarea
+                    value={formData.description.ar}
+                    onChange={(e) =>
+                      handleDescriptionChange("ar", e.target.value)
+                    }
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32 ${
+                      errors.descriptionAr
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                    placeholder="وصف مفصل للمنتج بالعربية"
+                    dir="rtl"
+                  />
+                  {errors.descriptionAr && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.descriptionAr}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex justify-end space-x-4 pt-6 border-t">
+              <button
+                type="button"
+                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                onClick={() => window.history.back()}
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <Save size={20} className="mr-2" />
+                    Enregistrer le produit
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-  );
+  )
 }
+
+export default AdminAddProduct

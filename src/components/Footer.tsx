@@ -1,8 +1,9 @@
 import { Mail, MapPin, Phone } from "lucide-react"
+import { getTranslations } from "next-intl/server"
 import Image from "next/image"
 import Link from "next/link"
-
-const Footer: React.FC = () => {
+export default async function Footer() {
+  const t = await getTranslations("Footer")
   return (
     <footer className="bg-gray-900 text-white pt-16 pb-8">
       <div className="container mx-auto px-4">
@@ -19,43 +20,42 @@ const Footer: React.FC = () => {
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
-              <span className="text-xl font-bold">Strass Shop</span>
+              <span className="text-xl font-bold">{t("company.name")}</span>
             </div>
-            <p className="text-gray-400 mb-4">
-              Votre partenaire de confiance pour tous vos projets de clôture au
-              Maroc.
-            </p>
+            <p className="text-gray-400 mb-4">{t("company.description")}</p>
             <div className="flex items-center mb-2">
               <MapPin size={16} className="mr-2" />
-              <span className="text-sm">Meknes, Maroc</span>
+              <span className="text-sm">{t("company.location")}</span>
             </div>
             <div className="flex items-center mb-2">
               <Phone size={16} className="mr-2" />
-              <span className="text-sm">+212 670366581</span>
+              <span className="text-sm">{t("company.phone")}</span>
             </div>
             <div className="flex items-center">
               <Mail size={16} className="mr-2" />
-              <span className="text-sm">Denon_taha@hotmail.fr</span>
+              <span className="text-sm">{t("company.email")}</span>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Liens Rapides</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("quickLinks.title")}
+            </h3>
             <ul className="space-y-2 text-gray-400">
               <li>
                 <Link href="/" className="hover:text-white">
-                  Accueil
+                  {t("quickLinks.home")}
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  Boutique
+                  {t("quickLinks.shop")}
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="hover:text-white">
-                  Contact
+                  {t("quickLinks.contact")}
                 </Link>
               </li>
             </ul>
@@ -63,31 +63,33 @@ const Footer: React.FC = () => {
 
           {/* Categories */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Catégories</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("categories.title")}
+            </h3>
             <ul className="space-y-2 text-gray-400">
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  CotureRigides
+                  {t("categories.rigidFencing")}
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  Grillages Souples
+                  {t("categories.flexibleMesh")}
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  Portails
+                  {t("categories.gates")}
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  Accessoires
+                  {t("categories.accessories")}
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  Packs Complets
+                  {t("categories.completePacks")}
                 </Link>
               </li>
             </ul>
@@ -95,26 +97,28 @@ const Footer: React.FC = () => {
 
           {/* Customer Service */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Service Client</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("customerService.title")}
+            </h3>
             <ul className="space-y-2 text-gray-400">
               <li>
                 <Link href="#" className="hover:text-white">
-                  Conditions de Vente
+                  {t("customerService.salesConditions")}
                 </Link>
               </li>
               <li>
                 <Link href="#" className="hover:text-white">
-                  Politique de Livraison
+                  {t("customerService.deliveryPolicy")}
                 </Link>
               </li>
               <li>
                 <Link href="#" className="hover:text-white">
-                  Retours & Échanges
+                  {t("customerService.returnsExchanges")}
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="hover:text-white">
-                  FAQ
+                  {t("customerService.faq")}
                 </Link>
               </li>
             </ul>
@@ -122,19 +126,22 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">
-            © 2025 Strass Shop. Tous droits réservés.
-          </p>
+          <p className="text-gray-400 text-sm">{t("copyright")}</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
-            <span className="text-gray-400 text-sm">Paiement sécurisé</span>
+            <span className="text-gray-400 text-sm">
+              {t("features.securePayment")}
+            </span>
             <span className="text-gray-400 text-sm">•</span>
-            <span className="text-gray-400 text-sm">Livraison rapide</span>
+            <span className="text-gray-400 text-sm">
+              {t("features.fastDelivery")}
+            </span>
             <span className="text-gray-400 text-sm">•</span>
-            <span className="text-gray-400 text-sm">Service client 7j/7</span>
+            <span className="text-gray-400 text-sm">
+              {t("features.customerSupport")}
+            </span>
           </div>
         </div>
       </div>
     </footer>
   )
 }
-export default Footer

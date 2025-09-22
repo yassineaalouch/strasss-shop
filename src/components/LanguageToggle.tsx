@@ -1,23 +1,3 @@
-// "use client"
-// import { Link } from "@/i18n/navigation"
-// import { useLocale } from "next-intl"
-// import { usePathname } from "next/navigation"
-// export default function LanguageToggle() {
-//   const locale = useLocale() // "fr" ou "ar"
-//   const pathname = usePathname() // ex: "/fr/about"
-
-//   const otherLocale = locale === "fr" ? "ar" : "fr"
-
-//   return (
-//     <Link
-//       href={pathname} // même page
-//       locale={otherLocale} // change la locale
-//       className="px-4 py-2 rounded-lg bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition-colors"
-//     >
-//       {otherLocale.toUpperCase()}
-//     </Link>
-//   )
-// }
 "use client"
 
 import { useLocale } from "next-intl"
@@ -48,3 +28,48 @@ export default function LanguageToggle() {
     </Link>
   )
 }
+
+// "use client"
+
+// import { usePathname, useRouter, useSearchParams } from "next/navigation"
+// import { routing } from "@/i18n/routing"
+
+// export default function LanguageSwitcher() {
+//   const router = useRouter()
+//   const pathname = usePathname()
+//   const searchParams = useSearchParams()
+
+//   const currentLocale = pathname?.split("/")[1] || routing.defaultLocale
+
+//   function switchLocale(newLocale: string) {
+//     if (newLocale === currentLocale) return
+
+//     // احذف الـ locale القديم من بداية الـ pathname
+//     const pathWithoutLocale = pathname?.replace(/^\/(ar|fr)/, "") || ""
+
+//     // أعد بناء الـ URL مع locale الجديد
+//     const newPath = `/${newLocale}${pathWithoutLocale}${
+//       searchParams.toString() ? `?${searchParams.toString()}` : ""
+//     }`
+
+//     router.push(newPath) // ✅ يغير اللغة بدون refresh
+//   }
+
+//   return (
+//     <div className="flex gap-2">
+//       {routing.locales.map((locale) => (
+//         <button
+//           key={locale}
+//           onClick={() => switchLocale(locale)}
+//           className={`px-3 py-1 rounded ${
+//             currentLocale === locale
+//               ? "bg-yellow-500 text-white"
+//               : "bg-gray-200"
+//           }`}
+//         >
+//           {locale.toUpperCase()}
+//         </button>
+//       ))}
+//     </div>
+//   )
+// }

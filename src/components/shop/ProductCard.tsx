@@ -2,7 +2,7 @@ import React from "react"
 import { Star } from "lucide-react"
 import { Product, ProductCardProps } from "@/types/type"
 import Image from "next/image"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) => {
   if (viewMode === "list") {
@@ -11,16 +11,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) => {
 
   return <ProductCardStandard product={product} />
 }
+
 export function ProductCardListView({ product }: { product: Product }) {
   const locale = useLocale()
+  const t = useTranslations("ProductCard")
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center space-x-4 hover:shadow-lg transition-shadow duration-300">
       <div className="w-32 h-32 flex-shrink-0">
         <Image
-          src={product.image}
-          alt={
-            locale === "ar" ? product.name.arabicName : product.name.franshName
-          }
+          src={product.images?.[0] ?? "/No_Image_Available.jpg"}
+          alt={locale === "ar" ? product.name.ar : product.name.fr}
           height={500}
           width={500}
           className="w-full h-full object-cover rounded-lg"
@@ -31,14 +32,12 @@ export function ProductCardListView({ product }: { product: Product }) {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-semibold text-gray-800 mb-2">
-              {locale === "ar"
-                ? product.name.arabicName
-                : product.name.franshName}
+              {locale === "ar" ? product.name.ar : product.name.fr}
             </h3>
             <p className="text-sm text-gray-600 mb-2 line-clamp-2">
               {locale === "ar"
-                ? product.description.arabicDescription
-                : product.description.franshDescription}
+                ? product.description.ar
+                : product.description.fr}
             </p>
 
             <div className="flex items-center mb-2">
@@ -57,9 +56,15 @@ export function ProductCardListView({ product }: { product: Product }) {
             </div>
 
             <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <span>Catégorie: {product.category}</span>
-              <span>Matériau: {product.material}</span>
-              <span>Hauteur: {product.height}</span>
+              <span>
+                {t("labels.category")} {product.category}
+              </span>
+              <span>
+                {t("labels.material")} {product.material}
+              </span>
+              <span>
+                {t("labels.height")} {product.height}
+              </span>
             </div>
           </div>
 
@@ -78,17 +83,17 @@ export function ProductCardListView({ product }: { product: Product }) {
             <div className="flex space-x-2 mb-2">
               {product.isNew && (
                 <span className="bg-blue-500 text-white px-2 py-1 text-xs rounded">
-                  Nouveau
+                  {t("badges.new")}
                 </span>
               )}
               {product.isOnSale && (
                 <span className="bg-red-500 text-white px-2 py-1 text-xs rounded">
-                  Promo
+                  {t("badges.sale")}
                 </span>
               )}
               {!product.inStock && (
                 <span className="bg-gray-500 text-white px-2 py-1 text-xs rounded">
-                  Rupture
+                  {t("badges.outOfStock")}
                 </span>
               )}
             </div>
@@ -101,7 +106,9 @@ export function ProductCardListView({ product }: { product: Product }) {
               }`}
               disabled={!product.inStock}
             >
-              {product.inStock ? "Ajouter au panier" : "Indisponible"}
+              {product.inStock
+                ? t("buttons.addToCart")
+                : t("buttons.unavailable")}
             </button>
           </div>
         </div>
@@ -109,19 +116,18 @@ export function ProductCardListView({ product }: { product: Product }) {
     </div>
   )
 }
+
 export function ProductCardStandard({ product }: { product: Product }) {
   const locale = useLocale()
+  const t = useTranslations("ProductCard")
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-lg transition-shadow duration-300">
       <div className="relative">
         <div className="w-full flex justify-center items-center">
           <Image
-            src={product.image}
-            alt={
-              locale === "ar"
-                ? product.name.arabicName
-                : product.name.franshName
-            }
+            src={product.images?.[0] ?? "/No_Image_Available.jpg"}
+            alt={locale === "ar" ? product.name.ar : product.name.fr}
             height={250}
             width={250}
             className="group-hover:scale-105 transition-transform duration-300"
@@ -131,17 +137,17 @@ export function ProductCardStandard({ product }: { product: Product }) {
         <div className="absolute top-2 left-2 flex flex-col space-y-1">
           {product.isNew && (
             <span className="bg-blue-500 text-white px-2 py-1 text-xs rounded">
-              Nouveau
+              {t("badges.new")}
             </span>
           )}
           {product.isOnSale && (
             <span className="bg-red-500 text-white px-2 py-1 text-xs rounded">
-              Promo
+              {t("badges.sale")}
             </span>
           )}
           {!product.inStock && (
             <span className="bg-gray-500 text-white px-2 py-1 text-xs rounded">
-              Rupture
+              {t("badges.outOfStock")}
             </span>
           )}
         </div>
@@ -149,7 +155,7 @@ export function ProductCardStandard({ product }: { product: Product }) {
 
       <div className="p-4">
         <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
-          {locale === "ar" ? product.name.arabicName : product.name.franshName}
+          {locale === "ar" ? product.name.ar : product.name.fr}
         </h3>
 
         <div className="flex items-center mb-2">
@@ -170,7 +176,8 @@ export function ProductCardStandard({ product }: { product: Product }) {
             {product.category} • {product.material}
           </div>
           <div>
-            Hauteur: {product.height} • Couleur: {product.color}
+            {t("labels.height")} {product.height} • {t("labels.color")}{" "}
+            {product.color}
           </div>
         </div>
 
@@ -195,10 +202,11 @@ export function ProductCardStandard({ product }: { product: Product }) {
           }`}
           disabled={!product.inStock}
         >
-          {product.inStock ? "Ajouter au panier" : "Indisponible"}
+          {product.inStock ? t("buttons.addToCart") : t("buttons.unavailable")}
         </button>
       </div>
     </div>
   )
 }
+
 export default ProductCard

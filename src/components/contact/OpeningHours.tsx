@@ -1,21 +1,20 @@
-import React from 'react';
-import { Clock } from 'lucide-react';
-import { OpeningHour } from '@/types/type';
+"use client"
+import React from "react"
+import { Clock } from "lucide-react"
+import { OpeningHour } from "@/types/type"
+import { useTranslations } from "next-intl"
+const OpeningHours = () => {
+  const t = useTranslations("ContactPage.OpeningHours")
 
-
-
-const OpeningHours: React.FC = () => {
-  // Déterminer le jour actuel côté serveur n'est pas optimal pour l'hydratation
-  // Il vaut mieux soit l'omettre, soit le gérer côté client
   const openingHours: OpeningHour[] = [
-    { day: 'Lundi', hours: '08:00 - 18:00' },
-    { day: 'Mardi', hours: '08:00 - 18:00' },
-    { day: 'Mercredi', hours: '08:00 - 18:00' },
-    { day: 'Jeudi', hours: '08:00 - 18:00' },
-    { day: 'Vendredi', hours: '08:00 - 18:00' },
-    { day: 'Samedi', hours: '09:00 - 16:00' },
-    { day: 'Dimanche', hours: 'Fermé' }
-  ];
+    { day: t("days.monday"), hours: t("hours.weekdays") },
+    { day: t("days.tuesday"), hours: t("hours.weekdays") },
+    { day: t("days.wednesday"), hours: t("hours.weekdays") },
+    { day: t("days.thursday"), hours: t("hours.weekdays") },
+    { day: t("days.friday"), hours: t("hours.weekdays") },
+    { day: t("days.saturday"), hours: t("hours.saturday") },
+    { day: t("days.sunday"), hours: t("hours.closed") }
+  ]
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
@@ -24,33 +23,38 @@ const OpeningHours: React.FC = () => {
           <Clock size={40} />
         </div>
       </div>
-      <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">Horaires d&apos;Ouverture</h3>
+
+      <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
+        {t("title")}
+      </h3>
+
       <div className="space-y-3">
         {openingHours.map((schedule, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="flex justify-between items-center py-2 px-3 rounded"
           >
-            <span className="font-medium text-gray-700">
-              {schedule.day}
-            </span>
-            <span className={`${
-              schedule.hours === 'Fermé' 
-                ? 'text-red-500 font-medium' 
-                : 'text-gray-600'
-            }`}>
+            <span className="font-medium text-gray-700">{schedule.day}</span>
+            <span
+              className={`${
+                schedule.hours === t("hours.closed")
+                  ? "text-red-500 font-medium"
+                  : "text-gray-600"
+              }`}
+            >
               {schedule.hours}
             </span>
           </div>
         ))}
       </div>
+
       <div className="mt-6 p-4 bg-green-50 rounded-lg">
         <p className="text-sm text-green-700 text-center">
-          <strong>Note :</strong> Nous sommes également disponibles sur rendez-vous en dehors de ces horaires.
+          <strong>{t("note.label")}</strong> {t("note.text")}
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default OpeningHours;
+export default OpeningHours

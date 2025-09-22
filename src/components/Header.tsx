@@ -193,15 +193,6 @@ const Header: React.FC = () => {
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Language Selector */}
               <div className="relative">
-                {/* <button
-                  onClick={toggleLanguage}
-                  className="flex items-center text-gray-700 hover:text-firstColor px-2 py-1 rounded-lg border border-gray-300 hover:border-firstColor transition-colors duration-200"
-                >
-                  <Globe size={18} className="mr-1" />
-                  <span className="text-sm font-medium">
-                    {currentLanguage.toUpperCase()}
-                  </span>
-                </button> */}
                 <LanguageToggle />
               </div>
 

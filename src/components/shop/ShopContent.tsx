@@ -92,8 +92,7 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
   const sortedProducts = useMemo(() => {
     const sorted = [...filteredProducts]
 
-    const nameKey: "franshName" | "arabicName" =
-      locale === "fr" ? "franshName" : "arabicName"
+    const nameKey: "fr" | "ar" = locale === "fr" ? "fr" : "ar"
 
     switch (sortBy) {
       case "name-asc":
@@ -116,27 +115,6 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
         return sorted
     }
   }, [filteredProducts, sortBy, locale])
-
-  // const sortedProducts = useMemo(() => {
-  //   const sorted = [...filteredProducts]
-
-  //   switch (sortBy) {
-  //     case "name-asc":
-  //       return sorted.sort((a, b) => a.name.localeCompare(b.name.franshName))
-  //     case "name-desc":
-  //       return sorted.sort((a, b) => b.name.localeCompare(a.name.franshName))
-  //     case "price-asc":
-  //       return sorted.sort((a, b) => a.price - b.price)
-  //     case "price-desc":
-  //       return sorted.sort((a, b) => b.price - a.price)
-  //     case "rating-desc":
-  //       return sorted.sort((a, b) => b.rating - a.rating)
-  //     case "newest":
-  //       return sorted.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0))
-  //     default:
-  //       return sorted
-  //   }
-  // }, [filteredProducts, sortBy])
 
   // Pagination
   const totalPages = Math.ceil(sortedProducts.length / productsPerPage)

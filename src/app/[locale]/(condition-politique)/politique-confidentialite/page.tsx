@@ -1,398 +1,487 @@
-import { Metadata } from 'next'
-import LegalLayout from '@/components/conditions-utilisation/LegalLayout'
-
-export const metadata: Metadata = {
-  title: 'Politique de Confidentialité | Accessoires de Couture Premium',
-  description: 'Notre politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles.',
-  robots: 'index, follow',
-  alternates: {
-    canonical: '/politique-confidentialite'
-  }
-}
+"use client"
+import LegalLayout from "@/components/conditions-utilisation/LegalLayout"
+import { useTranslations } from "next-intl"
 
 export default function PolitiqueConfidentialitePage() {
+  const t = useTranslations("PolitiqueConfidentialitePage")
+
   return (
-    <LegalLayout title="Politique de Confidentialité" lastUpdated="15 janvier 2025">
+    <LegalLayout title={t("title")} lastUpdated={t("lastUpdated")}>
       <div className="space-y-8">
+        {/* Intro */}
         <section>
           <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-            <h2 className="text-xl font-bold text-blue-800 mb-2">🔒 Votre vie privée est importante</h2>
-            <p className="text-blue-700">
-              Cette politique explique comment nous collectons, utilisons et protégeons vos données personnelles 
-              conformément au RGPD et à la loi Informatique et Libertés.
-            </p>
+            <h2 className="text-xl font-bold text-blue-800 mb-2">
+              {t("intro.title")}
+            </h2>
+            <p className="text-blue-700">{t("intro.description")}</p>
           </div>
         </section>
 
+        {/* Section 1 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            1. Responsable du Traitement
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section1.title")}
           </h2>
           <div className="bg-gray-50 p-6 rounded-lg">
-            <p className="mb-4"><strong>Responsable du traitement :</strong></p>
+            <p className="mb-4">
+              <strong>{t("section1.label")}</strong>
+            </p>
             <div className="text-gray-700">
-              Accessoires Couture Premium<br />
-              123 Rue de la Couture, 75001 Paris<br />
-              Email : dpo@accessoires-couture.fr<br />
-              Téléphone : 01 23 45 67 89
+              {t("section1.companyName")}
+              <br />
+              {t("section1.address")}
+              <br />
+              {t("section1.email")}
+              <br />
+              {t("section1.phone")}
             </div>
           </div>
         </section>
 
+        {/* Section 2 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            2. Données Collectées
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section2.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
-            <h3 className="font-semibold text-gray-800 mb-2">2.1 Données d&apos;identification</h3>
+            <h3 className="font-semibold text-gray-800 mb-2">
+              {t("section2.identification.title")}
+            </h3>
             <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
-              <li>Nom, prénom</li>
-              <li>Adresse email</li>
-              <li>Numéro de téléphone</li>
-              <li>Adresse postale</li>
-              <li>Date de naissance (facultative)</li>
+              <li>{t("section2.identification.name")}</li>
+              <li>{t("section2.identification.email")}</li>
+              <li>{t("section2.identification.phoneNumber")}</li>
+              <li>{t("section2.identification.postalAddress")}</li>
+              <li>{t("section2.identification.birthDate")}</li>
             </ul>
 
-            <h3 className="font-semibold text-gray-800 mb-2">2.2 Données de navigation</h3>
+            <h3 className="font-semibold text-gray-800 mb-2">
+              {t("section2.navigation.title")}
+            </h3>
             <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
-              <li>Adresse IP</li>
-              <li>Type de navigateur et appareil</li>
-              <li>Pages visitées et temps de navigation</li>
-              <li>Cookies et technologies similaires</li>
+              <li>{t("section2.navigation.ipAddress")}</li>
+              <li>{t("section2.navigation.browserType")}</li>
+              <li>{t("section2.navigation.pagesVisited")}</li>
+              <li>{t("section2.navigation.cookies")}</li>
             </ul>
 
-            <h3 className="font-semibold text-gray-800 mb-2">2.3 Données commerciales</h3>
+            <h3 className="font-semibold text-gray-800 mb-2">
+              {t("section2.commercial.title")}
+            </h3>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>Historique des commandes</li>
-              <li>Préférences produits</li>
-              <li>Panier d&apos;achat</li>
-              <li>Avis et commentaires</li>
+              <li>{t("section2.commercial.orderHistory")}</li>
+              <li>{t("section2.commercial.productPreferences")}</li>
+              <li>{t("section2.commercial.shoppingCart")}</li>
+              <li>{t("section2.commercial.reviews")}</li>
             </ul>
           </div>
         </section>
 
+        {/* Section 3 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            3. Finalités du Traitement
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section3.title")}
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-green-800 mb-2">✅ Traitements nécessaires</h3>
+              <h3 className="font-semibold text-green-800 mb-2">
+                {t("section3.necessary.title")}
+              </h3>
               <ul className="list-disc list-inside space-y-1 text-green-700">
-                <li>Gestion des commandes</li>
-                <li>Livraison des produits</li>
-                <li>Facturation et comptabilité</li>
-                <li>Service client</li>
-                <li>Gestion des retours</li>
+                <li>{t("section3.necessary.orderManagement")}</li>
+                <li>{t("section3.necessary.productDelivery")}</li>
+                <li>{t("section3.necessary.billing")}</li>
+                <li>{t("section3.necessary.customerService")}</li>
+                <li>{t("section3.necessary.returnManagement")}</li>
               </ul>
             </div>
             <div className="bg-orange-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-orange-800 mb-2">📧 Avec votre consentement</h3>
+              <h3 className="font-semibold text-orange-800 mb-2">
+                {t("section3.consent.title")}
+              </h3>
               <ul className="list-disc list-inside space-y-1 text-orange-700">
-                <li>Newsletter et promotions</li>
-                <li>Recommandations personnalisées</li>
-                <li>Études marketing</li>
-                <li>Cookies publicitaires</li>
-                <li>Réseaux sociaux</li>
+                <li>{t("section3.consent.newsletter")}</li>
+                <li>{t("section3.consent.recommendations")}</li>
+                <li>{t("section3.consent.marketing")}</li>
+                <li>{t("section3.consent.advertisingCookies")}</li>
+                <li>{t("section3.consent.socialNetworks")}</li>
               </ul>
             </div>
           </div>
         </section>
 
+        {/* Section 4 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            4. Base Légale des Traitements
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section4.title")}
           </h2>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-300 rounded-lg">
               <thead className="bg-orange-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Traitement</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Base légale</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Durée</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-800">
+                    {t("section4.tableHeaders.treatment")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-800">
+                    {t("section4.tableHeaders.legalBasis")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-800">
+                    {t("section4.tableHeaders.duration")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-t">
-                  <td className="px-4 py-3">Gestion des commandes</td>
-                  <td className="px-4 py-3">Exécution du contrat</td>
-                  <td className="px-4 py-3">5 ans</td>
+                  <td className="px-4 py-3">{t("section4.orderManagement")}</td>
+                  <td className="px-4 py-3">
+                    {t("section4.contractExecution")}
+                  </td>
+                  <td className="px-4 py-3">{t("section4.fiveYears")}</td>
                 </tr>
                 <tr className="border-t bg-gray-50">
-                  <td className="px-4 py-3">Marketing direct</td>
-                  <td className="px-4 py-3">Consentement</td>
-                  <td className="px-4 py-3">Jusqu&apos;au retrait</td>
+                  <td className="px-4 py-3">{t("section4.directMarketing")}</td>
+                  <td className="px-4 py-3">{t("section4.consent")}</td>
+                  <td className="px-4 py-3">{t("section4.untilWithdrawal")}</td>
                 </tr>
                 <tr className="border-t">
-                  <td className="px-4 py-3">Comptabilité</td>
-                  <td className="px-4 py-3">Obligation légale</td>
-                  <td className="px-4 py-3">10 ans</td>
+                  <td className="px-4 py-3">{t("section4.accounting")}</td>
+                  <td className="px-4 py-3">{t("section4.legalObligation")}</td>
+                  <td className="px-4 py-3">{t("section4.tenYears")}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
 
+        {/* Section 5 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            5. Cookies et Technologies Similaires
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section5.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
-            <h3 className="font-semibold text-gray-800 mb-2">5.1 Types de cookies utilisés</h3>
-            
+            <h3 className="font-semibold text-gray-800 mb-2">
+              {t("section5.subtitle")}
+            </h3>
+
             <div className="grid md:grid-cols-3 gap-4 mb-4">
               <div className="bg-green-50 p-4 rounded-lg text-center">
-                <h4 className="font-semibold text-green-800 mb-2">🍪 Essentiels</h4>
+                <h4 className="font-semibold text-green-800 mb-2">
+                  {t("section5.essential.title")}
+                </h4>
                 <p className="text-sm text-green-700">
-                  Fonctionnement du site, panier, session utilisateur
+                  {t("section5.essential.description")}
                 </p>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <h4 className="font-semibold text-blue-800 mb-2">📊 Analytiques</h4>
+                <h4 className="font-semibold text-blue-800 mb-2">
+                  {t("section5.analytics.title")}
+                </h4>
                 <p className="text-sm text-blue-700">
-                  Google Analytics, statistiques de visite
+                  {t("section5.analytics.description")}
                 </p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg text-center">
-                <h4 className="font-semibold text-purple-800 mb-2">🎯 Marketing</h4>
+                <h4 className="font-semibold text-purple-800 mb-2">
+                  {t("section5.marketing.title")}
+                </h4>
                 <p className="text-sm text-purple-700">
-                  Publicité ciblée, réseaux sociaux
+                  {t("section5.marketing.description")}
                 </p>
               </div>
             </div>
 
-            <p className="mb-4">
-              Vous pouvez gérer vos préférences de cookies à tout moment via notre bandeau de cookies 
-              ou les paramètres de votre navigateur.
-            </p>
+            <p className="mb-4">{t("section5.cookieManagement")}</p>
           </div>
         </section>
 
+        {/* Section 6 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            6. Partage des Données
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section6.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
-            <p className="mb-4">
-              Nous ne vendons jamais vos données personnelles. Nous pouvons les partager uniquement 
-              dans les cas suivants :
-            </p>
-            
-            <h3 className="font-semibold text-gray-800 mb-2">6.1 Prestataires de services</h3>
+            <p className="mb-4">{t("section6.intro")}</p>
+
+            <h3 className="font-semibold text-gray-800 mb-2">
+              {t("section6.serviceProviders.title")}
+            </h3>
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
               <ul className="list-disc list-inside space-y-2">
-                <li><strong>Transporteurs :</strong> La Poste, Chronopost, DPD</li>
-                <li><strong>Paiement :</strong> Stripe, PayPal</li>
-                <li><strong>Email :</strong> Mailchimp, SendGrid</li>
-                <li><strong>Hébergement :</strong> OVH (France)</li>
+                <li>
+                  <strong>{t("section6.serviceProviders.carriers")}</strong>
+                </li>
+                <li>
+                  <strong>{t("section6.serviceProviders.payment")}</strong>
+                </li>
+                <li>
+                  <strong>{t("section6.serviceProviders.email")}</strong>
+                </li>
+                <li>
+                  <strong>{t("section6.serviceProviders.hosting")}</strong>
+                </li>
               </ul>
             </div>
-            
-            <h3 className="font-semibold text-gray-800 mb-2">6.2 Obligations légales</h3>
-            <p>
-              Nous pouvons divulguer vos données si la loi l&apos;exige ou pour protéger nos droits, 
-              notre propriété ou notre sécurité.
-            </p>
+
+            <h3 className="font-semibold text-gray-800 mb-2">
+              {t("section6.legalObligations.title")}
+            </h3>
+            <p>{t("section6.legalObligations.description")}</p>
           </div>
         </section>
 
+        {/* Section 7 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            7. Sécurité des Données
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section7.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-green-800 mb-2">🔐 Mesures techniques</h3>
+                <h3 className="font-semibold text-green-800 mb-2">
+                  {t("section7.technical.title")}
+                </h3>
                 <ul className="list-disc list-inside space-y-1 text-green-700">
-                  <li>Chiffrement SSL/TLS</li>
-                  <li>Serveurs sécurisés en France</li>
-                  <li>Sauvegardes régulières</li>
-                  <li>Pare-feu et antivirus</li>
-                  <li>Accès restreint aux données</li>
+                  <li>{t("section7.technical.sslEncryption")}</li>
+                  <li>{t("section7.technical.secureServers")}</li>
+                  <li>{t("section7.technical.regularBackups")}</li>
+                  <li>{t("section7.technical.firewall")}</li>
+                  <li>{t("section7.technical.restrictedAccess")}</li>
                 </ul>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-800 mb-2">👥 Mesures organisationnelles</h3>
+                <h3 className="font-semibold text-blue-800 mb-2">
+                  {t("section7.organizational.title")}
+                </h3>
                 <ul className="list-disc list-inside space-y-1 text-blue-700">
-                  <li>Formation du personnel</li>
-                  <li>Politique de mots de passe</li>
-                  <li>Audit de sécurité régulier</li>
-                  <li>Procédure de violation</li>
-                  <li>Contrats de confidentialité</li>
+                  <li>{t("section7.organizational.staffTraining")}</li>
+                  <li>{t("section7.organizational.passwordPolicy")}</li>
+                  <li>{t("section7.organizational.securityAudit")}</li>
+                  <li>{t("section7.organizational.breachProcedure")}</li>
+                  <li>
+                    {t("section7.organizational.confidentialityContracts")}
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
         </section>
 
+        {/* Section 8 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            8. Vos Droits RGPD
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section8.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
-            <p className="mb-4">
-              Conformément au RGPD, vous disposez des droits suivants concernant vos données personnelles :
-            </p>
-            
+            <p className="mb-4">{t("section8.intro")}</p>
+
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-orange-600 font-bold text-sm">👁</span>
+                    <span className="text-secondColor font-bold text-sm">
+                      👁
+                    </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Droit d&apos;accès</h3>
-                    <p className="text-sm text-gray-600">Connaître les données que nous détenons sur vous</p>
+                    <h3 className="font-semibold text-gray-800">
+                      {t("section8.rights.access.title")}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {t("section8.rights.access.description")}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-orange-600 font-bold text-sm">✏️</span>
+                    <span className="text-secondColor font-bold text-sm">
+                      ✏️
+                    </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Droit de rectification</h3>
-                    <p className="text-sm text-gray-600">Corriger des données inexactes ou incomplètes</p>
+                    <h3 className="font-semibold text-gray-800">
+                      {t("section8.rights.rectification.title")}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {t("section8.rights.rectification.description")}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-orange-600 font-bold text-sm">🗑</span>
+                    <span className="text-secondColor font-bold text-sm">
+                      🗑
+                    </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Droit d&apos;effacement</h3>
-                    <p className="text-sm text-gray-600">Supprimer vos données dans certaines conditions</p>
+                    <h3 className="font-semibold text-gray-800">
+                      {t("section8.rights.erasure.title")}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {t("section8.rights.erasure.description")}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-orange-600 font-bold text-sm">⏸</span>
+                    <span className="text-secondColor font-bold text-sm">
+                      ⏸
+                    </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Droit de limitation</h3>
-                    <p className="text-sm text-gray-600">Limiter le traitement de vos données</p>
+                    <h3 className="font-semibold text-gray-800">
+                      {t("section8.rights.restriction.title")}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {t("section8.rights.restriction.description")}
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-orange-600 font-bold text-sm">📦</span>
+                    <span className="text-secondColor font-bold text-sm">
+                      📦
+                    </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Droit à la portabilité</h3>
-                    <p className="text-sm text-gray-600">Récupérer vos données dans un format exploitable</p>
+                    <h3 className="font-semibold text-gray-800">
+                      {t("section8.rights.portability.title")}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {t("section8.rights.portability.description")}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-orange-600 font-bold text-sm">🚫</span>
+                    <span className="text-secondColor font-bold text-sm">
+                      🚫
+                    </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Droit d&apos;opposition</h3>
-                    <p className="text-sm text-gray-600">Vous opposer à certains traitements</p>
+                    <h3 className="font-semibold text-gray-800">
+                      {t("section8.rights.objection.title")}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {t("section8.rights.objection.description")}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-orange-600 font-bold text-sm">🤖</span>
+                    <span className="text-secondColor font-bold text-sm">
+                      🤖
+                    </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Décision automatisée</h3>
-                    <p className="text-sm text-gray-600">Ne pas faire l&apos;objet de décisions automatisées</p>
+                    <h3 className="font-semibold text-gray-800">
+                      {t("section8.rights.automaticDecision.title")}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {t("section8.rights.automaticDecision.description")}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-orange-600 font-bold text-sm">❌</span>
+                    <span className="text-secondColor font-bold text-sm">
+                      ❌
+                    </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">Retrait du consentement</h3>
-                    <p className="text-sm text-gray-600">Retirer votre consentement à tout moment</p>
+                    <h3 className="font-semibold text-gray-800">
+                      {t("section8.rights.consentWithdrawal.title")}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {t("section8.rights.consentWithdrawal.description")}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mt-6">
-              <h3 className="font-semibold text-orange-800 mb-2">📧 Comment exercer vos droits ?</h3>
+              <h3 className="font-semibold text-orange-800 mb-2">
+                {t("section8.exercise.title")}
+              </h3>
               <p className="text-orange-700 mb-2">
-                Pour exercer l&apos;un de ces droits, contactez-nous :
+                {t("section8.exercise.intro")}
               </p>
               <ul className="list-disc list-inside space-y-1 text-orange-700">
-                <li>Email : dpo@accessoires-couture.fr</li>
-                <li>Courrier : DPO, 123 Rue de la Couture, 75001 Paris</li>
-                <li>Délai de réponse : 1 mois maximum</li>
+                <li>{t("section8.exercise.email")}</li>
+                <li>{t("section8.exercise.mail")}</li>
+                <li>{t("section8.exercise.responseTime")}</li>
               </ul>
             </div>
           </div>
         </section>
 
+        {/* Section 9 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            9. Transferts Internationaux
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section9.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
-            <p className="mb-4">
-              Vos données sont principalement traitées en France. Certains de nos prestataires peuvent 
-              être situés hors de l&apos;Union européenne. Dans ce cas, nous nous assurons que :
-            </p>
+            <p className="mb-4">{t("section9.intro")}</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>Le niveau de protection est adéquat (décision d&apos;adéquation de la Commission européenne)</li>
-              <li>Des garanties appropriées sont mises en place (clauses contractuelles types)</li>
-              <li>Votre consentement explicite est obtenu si nécessaire</li>
+              <li>{t("section9.adequateLevel")}</li>
+              <li>{t("section9.appropriateGuarantees")}</li>
+              <li>{t("section9.explicitConsent")}</li>
             </ul>
           </div>
         </section>
 
+        {/* Section 10 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            10. Mineurs
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section10.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
-            <p>
-              Notre site ne s&apos;adresse pas aux mineurs de moins de 16 ans. Nous ne collectons pas 
-              sciemment de données personnelles de mineurs de moins de 16 ans sans le consentement 
-              des parents ou tuteurs légaux.
-            </p>
+            <p>{t("section10.content")}</p>
           </div>
         </section>
 
+        {/* Section 11 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            11. Modifications
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section11.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
-            <p>
-              Cette politique de confidentialité peut être modifiée pour refléter les changements 
-              dans nos pratiques ou la législation. Les modifications importantes vous seront 
-              communiquées par email ou via une notification sur le site.
-            </p>
+            <p>{t("section11.content")}</p>
           </div>
         </section>
 
+        {/* Section 12 */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-4">
-            12. Réclamations
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
+            {t("section12.title")}
           </h2>
           <div className="bg-red-50 border-l-4 border-red-400 p-4">
-            <h3 className="font-semibold text-red-800 mb-2">🛡️ Autorité de contrôle</h3>
+            <h3 className="font-semibold text-red-800 mb-2">
+              {t("section12.authority.title")}
+            </h3>
             <p className="text-red-700 mb-2">
-              Si vous estimez que vos droits ne sont pas respectés, vous pouvez déposer une réclamation auprès de :
+              {t("section12.authority.intro")}
             </p>
             <div className="text-red-700">
-              <strong>CNIL (Commission Nationale de l&apos;Informatique et des Libertés)</strong><br />
-              3 Place de Fontenoy, TSA 80715<br />
-              75334 Paris Cedex 07<br />
-              Tél : 01 53 73 22 22<br />
-              Site web : www.cnil.fr
+              <strong>{t("section12.authority.name")}</strong>
+              <br />
+              {t("section12.authority.address")}
+              <br />
+              {t("section12.authority.city")}
+              <br />
+              {t("section12.authority.phone")}
+              <br />
+              {t("section12.authority.website")}
             </div>
           </div>
         </section>

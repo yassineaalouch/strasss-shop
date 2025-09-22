@@ -2,10 +2,10 @@ import { ReactNode } from "react"
 
 export interface Product {
   id: string
-  name: { arabicName: string; franshName: string }
+  name: { ar: string; fr: string }
   price: number
   originalPrice?: number
-  image: string
+  images: string[]
   rating: number
   reviews: number
   isNew?: boolean
@@ -16,8 +16,10 @@ export interface Product {
   color: string
   inStock: boolean
   quantity: number
-  description: { arabicDescription: string; franshDescription: string }
+  description: { ar: string; fr: string }
 }
+
+export type ProductForm = Omit<Product, "id" | "rating" | "reviews">
 
 export interface FormData {
   name: string
@@ -97,7 +99,10 @@ export interface ProductSorterProps {
 
 export interface Category {
   id: string
-  name: string
+  name: {
+    fr: string
+    ar: string
+  }
   image: string
   productCount: number
 }
@@ -110,10 +115,15 @@ export interface Service {
 
 export interface FAQ {
   id: string
-  question: string
-  answer: string
+  question: {
+    fr: string
+    ar: string
+  }
+  answer: {
+    fr: string
+    ar: string
+  }
 }
-
 interface ContactInfo {
   icon: React.ReactNode
   title: string
@@ -253,4 +263,38 @@ export interface UserProfile {
 export interface DashboardLayoutProps {
   children: React.ReactNode
   currentPath?: string
+}
+
+export type PackItem = {
+  product: Product
+  quantity: number
+}
+
+export type ProductPack = {
+  id: string
+  name: {
+    fr: string
+    ar: string
+  }
+  description?: {
+    fr: string
+    ar: string
+  }
+  items: PackItem[]
+  totalPrice: number
+  discountPrice?: number
+  images?: string[]
+}
+
+export interface PackFormData {
+  name: {
+    fr: string
+    ar: string
+  }
+  description: {
+    fr: string
+    ar: string
+  }
+  discountPrice: string
+  images: string[]
 }
