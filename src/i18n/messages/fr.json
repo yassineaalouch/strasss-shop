@@ -2,6 +2,12 @@
   "HomePage": {
     "title": "Découvrez nos accessoires de couture de qualité",
     "description": "Fils, aiguilles, ciseaux et tout le nécessaire pour vos projets de couture. Livraison rapide et fiable.",
+    "Badge": "Qualité Premium • Livraison Rapide",
+    "StatistiquesRapides": {
+      "Quality": "Qualité",
+      "Livraison": "Livraison",
+      "Products": "Produits"
+    },
     "CategoriesSection": {
       "title": "Nos Catégories",
       "subtitle": "Découvrez notre gamme complète de couture et accessoires adaptés à tous vos besoins",

@@ -174,7 +174,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {!sidebarCollapsed && (
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-firstColor font-bold text-lg">S</span>
+                <Image
+                  src="/logo.png"
+                  alt="logo"
+                  height={32}
+                  width={32}
+                  className="w-full h-full object-cover rounded-lg animate-bounce"
+                />
               </div>
               <div>
                 <h1 className="text-white font-bold text-lg">Strass Shop</h1>
@@ -185,7 +191,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           {sidebarCollapsed && (
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-firstColor font-bold text-lg">S</span>
+              <Image
+                src="/logo.png"
+                alt="logo"
+                height={32}
+                width={32}
+                className="w-full h-full object-cover rounded-lg animate-bounce"
+              />
             </div>
           )}
 

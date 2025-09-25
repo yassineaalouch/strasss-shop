@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "dashboard"
 }
 
-export default function RootLayout({
+export default function DashboardGlobalLayout({
   children
 }: Readonly<{
   children: React.ReactNode
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="min-h-screen">
           <DashboardLayout currentPath="/dashboard">{children}</DashboardLayout>

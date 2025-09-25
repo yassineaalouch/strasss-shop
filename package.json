@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.894.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.542.0",
+    "mongoose": "^8.18.2",
     "next": "15.5.2",
     "next-intl": "^4.3.9",
     "react": "19.1.0",

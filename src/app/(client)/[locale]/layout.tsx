@@ -6,7 +6,7 @@ import Footer from "@/components/Footer"
 import WhatsAppButton from "@/components/WhatsAppButton"
 import SocialMediaCard from "@/components/contact/SocialMediaCard"
 import { NextIntlClientProvider } from "next-intl"
-import { CartProvider } from "../context/CartContext"
+import { CartProvider } from "../../context/CartContext"
 import { routing } from "@/i18n/routing"
 import { getMessages } from "next-intl/server"
 import { ReactNode, ReactElement } from "react"
@@ -43,7 +43,7 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
 }
 
-export default async function RootLayout({
+export default async function ClientLayout({
   children,
   params
 }: {
@@ -62,7 +62,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
             <Header />
-            <div className="min-h-screen">{children}</div>
+            <div className="min-h-screen md:mt-5">{children}</div>
             <SocialMediaCard />
             <WhatsAppButton />
             <Footer />
