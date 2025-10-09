@@ -52,7 +52,7 @@ export default function Home() {
 
       {imageUrl && (
         <div className="mt-4">
-          <img src={imageUrl} alt="Uploaded" width={300} />
+          {/* <img src={imageUrl} alt="Uploaded" width={300} /> */}
           <button
             onClick={handleDelete}
             className="px-4 py-2 mt-2 bg-red-500 text-white rounded"

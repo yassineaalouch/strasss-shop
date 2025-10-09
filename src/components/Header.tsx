@@ -7,10 +7,7 @@ import {
   X,
   Home,
   Store,
-  Scissors,
-  Facebook,
-  Instagram,
-  Youtube
+  Scissors
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
@@ -26,26 +23,7 @@ const Header: React.FC = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
-  const socialMediaLinks = [
-    {
-      url: "https://facebook.com",
-      icon: Facebook,
-      className: "text-blue-600 hover:text-blue-800",
-      name: "Facebook"
-    },
-    {
-      url: "https://instagram.com",
-      icon: Instagram,
-      className: "text-pink-500 hover:text-pink-700",
-      name: "Instagram"
-    },
-    {
-      url: "https://youtube.com",
-      icon: Youtube,
-      className: "text-red-600 hover:text-red-800",
-      name: "YouTube"
-    }
-  ]
+
   // État du panier
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
