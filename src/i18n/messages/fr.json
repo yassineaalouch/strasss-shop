@@ -493,6 +493,20 @@
       "shippingCost": "Frais de livraison"
     }
   },
+  "thankYou": {
+    "title": "Merci pour votre commande !",
+    "subtitle": "Votre commande a été enregistrée avec succès",
+    "orderConfirmed": "Confirmation de commande",
+    "orderMessage": "Nous avons bien reçu votre commande et nous la traitons actuellement. Vous recevrez un e-mail de confirmation dans quelques instants.",
+    "phoneCallTitle": "Confirmation téléphonique",
+    "phoneCallMessage": "Notre équipe vous contactera par téléphone dans les prochaines heures pour confirmer les détails de votre commande et répondre à toutes vos questions.",
+    "timeframe": "Délai : quelques heures",
+    "nextStepsTitle": "Prochaines étapes",
+    "step1": "Vous recevrez un e-mail de confirmation",
+    "step2": "Notre équipe vous appellera pour confirmer votre commande",
+    "step3": "Votre commande sera préparée et expédiée",
+    "backButton": "Retour à l'accueil"
+  },
   "CheckoutForm": {
     "header": {
       "title": "Vos informations",

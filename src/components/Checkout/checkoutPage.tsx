@@ -287,7 +287,7 @@ export default function CheckoutPage() {
 
         // Redirection après 3 secondes
         setTimeout(() => {
-          router.push(`/order-confirmation/${response.data.orderId}`)
+          router.push(`/order-confirmation`)
         }, 3000)
       } else {
         throw new Error(response.data.message || "Erreur inconnue")
