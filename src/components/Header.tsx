@@ -7,10 +7,14 @@ import {
   X,
   Home,
   Store,
-  Scissors
+  Scissors,
+  Facebook,
+  Instagram,
+  Youtube
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import SideCart from "./CartContext"
 import { CartItem } from "@/types/type"
 import { FREE_SHIPPING_THRESHOLD } from "@/data/data"
@@ -18,9 +22,30 @@ import Image from "next/image"
 import LanguageToggle from "./LanguageToggle"
 
 const Header: React.FC = () => {
+  const t = useTranslations("Header")
+
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
-
+  const socialMediaLinks = [
+    {
+      url: "https://facebook.com",
+      icon: Facebook,
+      className: "text-blue-600 hover:text-blue-800",
+      name: "Facebook"
+    },
+    {
+      url: "https://instagram.com",
+      icon: Instagram,
+      className: "text-pink-500 hover:text-pink-700",
+      name: "Instagram"
+    },
+    {
+      url: "https://youtube.com",
+      icon: Youtube,
+      className: "text-red-600 hover:text-red-800",
+      name: "YouTube"
+    }
+  ]
   // État du panier
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
@@ -76,15 +101,24 @@ const Header: React.FC = () => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
   const menuItems = [
-    { href: "/", label: "Accueil", icon: Home, delay: "delay-100" },
-    { href: "/shop", label: "Boutique", icon: Store, delay: "delay-200" },
-    { href: "/shop", label: "Tissus", icon: Scissors, delay: "delay-300" }
+    { href: "/", label: t("navigation.home"), icon: Home, delay: "delay-100" },
+    {
+      href: "/shop",
+      label: t("navigation.shop"),
+      icon: Store,
+      delay: "delay-200"
+    },
+    {
+      href: "/shop",
+      label: t("navigation.fabrics"),
+      icon: Scissors,
+      delay: "delay-300"
+    }
   ]
-
   return (
     <>
       {/* Header fixe compact */}
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+      <div className="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
         {/* Top Bar - Plus compact */}
         <div className="bg-firstColor text-white py-1 hidden sm:block">
           <div className="container mx-auto px-4">
@@ -92,18 +126,19 @@ const Header: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center">
                   <Phone size={12} className="mr-1" />
-                  <span>+212 670366581</span>
+                  <span>{t("contact.phone")}</span>
                 </div>
                 <div className="flex items-center">
                   <Mail size={12} className="mr-1" />
-                  <span>Denon_taha@hotmail.fr</span>
+                  <span>{t("contact.email")}</span>
                 </div>
               </div>
               <div>
                 <span>
-                  Livraison gratuite à partir de {FREE_SHIPPING_THRESHOLD} DH
+                  {t("freeShipping", { threshold: FREE_SHIPPING_THRESHOLD })}
                 </span>
               </div>
+              s{" "}
             </div>
           </div>
         </div>
@@ -127,7 +162,7 @@ const Header: React.FC = () => {
                   STRASS SHOP
                 </h1>
                 <p className="text-xs text-gray-400 hidden sm:block">
-                  Tout pour vos créations couture
+                  {t("tagline")}
                 </p>
               </div>
             </div>
@@ -143,9 +178,10 @@ const Header: React.FC = () => {
               <button
                 onClick={toggleCart}
                 className="flex items-center text-gray-700 hover:text-firstColor relative transition-colors duration-200"
+                aria-label={t("cart")}
               >
                 <ShoppingCart size={20} />
-                <span className="hidden sm:inline ml-1">Panier</span>
+                <span className="hidden sm:inline ml-1">{t("cart")}</span>
                 {totalItems > 0 && (
                   <span className="absolute -top-2 -right-2 bg-firstColor text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium animate-pulse">
                     {totalItems}
@@ -157,6 +193,7 @@ const Header: React.FC = () => {
               <button
                 onClick={toggleMenu}
                 className="lg:hidden p-2 text-gray-700 hover:text-firstColor relative z-50 transition-all duration-300"
+                aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
               >
                 <div
                   className={`transform transition-all duration-300 ${
@@ -171,7 +208,7 @@ const Header: React.FC = () => {
         </div>
 
         {/* Navigation Desktop - Plus compact */}
-        <nav className="bg-firstColor text-white py-2 hidden lg:block">
+        <div className="bg-firstColor text-white py-2 hidden lg:block">
           <div className="container mx-auto px-4">
             <ul className="flex justify-center items-center space-x-8">
               <li>
@@ -179,7 +216,7 @@ const Header: React.FC = () => {
                   href="/"
                   className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
                 >
-                  Accueil
+                  {t("navigation.home")}
                 </Link>
               </li>
               <li>
@@ -187,7 +224,7 @@ const Header: React.FC = () => {
                   href="/shop"
                   className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
                 >
-                  Boutique
+                  {t("navigation.shop")}
                 </Link>
               </li>
               <li>
@@ -195,13 +232,13 @@ const Header: React.FC = () => {
                   href="/shop"
                   className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
                 >
-                  Tissus
+                  {t("navigation.fabrics")}
                 </Link>
               </li>
             </ul>
           </div>
-        </nav>
-      </header>
+        </div>
+      </div>
 
       {/* Menu Mobile Simple */}
       <div
@@ -243,11 +280,11 @@ const Header: React.FC = () => {
           <div className="mt-16 text-center space-y-4">
             <div className="flex items-center justify-center text-gray-600">
               <Phone size={18} className="mr-2" />
-              <span>+212 670366581</span>
+              <span>{t("contact.phone")}</span>
             </div>
             <div className="flex items-center justify-center text-gray-600">
               <Mail size={18} className="mr-2" />
-              <span>Denon_taha@hotmail.fr</span>
+              <span>{t("contact.email")}</span>
             </div>
           </div>
 
@@ -272,4 +309,5 @@ const Header: React.FC = () => {
     </>
   )
 }
+
 export default Header

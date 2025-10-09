@@ -18,6 +18,21 @@
       "subtitle": "المنتجات الأكثر تقديرًا من قبل عملائنا"
     }
   },
+  "Header": {
+    "contact": {
+      "phone": "+212 670366581",
+      "email": "Denon_taha@hotmail.fr"
+    },
+    "freeShipping": "شحن مجاني ابتداءً من {threshold} درهم",
+    "tagline": "كل ما تحتاجه لمشاريع الخياطة",
+    "cart": "السلة",
+    "navigation": {
+      "home": "الرئيسية",
+      "shop": "المتجر",
+      "fabrics": "الأقمشة"
+    },
+    "security": "اتصال آمن"
+  },
   "Footer": {
     "company": {
       "name": "شوب ستراس",
@@ -473,8 +488,13 @@
       "measurement": "قياس"
     },
     "checkout": {
-      "success": "شكراً {customerName}! طلبك بقيمة {total} MAD سيتم توصيله إلى {city}.",
-      "error": "حدث خطأ. يرجى المحاولة مرة أخرى."
+      "success": "شكراً {customerName}! سيتم توصيل طلبك بقيمة {total} درهم إلى {city}.",
+      "emptyCart": "السلة فارغة",
+      "error": "خطأ أثناء تسجيل الطلب",
+      "errorTitle": "خطأ",
+      "successTitle": "!تم تأكيد الطلب",
+      "successMessage": "تم تسجيل طلبك بنجاح.",
+      "retry": "إعادة المحاولة"
     },
     "cart": {
       "freeShipping": "توصيل مجاني من {FREE_SHIPPING_THRESHOLD} MAD",
@@ -697,6 +717,78 @@
     "description": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
     "button": {
       "home": "العودة للرئيسية"
+    }
+  },
+  "ShopPage": {
+    "ProductFilter": {
+      "title": "المرشحات",
+      "reset": "إعادة تعيين",
+      "sections": {
+        "price": {
+          "title": "السعر (درهم)",
+          "min": "الحد الأدنى",
+          "max": "الحد الأقصى"
+        },
+        "categories": {
+          "title": "الفئات"
+        },
+        "material": {
+          "title": "المادة"
+        },
+        "height": {
+          "title": "الارتفاع"
+        },
+        "color": {
+          "title": "اللون"
+        },
+        "options": {
+          "title": "خيارات",
+          "inStock": "متوفر في المخزون فقط",
+          "onSale": "في التخفيضات"
+        },
+        "rating": {
+          "title": "الحد الأدنى للتقييم"
+        }
+      },
+      "activeFilters": "المرشحات النشطة:",
+      "close": "إغلاق"
+    },
+    "ProductSorter": {
+      "title": "متجرنا",
+      "productsFound": {
+        "single": "تم العثور على منتج واحد",
+        "plural": "تم العثور على {count} منتجات"
+      },
+      "filters": "المرشحات",
+      "sortBy": "ترتيب حسب:",
+      "sortOptions": {
+        "nameAsc": "الاسم أ-ي",
+        "nameDesc": "الاسم ي-أ",
+        "priceAsc": "السعر من الأقل للأكثر",
+        "priceDesc": "السعر من الأكثر للأقل",
+        "ratingDesc": "الأعلى تقييماً",
+        "newest": "الأحدث"
+      },
+      "viewMode": {
+        "label": "العرض:",
+        "grid": "عرض شبكي",
+        "list": "عرض قائمة"
+      },
+      "pagination": {
+        "previous": "السابق",
+        "previousShort": "سابق",
+        "next": "التالي",
+        "nextShort": "تالي"
+      }
+    },
+    "ShopContent": {
+      "activeFilters": "المرشحات النشطة:",
+      "clearAll": "مسح الكل",
+      "noProductsFound": {
+        "title": "لم يتم العثور على منتجات",
+        "description": "حاول تعديل المرشحات أو البحث",
+        "resetButton": "إعادة تعيين المرشحات"
+      }
     }
   }
 }

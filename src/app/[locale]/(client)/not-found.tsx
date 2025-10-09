@@ -1,11 +1,11 @@
 "use client"
 import Link from "next/link"
-import { Home, Search, ArrowLeft, Scissors, Package } from "lucide-react"
+import { Home, ArrowLeft, Scissors, Package } from "lucide-react"
 
 const NotFoundPage: React.FC = () => {
+  const currentYear = new Date().getFullYear()
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Éléments décoratifs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-firstColor/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-secondColor/10 rounded-full blur-3xl animate-bounce"></div>
@@ -14,7 +14,6 @@ const NotFoundPage: React.FC = () => {
           style={{ animationDelay: "1s" }}
         ></div>
 
-        {/* Motifs de couture flottants */}
         <Scissors
           className="absolute top-20 right-20 text-firstColor/20 w-8 h-8 animate-spin"
           style={{ animationDuration: "8s" }}
@@ -23,17 +22,15 @@ const NotFoundPage: React.FC = () => {
       </div>
 
       <div className="relative z-10 text-center max-w-2xl mx-auto">
-        {/* Numéro 404 stylisé */}
         <div className="relative mb-8">
           <h1 className="text-8xl sm:text-9xl md:text-[12rem] font-bold bg-gradient-to-r from-firstColor via-secondColor to-orange-600 bg-clip-text text-transparent leading-none">
-            40444
+            404
           </h1>
           <div className="absolute inset-0 text-8xl sm:text-9xl md:text-[12rem] font-bold text-firstColor/10 blur-sm leading-none">
             404
           </div>
         </div>
 
-        {/* Message principal */}
         <div className="mb-8 space-y-4">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">
             Page Introuvable
@@ -43,29 +40,6 @@ const NotFoundPage: React.FC = () => {
             a été déplacée. Peut-être cherchiez-vous nos magnifiques accessoires
             de couture ?
           </p>
-        </div>
-
-        {/* Suggestions d'actions */}
-        <div className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-firstColor/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <Home className="w-8 h-8 text-firstColor mx-auto mb-2" />
-            <h3 className="font-semibold text-gray-800 text-sm">Accueil</h3>
-            <p className="text-xs text-gray-600 mt-1">
-              Retour à la page principale
-            </p>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-firstColor/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <Package className="w-8 h-8 text-firstColor mx-auto mb-2" />
-            <h3 className="font-semibold text-gray-800 text-sm">Boutique</h3>
-            <p className="text-xs text-gray-600 mt-1">Découvrir nos produits</p>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-firstColor/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <Search className="w-8 h-8 text-firstColor mx-auto mb-2" />
-            <h3 className="font-semibold text-gray-800 text-sm">Recherche</h3>
-            <p className="text-xs text-gray-600 mt-1">
-              Trouver ce que vous voulez
-            </p>
-          </div>
         </div>
 
         {/* Boutons d'action */}
@@ -127,10 +101,9 @@ const NotFoundPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-gray-500">
-            © 2025 STRASS SHOP - Tout pour vos créations couture
+            © {currentYear} STRASS SHOP - Tout pour vos créations couture
           </p>
         </div>
       </div>

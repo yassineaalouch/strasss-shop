@@ -18,6 +18,21 @@
       "subtitle": "Les produits les plus appréciés par nos clients"
     }
   },
+  "Header": {
+    "contact": {
+      "phone": "+212 670366581",
+      "email": "Denon_taha@hotmail.fr"
+    },
+    "freeShipping": "Livraison gratuite à partir de {threshold} DH",
+    "tagline": "Tout pour vos créations couture",
+    "cart": "Panier",
+    "navigation": {
+      "home": "Accueil",
+      "shop": "Boutique",
+      "fabrics": "Tissus"
+    },
+    "security": "Connexion sécurisée"
+  },
   "Footer": {
     "company": {
       "name": "Strass Shop",
@@ -466,7 +481,12 @@
     },
     "checkout": {
       "success": "Merci {customerName} ! Votre commande de {total} MAD sera livrée à {city}.",
-      "error": "Une erreur est survenue. Veuillez réessayer."
+      "emptyCart": "Le panier est vide",
+      "error": "Erreur lors de l'enregistrement de la commande",
+      "errorTitle": "Erreur",
+      "successTitle": "Commande confirmée !",
+      "successMessage": "Votre commande a été enregistrée avec succès.",
+      "retry": "Réessayer"
     },
     "cart": {
       "freeShipping": "Livraison gratuite dès {FREE_SHIPPING_THRESHOLD} MAD",
@@ -689,6 +709,78 @@
     "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
     "button": {
       "home": "Retour à l'accueil"
+    }
+  },
+  "ShopPage": {
+    "ProductFilter": {
+      "title": "Filtres",
+      "reset": "Réinitialiser",
+      "sections": {
+        "price": {
+          "title": "Prix (DH)",
+          "min": "Min",
+          "max": "Max"
+        },
+        "categories": {
+          "title": "Catégories"
+        },
+        "material": {
+          "title": "Matériau"
+        },
+        "height": {
+          "title": "Hauteur"
+        },
+        "color": {
+          "title": "Couleur"
+        },
+        "options": {
+          "title": "Options",
+          "inStock": "En stock uniquement",
+          "onSale": "En promotion"
+        },
+        "rating": {
+          "title": "Note minimale"
+        }
+      },
+      "activeFilters": "Filtres actifs:",
+      "close": "Fermer"
+    },
+    "ProductSorter": {
+      "title": "Notre Boutique",
+      "productsFound": {
+        "single": "{count} produit trouvé",
+        "plural": "{count} produits trouvés"
+      },
+      "filters": "Filtres",
+      "sortBy": "Trier par:",
+      "sortOptions": {
+        "nameAsc": "Nom A-Z",
+        "nameDesc": "Nom Z-A",
+        "priceAsc": "Prix croissant",
+        "priceDesc": "Prix décroissant",
+        "ratingDesc": "Mieux notés",
+        "newest": "Plus récents"
+      },
+      "viewMode": {
+        "label": "Vue:",
+        "grid": "Vue grille",
+        "list": "Vue liste"
+      },
+      "pagination": {
+        "previous": "Précédent",
+        "previousShort": "Préc.",
+        "next": "Suivant",
+        "nextShort": "Suiv."
+      }
+    },
+    "ShopContent": {
+      "activeFilters": "Filtres actifs:",
+      "clearAll": "Tout effacer",
+      "noProductsFound": {
+        "title": "Aucun produit trouvé",
+        "description": "Essayez de modifier vos filtres ou votre recherche",
+        "resetButton": "Réinitialiser les filtres"
+      }
     }
   }
 }

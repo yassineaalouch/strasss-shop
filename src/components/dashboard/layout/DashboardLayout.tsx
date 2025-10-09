@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { signOut } from "next-auth/react"
 import {
   Menu,
   X,
@@ -434,6 +435,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </button>
 
             <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
               className={`
                 w-full flex items-center text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors group relative
                 ${sidebarCollapsed ? "justify-center px-3 py-3" : "px-3 py-2"}
