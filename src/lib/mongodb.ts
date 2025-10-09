@@ -1,8 +1,8 @@
 import mongoose, { Mongoose } from "mongoose"
 
-const MONGODB_URI = process.env.MONGODB_URI!
+const URI = process.env.MONGODB_URI!
 
-if (!MONGODB_URI) {
+if (!URI) {
   throw new Error(
     "❌ Please define the MONGODB_URI environment variable inside .env.local"
   )
@@ -30,7 +30,7 @@ export async function connectToDatabase(): Promise<Mongoose> {
 
   if (!cached.promise) {
     cached.promise = mongoose
-      .connect(MONGODB_URI, {
+      .connect(URI, {
         dbName: "strass-shop" // optionnel si déjà dans l’URI
       })
       .then((mongoose) => {
