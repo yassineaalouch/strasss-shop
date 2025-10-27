@@ -4,7 +4,7 @@ export interface FilterState {
   characteristics: string[]
   inStock: boolean
   onSale: boolean
-  isNew: boolean
+  isNewCategory: boolean
 }
 
 export interface ProductFilterProps {

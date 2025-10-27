@@ -76,7 +76,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
       characteristics: [],
       inStock: false,
       onSale: false,
-      isNew: false
+      isNewCategory: false
     })
   }
 
@@ -91,7 +91,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     filters.characteristics.length > 0 ||
     filters.inStock ||
     filters.onSale ||
-    filters.isNew
+    filters.isNewCategory
 
   return (
     <>
@@ -305,9 +305,12 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
               <label className="flex items-baseline gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
                 <input
                   type="checkbox"
-                  checked={filters.isNew}
+                  checked={filters.isNewCategory}
                   onChange={(e) =>
-                    onFiltersChange({ ...filters, isNew: e.target.checked })
+                    onFiltersChange({
+                      ...filters,
+                      isNewCategory: e.target.checked
+                    })
                   }
                   className="mr-3 text-yellow-500 focus:ring-yellow-500 rounded"
                 />

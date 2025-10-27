@@ -326,7 +326,7 @@ export interface FilterState {
   characteristics: string[]
   inStock: boolean
   onSale: boolean
-  isNew: boolean
+  isNewCategory: boolean
 }
 
 interface ShopContentProps {
@@ -344,7 +344,7 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
     characteristics: [],
     inStock: false,
     onSale: false,
-    isNew: false
+    isNewCategory: false
   })
   const [sortBy, setSortBy] = useState<string>("name-asc")
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false)
@@ -394,7 +394,7 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
       if (filters.onSale && !product.isOnSale) return false
 
       // Nouveauté
-      if (filters.isNew && !product.isNew) return false
+      if (filters.isNewCategory && !product.isNewProduct) return false
 
       return true
     })
@@ -435,7 +435,7 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
       characteristics: [],
       inStock: false,
       onSale: false,
-      isNew: false
+      isNewCategory: false
     })
     setCurrentPage(1)
   }
@@ -455,7 +455,7 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
     filters.characteristics.length > 0 ||
     filters.inStock ||
     filters.onSale ||
-    filters.isNew
+    filters.isNewCategory
 
   // 🧩 Suppression filtre
 
@@ -518,7 +518,7 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
               </span>
             ))}
 
-            {(filters.inStock || filters.onSale || filters.isNew) && (
+            {(filters.inStock || filters.onSale || filters.isNewCategory) && (
               <button
                 onClick={resetAllFilters}
                 className="text-sm text-red-600 hover:text-red-800 underline"

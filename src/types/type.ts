@@ -29,7 +29,7 @@ export interface FormData {
   image: string
   rating: string
   reviews: string
-  isNew: boolean
+  isNewProduct: boolean
   isOnSale: boolean
   category: string
   material: string
