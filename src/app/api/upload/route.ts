@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
-import { uploadFileToS3 } from "@/lib/s3"
+import { uploadMultipleFilesToS3 } from "@/lib/s3"
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData()
-  const file = formData.get("file") as File
+  try {
+    const formData = await req.formData()
+    const files = formData.getAll("files") as File[]
 
-  if (!file)
-    return NextResponse.json({ error: "No file uploaded" }, { status: 400 })
+    if (!files || files.length === 0) {
+      return NextResponse.json({ error: "Aucun fichier reçu" }, { status: 400 })
+    }
 
-  const bytes = await file.arrayBuffer()
-  const buffer = Buffer.from(bytes)
+    const urls = await uploadMultipleFilesToS3(files)
 
-  const fileName = `${Date.now()}-${file.name}`
-  const url = await uploadFileToS3(buffer, fileName, file.type)
-
-  return NextResponse.json({ url })
+    return NextResponse.json({ success: true, urls })
+  } catch (error) {
+    console.error("S3 Upload error:", error)
+    return NextResponse.json(
+      { error: "Erreur lors du téléversement" },
+      { status: 500 }
+    )
+  }
 }

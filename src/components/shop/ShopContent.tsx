@@ -2,19 +2,19 @@
 
 // import React, { useState, useMemo } from "react"
 // import { Search, X } from "lucide-react"
+// import { useTranslations, useLocale } from "next-intl"
 // import ProductFilter from "./ProductFilter"
 // import ProductSorter from "./ProductSorter"
 // import ProductCard from "./ProductCard"
 // import { FilterState, ShopContentProps } from "@/types/type"
-// import { useLocale } from "next-intl"
 
 // const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
+//   const t = useTranslations("ShopPage.ShopContent")
+//   const locale = useLocale() as "ar" | "fr"
+
 //   const [filters, setFilters] = useState<FilterState>({
 //     category: [],
 //     priceRange: [0, 5000],
-//     material: [],
-//     height: [],
-//     color: [],
 //     inStock: false,
 //     onSale: false,
 //     rating: 0
@@ -33,7 +33,7 @@
 //       // Filtre par catégorie
 //       if (
 //         filters.category.length > 0 &&
-//         !filters.category.includes(product.category)
+//         !filters.category.includes(product.category?.name[locale] ?? "")
 //       ) {
 //         return false
 //       }
@@ -43,27 +43,6 @@
 //         product.price < filters.priceRange[0] ||
 //         product.price > filters.priceRange[1]
 //       ) {
-//         return false
-//       }
-
-//       // Filtre par matériau
-//       if (
-//         filters.material.length > 0 &&
-//         !filters.material.includes(product.material)
-//       ) {
-//         return false
-//       }
-
-//       // Filtre par hauteur
-//       if (
-//         filters.height.length > 0 &&
-//         !filters.height.includes(product.height)
-//       ) {
-//         return false
-//       }
-
-//       // Filtre par couleur
-//       if (filters.color.length > 0 && !filters.color.includes(product.color)) {
 //         return false
 //       }
 
@@ -77,18 +56,11 @@
 //         return false
 //       }
 
-//       // Filtre par note
-//       if (filters.rating > 0 && product.rating < filters.rating) {
-//         return false
-//       }
-
 //       return true
 //     })
 //   }, [products, filters])
 
 //   // Tri des produits avec useMemo
-//   const locale = useLocale()
-
 //   const sortedProducts = useMemo(() => {
 //     const sorted = [...filteredProducts]
 
@@ -107,8 +79,6 @@
 //         return sorted.sort((a, b) => a.price - b.price)
 //       case "price-desc":
 //         return sorted.sort((a, b) => b.price - a.price)
-//       case "rating-desc":
-//         return sorted.sort((a, b) => b.rating - a.rating)
 //       case "newest":
 //         return sorted.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0))
 //       default:
@@ -123,6 +93,21 @@
 //     startIndex,
 //     startIndex + productsPerPage
 //   )
+
+//   // Fonction pour réinitialiser tous les filtres
+//   const resetAllFilters = () => {
+//     setFilters({
+//       category: [],
+//       priceRange: [0, 5000],
+//       material: [],
+//       height: [],
+//       color: [],
+//       inStock: false,
+//       onSale: false,
+//       rating: 0
+//     })
+//     setCurrentPage(1)
+//   }
 
 //   // Handlers
 //   const handleFiltersChange = (newFilters: FilterState) => {
@@ -151,18 +136,28 @@
 //     setCurrentPage(page)
 //   }
 
+//   // Fonction pour supprimer un filtre spécifique
+//   const removeFilter = (type: keyof FilterState, value: string) => {
+//     const newFilters = { ...filters }
+
+//     if (Array.isArray(newFilters[type])) {
+//       ;(newFilters[type] as string[]) = (newFilters[type] as string[]).filter(
+//         (item) => item !== value
+//       )
+//     }
+
+//     handleFiltersChange(newFilters)
+//   }
+
 //   // Vérifier si des filtres sont actifs
 //   const hasActiveFilters =
 //     filters.category.length > 0 ||
-//     filters.material.length > 0 ||
-//     filters.height.length > 0 ||
-//     filters.color.length > 0 ||
 //     filters.inStock ||
 //     filters.onSale ||
 //     filters.rating > 0
 
 //   return (
-//     <div className="flex flex-col lg:flex-row gap-8">
+//     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
 //       {/* Sidebar Filtres */}
 //       <ProductFilter
 //         products={products}
@@ -173,7 +168,7 @@
 //       />
 
 //       {/* Contenu Principal */}
-//       <div className="flex-1">
+//       <div className="flex-1 min-w-0">
 //         {/* Header avec tri et contrôles */}
 //         <ProductSorter
 //           totalProducts={sortedProducts.length}
@@ -191,105 +186,85 @@
 //         {hasActiveFilters && (
 //           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
 //             <div className="flex flex-wrap items-center gap-2">
-//               <span className="text-sm text-gray-600">Filtres actifs:</span>
+//               <span className="text-sm text-gray-600 font-medium">
+//                 {t("activeFilters")}
+//               </span>
 
+//               {/* Filtres de catégorie */}
 //               {filters.category.map((category) => (
 //                 <span
-//                   key={category}
-//                   className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs flex items-center"
+//                   key={`category-${category}`}
+//                   className="bg-firstColor/10 text-firstColor px-3 py-1 rounded-full text-xs flex items-center border border-firstColor/20 transition-all duration-200 hover:bg-firstColor/20"
 //                 >
 //                   {category}
 //                   <button
-//                     onClick={() =>
-//                       setFilters({
-//                         ...filters,
-//                         category: filters.category.filter((c) => c !== category)
-//                       })
-//                     }
-//                     className="ml-1 hover:text-green-600"
+//                     onClick={() => removeFilter("category", category)}
+//                     className="ml-2 hover:text-secondColor transition-colors duration-200"
+//                     aria-label={`Supprimer le filtre ${category}`}
 //                   >
 //                     <X size={12} />
 //                   </button>
 //                 </span>
 //               ))}
 
+//               {/* Filtres de matériau */}
 //               {filters.material.map((material) => (
 //                 <span
-//                   key={material}
-//                   className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs flex items-center"
+//                   key={`material-${material}`}
+//                   className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs flex items-center border border-blue-200 transition-all duration-200 hover:bg-blue-100"
 //                 >
 //                   {material}
 //                   <button
-//                     onClick={() =>
-//                       setFilters({
-//                         ...filters,
-//                         material: filters.material.filter((m) => m !== material)
-//                       })
-//                     }
-//                     className="ml-1 hover:text-blue-600"
+//                     onClick={() => removeFilter("material", material)}
+//                     className="ml-2 hover:text-blue-900 transition-colors duration-200"
+//                     aria-label={`Supprimer le filtre ${material}`}
 //                   >
 //                     <X size={12} />
 //                   </button>
 //                 </span>
 //               ))}
 
+//               {/* Filtres de hauteur */}
 //               {filters.height.map((height) => (
 //                 <span
-//                   key={height}
-//                   className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs flex items-center"
+//                   key={`height-${height}`}
+//                   className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs flex items-center border border-purple-200 transition-all duration-200 hover:bg-purple-100"
 //                 >
 //                   {height}
 //                   <button
-//                     onClick={() =>
-//                       setFilters({
-//                         ...filters,
-//                         height: filters.height.filter((h) => h !== height)
-//                       })
-//                     }
-//                     className="ml-1 hover:text-purple-600"
+//                     onClick={() => removeFilter("height", height)}
+//                     className="ml-2 hover:text-purple-900 transition-colors duration-200"
+//                     aria-label={`Supprimer le filtre ${height}`}
 //                   >
 //                     <X size={12} />
 //                   </button>
 //                 </span>
 //               ))}
 
+//               {/* Filtres de couleur */}
 //               {filters.color.map((color) => (
 //                 <span
-//                   key={color}
-//                   className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs flex items-center"
+//                   key={`color-${color}`}
+//                   className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-xs flex items-center border border-yellow-200 transition-all duration-200 hover:bg-yellow-100"
 //                 >
 //                   {color}
 //                   <button
-//                     onClick={() =>
-//                       setFilters({
-//                         ...filters,
-//                         color: filters.color.filter((c) => c !== color)
-//                       })
-//                     }
-//                     className="ml-1 hover:text-yellow-600"
+//                     onClick={() => removeFilter("color", color)}
+//                     className="ml-2 hover:text-yellow-900 transition-colors duration-200"
+//                     aria-label={`Supprimer le filtre ${color}`}
 //                   >
 //                     <X size={12} />
 //                   </button>
 //                 </span>
 //               ))}
 
-//               {(filters.inStock || filters.onSale || filters.rating > 0) && (
+//               {/* Bouton tout effacer */}
+//               {hasActiveFilters && (
 //                 <button
-//                   onClick={() =>
-//                     setFilters({
-//                       category: [],
-//                       priceRange: [0, 5000],
-//                       material: [],
-//                       height: [],
-//                       color: [],
-//                       inStock: false,
-//                       onSale: false,
-//                       rating: 0
-//                     })
-//                   }
-//                   className="text-sm text-red-600 hover:text-red-800 underline"
+//                   onClick={resetAllFilters}
+//                   className="text-sm text-red-600 hover:text-red-800 underline underline-offset-2 transition-colors duration-200 ml-2"
 //                 >
-//                   Tout effacer
+//                   {t("clearAll")}
 //                 </button>
 //               )}
 //             </div>
@@ -301,45 +276,31 @@
 //           <div
 //             className={
 //               viewMode === "grid"
-//                 ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+//                 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6"
 //                 : "space-y-4"
 //             }
 //           >
-//             {paginatedProducts.map((product) => (
-//               <ProductCard
-//                 key={product.id}
-//                 product={product}
-//                 viewMode={viewMode}
-//               />
+//             {paginatedProducts.map((product, index) => (
+//               <ProductCard key={index} product={product} viewMode={viewMode} />
 //             ))}
 //           </div>
 //         ) : (
-//           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-//             <div className="text-gray-400 mb-4">
-//               <Search size={64} className="mx-auto" />
+//           /* État vide avec design amélioré */
+//           <div className="bg-white rounded-lg shadow-sm p-8 sm:p-12 text-center">
+//             <div className="text-gray-300 mb-6">
+//               <Search size={48} className="mx-auto sm:w-16 sm:h-16" />
 //             </div>
-//             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-//               Aucun produit trouvé
+//             <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
+//               {t("noProductsFound.title")}
 //             </h3>
-//             <p className="text-gray-600 mb-4">
-//               Essayez de modifier vos filtres ou votre recherche
+//             <p className="text-gray-600 mb-6 max-w-md mx-auto">
+//               {t("noProductsFound.description")}
 //             </p>
 //             <button
-//               onClick={() =>
-//                 setFilters({
-//                   category: [],
-//                   priceRange: [0, 5000],
-//                   material: [],
-//                   height: [],
-//                   color: [],
-//                   inStock: false,
-//                   onSale: false,
-//                   rating: 0
-//                 })
-//               }
-//               className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+//               onClick={resetAllFilters}
+//               className="bg-firstColor text-white px-6 py-3 rounded-lg hover:bg-secondColor transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
 //             >
-//               Réinitialiser les filtres
+//               {t("noProductsFound.resetButton")}
 //             </button>
 //           </div>
 //         )}
@@ -357,42 +318,68 @@ import { useTranslations, useLocale } from "next-intl"
 import ProductFilter from "./ProductFilter"
 import ProductSorter from "./ProductSorter"
 import ProductCard from "./ProductCard"
-import { FilterState, ShopContentProps } from "@/types/type"
+import { Product } from "@/types/product"
+
+export interface FilterState {
+  category: string[]
+  priceRange: [number, number]
+  characteristics: string[]
+  inStock: boolean
+  onSale: boolean
+  isNew: boolean
+}
+
+interface ShopContentProps {
+  products: Product[]
+}
 
 const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
   const t = useTranslations("ShopPage.ShopContent")
-  const locale = useLocale()
+  const locale = useLocale() as "ar" | "fr"
 
+  // 🎯 États
   const [filters, setFilters] = useState<FilterState>({
     category: [],
     priceRange: [0, 5000],
-    material: [],
-    height: [],
-    color: [],
+    characteristics: [],
     inStock: false,
     onSale: false,
-    rating: 0
+    isNew: false
   })
-
   const [sortBy, setSortBy] = useState<string>("name-asc")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false)
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
   const productsPerPage = 12
 
-  // Filtrage des produits avec useMemo
+  // 🧠 Filtrage
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      // Filtre par catégorie
+      // Catégorie
       if (
         filters.category.length > 0 &&
-        !filters.category.includes(product.category)
+        !filters.category.includes(product.category?.name?.[locale] ?? "")
       ) {
         return false
       }
 
-      // Filtre par prix
+      // Caractéristiques
+      if (filters.characteristics.length > 0) {
+        const allValues = product.Characteristic?.flatMap((char) =>
+          char.values.map((val) => val[locale])
+        )
+
+        if (
+          !filters.characteristics.some((selected) =>
+            allValues?.includes(selected)
+          )
+        ) {
+          return false
+        }
+      }
+
+      // Prix
       if (
         product.price < filters.priceRange[0] ||
         product.price > filters.priceRange[1]
@@ -400,75 +387,39 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
         return false
       }
 
-      // Filtre par matériau
-      if (
-        filters.material.length > 0 &&
-        !filters.material.includes(product.material)
-      ) {
-        return false
-      }
+      // Stock
+      if (filters.inStock && !product.inStock) return false
 
-      // Filtre par hauteur
-      if (
-        filters.height.length > 0 &&
-        !filters.height.includes(product.height)
-      ) {
-        return false
-      }
+      // Solde
+      if (filters.onSale && !product.isOnSale) return false
 
-      // Filtre par couleur
-      if (filters.color.length > 0 && !filters.color.includes(product.color)) {
-        return false
-      }
-
-      // Filtre par stock
-      if (filters.inStock && !product.inStock) {
-        return false
-      }
-
-      // Filtre par promotion
-      if (filters.onSale && !product.isOnSale) {
-        return false
-      }
-
-      // Filtre par note
-      if (filters.rating > 0 && product.rating < filters.rating) {
-        return false
-      }
+      // Nouveauté
+      if (filters.isNew && !product.isNew) return false
 
       return true
     })
-  }, [products, filters])
+  }, [products, filters, locale])
 
-  // Tri des produits avec useMemo
+  // 🔽 Tri
   const sortedProducts = useMemo(() => {
     const sorted = [...filteredProducts]
-
-    const nameKey: "fr" | "ar" = locale === "fr" ? "fr" : "ar"
+    const key: "fr" | "ar" = locale === "fr" ? "fr" : "ar"
 
     switch (sortBy) {
       case "name-asc":
-        return sorted.sort((a, b) =>
-          a.name[nameKey].localeCompare(b.name[nameKey])
-        )
+        return sorted.sort((a, b) => a.name[key].localeCompare(b.name[key]))
       case "name-desc":
-        return sorted.sort((a, b) =>
-          b.name[nameKey].localeCompare(a.name[nameKey])
-        )
+        return sorted.sort((a, b) => b.name[key].localeCompare(a.name[key]))
       case "price-asc":
         return sorted.sort((a, b) => a.price - b.price)
       case "price-desc":
         return sorted.sort((a, b) => b.price - a.price)
-      case "rating-desc":
-        return sorted.sort((a, b) => b.rating - a.rating)
-      case "newest":
-        return sorted.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0))
       default:
         return sorted
     }
   }, [filteredProducts, sortBy, locale])
 
-  // Pagination
+  // 📄 Pagination
   const totalPages = Math.ceil(sortedProducts.length / productsPerPage)
   const startIndex = (currentPage - 1) * productsPerPage
   const paginatedProducts = sortedProducts.slice(
@@ -476,17 +427,15 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
     startIndex + productsPerPage
   )
 
-  // Fonction pour réinitialiser tous les filtres
+  // 🧹 Réinitialiser
   const resetAllFilters = () => {
     setFilters({
       category: [],
       priceRange: [0, 5000],
-      material: [],
-      height: [],
-      color: [],
+      characteristics: [],
       inStock: false,
       onSale: false,
-      rating: 0
+      isNew: false
     })
     setCurrentPage(1)
   }
@@ -494,200 +443,118 @@ const ShopContent: React.FC<ShopContentProps> = ({ products }) => {
   // Handlers
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters)
-    setCurrentPage(1) // Reset pagination when filters change
+    setCurrentPage(1)
   }
 
-  const handleSortChange = (newSortBy: string) => {
-    setSortBy(newSortBy)
-    setCurrentPage(1) // Reset pagination when sorting changes
-  }
+  const handleSortChange = (newSortBy: string) => setSortBy(newSortBy)
+  const handleViewModeChange = (mode: "grid" | "list") => setViewMode(mode)
+  const handlePageChange = (page: number) => setCurrentPage(page)
 
-  const handleViewModeChange = (mode: "grid" | "list") => {
-    setViewMode(mode)
-  }
-
-  const handleOpenFilters = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleCloseFilters = () => {
-    setSidebarOpen(false)
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  // Fonction pour supprimer un filtre spécifique
-  const removeFilter = (type: keyof FilterState, value: string) => {
-    const newFilters = { ...filters }
-
-    if (Array.isArray(newFilters[type])) {
-      ;(newFilters[type] as string[]) = (newFilters[type] as string[]).filter(
-        (item) => item !== value
-      )
-    }
-
-    handleFiltersChange(newFilters)
-  }
-
-  // Vérifier si des filtres sont actifs
   const hasActiveFilters =
     filters.category.length > 0 ||
-    filters.material.length > 0 ||
-    filters.height.length > 0 ||
-    filters.color.length > 0 ||
+    filters.characteristics.length > 0 ||
     filters.inStock ||
     filters.onSale ||
-    filters.rating > 0
+    filters.isNew
 
+  // 🧩 Suppression filtre
+
+  const removeFilter = (
+    type: "category" | "characteristics",
+    value: string
+  ) => {
+    const updated = { ...filters }
+    updated[type] = updated[type].filter((v) => v !== value)
+    setFilters(updated)
+  }
   return (
-    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-      {/* Sidebar Filtres */}
+    <div className="flex flex-col lg:flex-row gap-6">
+      {/* 🧱 Sidebar Filtres */}
       <ProductFilter
-        products={products}
         filters={filters}
         onFiltersChange={handleFiltersChange}
         isOpen={sidebarOpen}
-        onClose={handleCloseFilters}
+        onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Contenu Principal */}
+      {/* 🏬 Contenu Principal */}
       <div className="flex-1 min-w-0">
-        {/* Header avec tri et contrôles */}
         <ProductSorter
           totalProducts={sortedProducts.length}
           sortBy={sortBy}
           onSortChange={handleSortChange}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-          onOpenFilters={handleOpenFilters}
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={handlePageChange}
+          onOpenFilters={() => setSidebarOpen(true)}
         />
 
         {/* Filtres actifs */}
         {hasActiveFilters && (
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-gray-600 font-medium">
-                {t("activeFilters")}
-              </span>
-
-              {/* Filtres de catégorie */}
-              {filters.category.map((category) => (
-                <span
-                  key={`category-${category}`}
-                  className="bg-firstColor/10 text-firstColor px-3 py-1 rounded-full text-xs flex items-center border border-firstColor/20 transition-all duration-200 hover:bg-firstColor/20"
-                >
-                  {category}
-                  <button
-                    onClick={() => removeFilter("category", category)}
-                    className="ml-2 hover:text-secondColor transition-colors duration-200"
-                    aria-label={`Supprimer le filtre ${category}`}
-                  >
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-
-              {/* Filtres de matériau */}
-              {filters.material.map((material) => (
-                <span
-                  key={`material-${material}`}
-                  className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs flex items-center border border-blue-200 transition-all duration-200 hover:bg-blue-100"
-                >
-                  {material}
-                  <button
-                    onClick={() => removeFilter("material", material)}
-                    className="ml-2 hover:text-blue-900 transition-colors duration-200"
-                    aria-label={`Supprimer le filtre ${material}`}
-                  >
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-
-              {/* Filtres de hauteur */}
-              {filters.height.map((height) => (
-                <span
-                  key={`height-${height}`}
-                  className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs flex items-center border border-purple-200 transition-all duration-200 hover:bg-purple-100"
-                >
-                  {height}
-                  <button
-                    onClick={() => removeFilter("height", height)}
-                    className="ml-2 hover:text-purple-900 transition-colors duration-200"
-                    aria-label={`Supprimer le filtre ${height}`}
-                  >
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-
-              {/* Filtres de couleur */}
-              {filters.color.map((color) => (
-                <span
-                  key={`color-${color}`}
-                  className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-xs flex items-center border border-yellow-200 transition-all duration-200 hover:bg-yellow-100"
-                >
-                  {color}
-                  <button
-                    onClick={() => removeFilter("color", color)}
-                    className="ml-2 hover:text-yellow-900 transition-colors duration-200"
-                    aria-label={`Supprimer le filtre ${color}`}
-                  >
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-
-              {/* Bouton tout effacer */}
-              {hasActiveFilters && (
-                <button
-                  onClick={resetAllFilters}
-                  className="text-sm text-red-600 hover:text-red-800 underline underline-offset-2 transition-colors duration-200 ml-2"
-                >
-                  {t("clearAll")}
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-6 flex flex-wrap gap-2">
+            {filters.category.map((cat) => (
+              <span
+                key={cat}
+                className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-xs flex items-center"
+              >
+                {cat}
+                <button onClick={() => removeFilter("category", cat)}>
+                  <X size={12} className="ml-2" />
                 </button>
-              )}
-            </div>
+              </span>
+            ))}
+
+            {filters.characteristics.map((char) => (
+              <span
+                key={char}
+                className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs flex items-center"
+              >
+                {char}
+                <button onClick={() => removeFilter("characteristics", char)}>
+                  <X size={12} className="ml-2" />
+                </button>
+              </span>
+            ))}
+
+            {(filters.inStock || filters.onSale || filters.isNew) && (
+              <button
+                onClick={resetAllFilters}
+                className="text-sm text-red-600 hover:text-red-800 underline"
+              >
+                {t("clearAll")}
+              </button>
+            )}
           </div>
         )}
 
-        {/* Grille/Liste de produits */}
+        {/* Liste des produits */}
         {paginatedProducts.length > 0 ? (
           <div
             className={
               viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6"
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                 : "space-y-4"
             }
           >
             {paginatedProducts.map((product) => (
               <ProductCard
-                key={product.id}
+                key={product._id}
                 product={product}
                 viewMode={viewMode}
               />
             ))}
           </div>
         ) : (
-          /* État vide avec design amélioré */
-          <div className="bg-white rounded-lg shadow-sm p-8 sm:p-12 text-center">
-            <div className="text-gray-300 mb-6">
-              <Search size={48} className="mx-auto sm:w-16 sm:h-16" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
-              {t("noProductsFound.title")}
-            </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <Search size={48} className="mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-600 mb-4">
               {t("noProductsFound.description")}
             </p>
             <button
               onClick={resetAllFilters}
-              className="bg-firstColor text-white px-6 py-3 rounded-lg hover:bg-secondColor transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600"
             >
               {t("noProductsFound.resetButton")}
             </button>

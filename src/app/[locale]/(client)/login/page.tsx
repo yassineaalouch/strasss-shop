@@ -311,7 +311,7 @@ const AdminLoginPage: React.FC = () => {
                 alt="logo"
                 height={32}
                 width={32}
-                className="w-full h-full object-cover rounded-lg animate-bounce"
+                className=" object-cover rounded-lg animate-bounce"
               />
             </div>
             <h1 className="text-xl font-bold text-white mb-1">Admin</h1>

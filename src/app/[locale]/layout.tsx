@@ -41,7 +41,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <div className="min-h-screen md:mt-5">{children}</div>
+          <div className="min-h-screen">{children}</div>
         </NextIntlClientProvider>
       </body>
     </html>

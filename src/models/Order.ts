@@ -41,6 +41,12 @@ const OrderSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
+    coupon: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Discount",
+      required: false,
+      default: null
+    },
     total: {
       type: Number,
       required: true
@@ -56,7 +62,8 @@ const OrderSchema = new mongoose.Schema(
     }
   },
   {
-    timestamps: true
+    timestamps: true, // ✅ important pour avoir createdAt et updatedAt
+    suppressReservedKeysWarning: true // ✅ pour supprimer ton warning mongoose
   }
 )
 

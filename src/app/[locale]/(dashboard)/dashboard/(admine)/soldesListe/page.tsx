@@ -23,48 +23,16 @@ import {
   AlertTriangle,
   ToggleRight
 } from "lucide-react"
-
+import {
+  getDiscounts,
+  createDiscount,
+  updateDiscount,
+  deleteDiscount,
+  toggleDiscount
+} from "@/app/api/discounts"
+import { Discount, DiscountFormData } from "@/types/discount"
 // Types
 export type DiscountType = "PERCENTAGE" | "BUY_X_GET_Y" | "COUPON"
-
-export interface Discount {
-  id: string
-  name: {
-    fr: string
-    ar: string
-  }
-  type: DiscountType
-  value?: number
-  buyQuantity?: number
-  getQuantity?: number
-  couponCode?: string
-  description?: {
-    fr: string
-    ar: string
-  }
-  startDate?: Date
-  endDate?: Date
-  isActive: boolean
-}
-
-export interface DiscountFormData {
-  name: {
-    fr: string
-    ar: string
-  }
-  type: DiscountType
-  value: string
-  buyQuantity: string
-  getQuantity: string
-  couponCode: string
-  description: {
-    fr: string
-    ar: string
-  }
-  startDate: string
-  endDate: string
-  isActive: boolean
-}
 
 export interface FilterState {
   search: string
@@ -83,7 +51,17 @@ const AdminDiscountsManager: React.FC = () => {
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null)
   const [currentLanguage, setCurrentLanguage] = useState<"fr" | "ar">("fr")
   const [showFilters, setShowFilters] = useState(false)
-
+  const fetchDiscounts = async () => {
+    try {
+      const data = await getDiscounts()
+      setDiscounts(data)
+    } catch (err) {
+      console.error("Erreur lors du chargement des promotions", err)
+    }
+  }
+  React.useEffect(() => {
+    fetchDiscounts()
+  }, [])
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     type: "all",
@@ -98,91 +76,25 @@ const AdminDiscountsManager: React.FC = () => {
   const [formData, setFormData] = useState<DiscountFormData>({
     name: { fr: "", ar: "" },
     type: "PERCENTAGE",
-    value: "",
-    buyQuantity: "",
-    getQuantity: "",
+    value: 0,
+    buyQuantity: 0,
+    getQuantity: 0,
     couponCode: "",
     description: { fr: "", ar: "" },
     startDate: "",
     endDate: "",
-    isActive: true
+    isActive: true,
+    usageLimit: 0,
+    minimumPurchase: 0
   })
-
-  // Données d'exemple de réductions
-  const exampleDiscounts: Discount[] = useMemo(
-    () => [
-      {
-        id: "1",
-        name: { fr: "Soldes d'été 2025", ar: "تخفيضات الصيف 2025" },
-        type: "PERCENTAGE",
-        value: 20,
-        description: {
-          fr: "Réduction de 20% sur tous les articles d'été",
-          ar: "خصم 20% على جميع مقالات الصيف"
-        },
-        startDate: new Date("2025-06-01"),
-        endDate: new Date("2025-08-31"),
-        isActive: true
-      },
-      {
-        id: "2",
-        name: {
-          fr: "Achetez 2, obtenez 1 gratuit",
-          ar: "اشترِ 2 واحصل على 1 مجاناً"
-        },
-        type: "BUY_X_GET_Y",
-        buyQuantity: 2,
-        getQuantity: 1,
-        description: {
-          fr: "Promotion sur les bobines de fil",
-          ar: "عرض ترويجي على بكرات الخيط"
-        },
-        startDate: new Date("2025-01-15"),
-        endDate: new Date("2025-02-15"),
-        isActive: true
-      },
-      {
-        id: "3",
-        name: { fr: "Code promo COUTURE50", ar: "كود خصم COUTURE50" },
-        type: "COUPON",
-        value: 50,
-        couponCode: "COUTURE50",
-        description: {
-          fr: "50 DH de réduction avec le code COUTURE50",
-          ar: "خصم 50 درهم مع الكود COUTURE50"
-        },
-        startDate: new Date("2025-01-01"),
-        endDate: new Date("2025-12-31"),
-        isActive: true
-      },
-      {
-        id: "4",
-        name: { fr: "Promotion Black Friday", ar: "عرض الجمعة السوداء" },
-        type: "PERCENTAGE",
-        value: 50,
-        description: {
-          fr: "Méga réduction pour le Black Friday",
-          ar: "خصم كبير للجمعة السوداء"
-        },
-        startDate: new Date("2025-11-29"),
-        endDate: new Date("2025-11-29"),
-        isActive: false
-      }
-    ],
-    []
-  )
-
-  // Initialiser avec les données d'exemple
-  React.useEffect(() => {
-    setDiscounts(exampleDiscounts)
-  }, [exampleDiscounts])
 
   const getDiscountStatus = (discount: Discount) => {
     const now = new Date()
 
     if (!discount.isActive) return "inactive"
-    if (discount.endDate && discount.endDate < now) return "expired"
-    if (discount.startDate && discount.startDate > now) return "upcoming"
+    if (discount.endDate && new Date(discount.endDate) < now) return "expired"
+    if (discount.startDate && new Date(discount.startDate) > now)
+      return "upcoming"
     return "active"
   }
 
@@ -283,14 +195,14 @@ const AdminDiscountsManager: React.FC = () => {
           comparison = a.type.localeCompare(b.type)
           break
         case "startDate":
-          const aStart = a.startDate?.getTime() || 0
-          const bStart = b.startDate?.getTime() || 0
-          comparison = aStart - bStart
+          const aStart = a.startDate || 0
+          const bStart = b.startDate || 0
+          comparison = Number(aStart) - Number(bStart)
           break
         case "endDate":
-          const aEnd = a.endDate?.getTime() || 0
-          const bEnd = b.endDate?.getTime() || 0
-          comparison = aEnd - bEnd
+          const aEnd = a.endDate || 0
+          const bEnd = b.endDate || 0
+          comparison = Number(aEnd) - Number(bEnd)
           break
       }
 
@@ -321,76 +233,45 @@ const AdminDiscountsManager: React.FC = () => {
     setFormData({
       name: { fr: "", ar: "" },
       type: "PERCENTAGE",
-      value: "",
-      buyQuantity: "",
-      getQuantity: "",
+      value: 0,
+      buyQuantity: 0,
+      getQuantity: 0,
       couponCode: "",
       description: { fr: "", ar: "" },
       startDate: "",
       endDate: "",
-      isActive: true
+      isActive: true,
+      usageLimit: 0,
+      minimumPurchase: 0
     })
     setIsCreating(false)
     setEditingDiscount(null)
   }
 
-  const handleSaveDiscount = () => {
-    if (!formData.name.fr || !formData.name.ar) {
-      alert("Veuillez remplir tous les champs obligatoires")
-      return
+  const handleSaveDiscount = async () => {
+    if (!formData.name.fr || !formData.name.ar)
+      return alert("Veuillez remplir tous les champs obligatoires")
+
+    const payload = {
+      ...formData,
+      value: formData.value ? formData.value : undefined,
+      buyQuantity: formData.buyQuantity ? formData.buyQuantity : undefined,
+      getQuantity: formData.getQuantity ? formData.getQuantity : undefined
     }
 
-    // Validation selon le type
-    if (formData.type === "PERCENTAGE" && !formData.value) {
-      alert("Veuillez entrer un pourcentage de réduction")
-      return
+    try {
+      if (editingDiscount) {
+        await updateDiscount(editingDiscount._id, payload)
+        await fetchDiscounts()
+      } else {
+        await createDiscount(payload)
+        await fetchDiscounts()
+      }
+      resetForm()
+    } catch (err) {
+      console.error(err)
+      alert("Erreur lors de la sauvegarde")
     }
-
-    if (
-      formData.type === "BUY_X_GET_Y" &&
-      (!formData.buyQuantity || !formData.getQuantity)
-    ) {
-      alert("Veuillez entrer les quantités pour l'offre")
-      return
-    }
-
-    if (formData.type === "COUPON" && !formData.couponCode) {
-      alert("Veuillez entrer un code promo")
-      return
-    }
-
-    const newDiscount: Discount = {
-      id: editingDiscount?.id || `discount-${Date.now()}`,
-      name: formData.name,
-      type: formData.type,
-      value: formData.value ? parseFloat(formData.value) : undefined,
-      buyQuantity: formData.buyQuantity
-        ? parseInt(formData.buyQuantity)
-        : undefined,
-      getQuantity: formData.getQuantity
-        ? parseInt(formData.getQuantity)
-        : undefined,
-      couponCode: formData.couponCode || undefined,
-      description:
-        formData.description.fr || formData.description.ar
-          ? formData.description
-          : undefined,
-      startDate: formData.startDate ? new Date(formData.startDate) : undefined,
-      endDate: formData.endDate ? new Date(formData.endDate) : undefined,
-      isActive: formData.isActive
-    }
-
-    if (editingDiscount) {
-      setDiscounts((prev) =>
-        prev.map((discount) =>
-          discount.id === editingDiscount.id ? newDiscount : discount
-        )
-      )
-    } else {
-      setDiscounts((prev) => [...prev, newDiscount])
-    }
-
-    resetForm()
   }
 
   const handleEditDiscount = (discount: Discount) => {
@@ -398,38 +279,42 @@ const AdminDiscountsManager: React.FC = () => {
     setFormData({
       name: discount.name,
       type: discount.type,
-      value: discount.value?.toString() || "",
-      buyQuantity: discount.buyQuantity?.toString() || "",
-      getQuantity: discount.getQuantity?.toString() || "",
+      value: discount.value || 0,
+      buyQuantity: discount.buyQuantity || 0,
+      getQuantity: discount.getQuantity || 0,
       couponCode: discount.couponCode || "",
       description: discount.description || { fr: "", ar: "" },
-      startDate: discount.startDate
-        ? discount.startDate.toISOString().split("T")[0]
-        : "",
-      endDate: discount.endDate
-        ? discount.endDate.toISOString().split("T")[0]
-        : "",
-      isActive: discount.isActive
+      startDate: discount.startDate ? discount.startDate.split("T")[0] : "",
+      endDate: discount.endDate ? discount.endDate.split("T")[0] : "",
+      isActive: discount.isActive,
+      usageLimit: 0,
+      minimumPurchase: 0
     })
     setIsCreating(true)
   }
 
-  const handleDeleteDiscount = (discountId: string) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette réduction ?")) {
-      setDiscounts((prev) =>
-        prev.filter((discount) => discount.id !== discountId)
-      )
+  const handleDeleteDiscount = async (id: string) => {
+    if (!confirm("Êtes-vous sûr ?")) return
+    try {
+      await deleteDiscount(id)
+      setDiscounts((prev) => prev.filter((d) => d._id !== id))
+    } catch (err) {
+      console.error(err)
+      alert("Erreur lors de la suppression")
     }
   }
 
-  const toggleDiscountStatus = (discountId: string) => {
-    setDiscounts((prev) =>
-      prev.map((discount) =>
-        discount.id === discountId
-          ? { ...discount, isActive: !discount.isActive }
-          : discount
-      )
-    )
+  const toggleDiscountStatus = async (id: string) => {
+    const discount = discounts.find((d) => d._id === id)
+    if (!discount) return
+
+    try {
+      await toggleDiscount(id, !discount.isActive)
+      await fetchDiscounts()
+    } catch (err) {
+      console.error(err)
+      alert("Erreur lors de la mise à jour du statut")
+    }
   }
 
   const formatDate = (date: Date) => {
@@ -645,7 +530,7 @@ const AdminDiscountsManager: React.FC = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAndSortedDiscounts.map((discount) => (
                     <tr
-                      key={discount.id}
+                      key={discount._id}
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4">
@@ -696,12 +581,12 @@ const AdminDiscountsManager: React.FC = () => {
                           {discount.startDate && (
                             <div className="flex items-center">
                               <Calendar className="mr-1" size={12} />
-                              {formatDate(discount.startDate)}
+                              {formatDate(new Date(discount.startDate))}
                             </div>
                           )}
                           {discount.endDate && (
                             <div className="flex items-center text-gray-500 text-xs">
-                              au {formatDate(discount.endDate)}
+                              au {formatDate(new Date(discount.endDate))}
                             </div>
                           )}
                         </div>
@@ -714,7 +599,7 @@ const AdminDiscountsManager: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => toggleDiscountStatus(discount.id)}
+                            onClick={() => toggleDiscountStatus(discount._id)}
                             className={`p-2 rounded-lg ${
                               discount.isActive
                                 ? "text-green-600 hover:bg-green-50"
@@ -732,7 +617,7 @@ const AdminDiscountsManager: React.FC = () => {
                             <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeleteDiscount(discount.id)}
+                            onClick={() => handleDeleteDiscount(discount._id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                             title="Supprimer"
                           >
@@ -872,7 +757,7 @@ const AdminDiscountsManager: React.FC = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          value: e.target.value
+                          value: Number(e.target.value)
                         }))
                       }
                       className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -898,7 +783,7 @@ const AdminDiscountsManager: React.FC = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          buyQuantity: e.target.value
+                          buyQuantity: Number(e.target.value)
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -916,7 +801,7 @@ const AdminDiscountsManager: React.FC = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          getQuantity: e.target.value
+                          getQuantity: Number(e.target.value)
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -957,7 +842,7 @@ const AdminDiscountsManager: React.FC = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          value: e.target.value
+                          value: Number(e.target.value)
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1037,6 +922,42 @@ const AdminDiscountsManager: React.FC = () => {
                       setFormData((prev) => ({
                         ...prev,
                         endDate: e.target.value
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              {/* usage counte */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre d&apos;utilisation Limit
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.usageLimit}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        usageLimit: Number(e.target.value)
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nontant minimum du panier
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.minimumPurchase}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        minimumPurchase: Number(e.target.value)
                       }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

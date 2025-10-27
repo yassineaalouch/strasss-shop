@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { signOut } from "next-auth/react"
+import { usePathname } from "next/navigation"
 import {
   Menu,
   X,
@@ -15,10 +16,11 @@ import {
   Home,
   Package,
   ShoppingCart,
-  Users,
-  BarChart3,
   Settings,
-  Tag
+  Percent,
+  Boxes,
+  Layers,
+  LayoutDashboard
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -43,17 +45,14 @@ interface UserProfile {
 
 interface DashboardLayoutProps {
   children: React.ReactNode
-  currentPath?: string
 }
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({
-  children,
-  currentPath = "/dashboard"
-}) => {
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const currentPath = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
-
+  console.log("currentPath", currentPath)
   // Profil utilisateur
   const userProfile: UserProfile = {
     name: "Taha larhrissi",
@@ -66,69 +65,61 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const navigationItems: NavigationItem[] = [
     {
       id: "dashboard",
-      label: "Tableau de bord",
-      href: "/dashboard",
+      label: "Dashboard",
       icon: <Home className="w-5 h-5" />,
-      isActive: currentPath === "/dashboard"
-    },
-    {
-      id: "products",
-      label: "Produits",
-      href: "/dashboard/products",
-      icon: <Package className="w-5 h-5" />,
-      isActive: currentPath.startsWith("/dashboard/products"),
-      submenu: [
-        {
-          id: "products-list",
-          label: "Liste des produits",
-          href: "/dashboard/products",
-          icon: <></>,
-          isActive: currentPath === "/dashboard/products"
-        },
-        {
-          id: "products-add",
-          label: "Ajouter un produit",
-          href: "/dashboard/products/add",
-          icon: <></>,
-          isActive: currentPath === "/dashboard/products/add"
-        }
-      ]
+      href: "/dashboard",
+      isActive:
+        currentPath.toLowerCase() === "/fr/dashboard" ||
+        currentPath.toLowerCase() === "/ar/dashboard"
     },
     {
       id: "orders",
       label: "Commandes",
-      href: "/dashboard/orders",
       icon: <ShoppingCart className="w-5 h-5" />,
-      isActive: currentPath.startsWith("/dashboard/orders"),
-      badge: "12"
+      href: "/dashboard/ordersListe",
+      isActive: currentPath.includes("/dashboard/orders")
     },
     {
-      id: "customers",
-      label: "Clients",
-      href: "/dashboard/customers",
-      icon: <Users className="w-5 h-5" />,
-      isActive: currentPath.startsWith("/dashboard/customers")
+      id: "products",
+      label: "Produits",
+      icon: <Package className="w-5 h-5" />,
+      href: "/dashboard/productList",
+      isActive: currentPath.includes("/dashboard/productList")
     },
     {
-      id: "analytics",
-      label: "Analytiques",
-      href: "/dashboard/analytics",
-      icon: <BarChart3 className="w-5 h-5" />,
-      isActive: currentPath.startsWith("/dashboard/analytics")
+      id: "packs",
+      label: "Packs",
+      icon: <Boxes className="w-5 h-5" />,
+      href: "/dashboard/packsListe",
+      isActive: currentPath.includes("/dashboard/packsListe")
     },
     {
-      id: "promotions",
-      label: "Promotions",
-      href: "/dashboard/promotions",
-      icon: <Tag className="w-5 h-5" />,
-      isActive: currentPath.startsWith("/dashboard/promotions")
+      id: "categories",
+      label: "Catégories",
+      icon: <Layers className="w-5 h-5" />,
+      href: "/dashboard/categoriesListe",
+      isActive: currentPath.includes("/dashboard/categoriesListe")
+    },
+    {
+      id: "hero",
+      label: "Hero Content",
+      icon: <LayoutDashboard className="w-5 h-5" />,
+      href: "/dashboard/pagesContent",
+      isActive: currentPath.includes("/dashboard/pagesContent")
+    },
+    {
+      id: "marketing",
+      label: "Marketing",
+      icon: <Percent className="w-5 h-5" />,
+      href: "/dashboard/soldesListe",
+      isActive: currentPath.includes("/dashboard/soldesListe")
     },
     {
       id: "settings",
       label: "Paramètres",
-      href: "/dashboard/settings",
       icon: <Settings className="w-5 h-5" />,
-      isActive: currentPath.startsWith("/dashboard/settings")
+      href: "/dashboard/settings",
+      isActive: currentPath.includes("/dashboard/settings")
     }
   ]
 
@@ -180,7 +171,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   alt="logo"
                   height={32}
                   width={32}
-                  className="w-full h-full object-cover rounded-lg animate-bounce"
+                  className="object-cover rounded-lg animate-bounce"
                 />
               </div>
               <div>

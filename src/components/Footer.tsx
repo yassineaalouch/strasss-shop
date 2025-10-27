@@ -17,7 +17,7 @@ export default async function Footer() {
                   alt="logo"
                   height={40}
                   width={40}
-                  className="w-full h-full object-cover rounded-lg"
+                  className="object-cover rounded-lg"
                 />
               </div>
               <span className="text-xl font-bold">{t("company.name")}</span>

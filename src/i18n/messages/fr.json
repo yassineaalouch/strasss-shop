@@ -638,6 +638,7 @@
       }
     },
     "FAQSection": {
+      "loading": "chargement",
       "header": {
         "title": "Questions Fréquemment Posées",
         "subtitle": "Trouvez rapidement les réponses à vos questions les plus courantes sur nos services de couture au Maroc."
@@ -735,6 +736,8 @@
           "min": "Min",
           "max": "Max"
         },
+        "characteristics": { "title": "caractéristiques" },
+
         "categories": {
           "title": "Catégories"
         },
@@ -749,6 +752,7 @@
         },
         "options": {
           "title": "Options",
+          "isNew": "nouveau",
           "inStock": "En stock uniquement",
           "onSale": "En promotion"
         },

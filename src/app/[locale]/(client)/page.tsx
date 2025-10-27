@@ -1,10 +1,11 @@
 import React from "react"
-import { Category, Product } from "@/types/type"
+import { Category } from "@/types/type"
 import HeroSection from "@/components/home/HeroSection"
-import { ProductCardStandard } from "@/components/shop/ProductCard"
+import ProductCard from "@/components/shop/ProductCard"
 import WhyChooseUs from "@/components/WhyCoseUs"
 import { getTranslations, getLocale } from "next-intl/server"
 import Image from "next/image"
+import { Product } from "@/types/product"
 
 const CategoriesSection = async () => {
   const t = await getTranslations("HomePage")
@@ -67,13 +68,12 @@ const CategoriesSection = async () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category) => (
             <div key={category.id} className="group cursor-pointer">
-              <div className="relative overflow-hidden rounded-lg shadow-md">
+              <div className="relative overflow-hidden rounded-lg shadow-md h-64">
                 <Image
                   src={category.image}
                   alt={category.name[locale]}
-                  width={500}
-                  height={256}
-                  className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                  fill // Utilisation de `fill`
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/25 transition-opacity duration-300 flex items-end">
                   <div className="p-6 text-white">
@@ -99,106 +99,242 @@ const CategoriesSection = async () => {
 // Composant Produits Populaires
 const FeaturedProducts: React.FC = async () => {
   const t = await getTranslations("HomePage")
-
   const products: Product[] = [
     {
-      id: "1",
+      _id: "1",
       name: {
-        ar: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
         fr: "Bobines de fil multicolores"
+      },
+      description: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Un assortiment de belles bobines de fil multicolores, parfaites pour tous vos projets de couture."
       },
       price: 25,
       originalPrice: 30,
       images: [
         "https://static.mapetitemercerie.com/98636-large_default/poincon-pour-pose-rivets-oeillets-boutons-couture-loisirs.jpg"
       ],
-      rating: 4.7,
-      reviews: 120,
-      isNew: false,
-      isOnSale: true,
-      category: "Accessoires de Couture",
-      material: "Polyester",
-      height: "-",
-      color: "Multicolore",
+      category: {
+        _id: "cat1",
+        name: { fr: "Accessoires de Couture", ar: "إكسسوارات الخياطة" },
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      discount: {
+        _id: "disc1",
+        name: { fr: "Promotion 10%", ar: "تخفيض 10%" },
+        type: "PERCENTAGE",
+        value: 10,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      Characteristic: [
+        {
+          _id: "c1",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [
+            { fr: "Multicolore", ar: "متعدد الألوان" },
+            { fr: "Blanc", ar: "أبيض" }
+          ]
+        },
+        {
+          _id: "c2",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [
+            { fr: "Polyester", ar: "بوليستر" },
+            { fr: "Coton", ar: "قطن" }
+          ]
+        }
+      ],
       inStock: true,
       quantity: 20,
-      description: {
-        ar: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
-        fr: "Un assortiment de belles bobines de fil multicolores, parfaites pour tous vos projets de couture."
-      }
+      isNew: false,
+      isOnSale: true,
+      slug: "bobines-de-fil-multicolores",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "2",
+      _id: "2",
       name: {
-        ar: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
-        fr: "Fournitures de couture "
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Fournitures de couture"
+      },
+      description: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Collection d’outils de couture (fils, boutons, etc.) idéale pour atelier et DIY."
       },
       price: 40,
       images: [
         "https://static.mapetitemercerie.com/241747-large_default/ciseaux-classic-cranteurs-23-cm-droitier-fiskars.jpg"
       ],
-      rating: 4.5,
-      reviews: 85,
-      category: "Accessoires de Couture",
-      material: "Mix",
-      height: "-",
-      color: "Multicolore",
+      category: {
+        _id: "cat1",
+        name: { fr: "Accessoires de Couture", ar: "إكسسوارات الخياطة" },
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      Characteristic: [
+        {
+          _id: "c3",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Multicolore", ar: "متعدد الألوان" }]
+        },
+        {
+          _id: "c4",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Mix", ar: "خليط" }]
+        }
+      ],
       inStock: true,
       quantity: 50,
-      description: {
-        ar: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
-        fr: "Collection d’outils de couture (fils, boutons, etc.) idéal pour atelier et DIY."
-      }
+      isNew: false,
+      isOnSale: false,
+      slug: "fournitures-de-couture",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "3",
+      _id: "3",
       name: {
-        ar: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
         fr: "Fils colorés dans un tiroir"
+      },
+      description: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Vue rapprochée de fils à coudre colorés bien rangés dans un tiroir."
       },
       price: 30,
       images: [
         "https://static.mapetitemercerie.com/99298-large_default/kit-de-11-fils-a-coudre-guetermann-accessoires.jpg"
       ],
-      rating: 4.8,
-      reviews: 150,
-      isNew: true,
-      isOnSale: false,
-      category: "Accessoires de Couture",
-      material: "Coton",
-      height: "-",
-      color: "Multicolore",
+      category: {
+        _id: "cat1",
+        name: { fr: "Accessoires de Couture", ar: "إكسسوارات الخياطة" },
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      Characteristic: [
+        {
+          _id: "c5",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Multicolore", ar: "متعدد الألوان" }]
+        },
+        {
+          _id: "c6",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Coton", ar: "قطن" }]
+        }
+      ],
       inStock: true,
       quantity: 70,
-      description: {
-        ar: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
-        fr: "Vue rapprochée de fils à coudre colorés bien rangés dans un tiroir."
-      }
+      isNew: true,
+      isOnSale: false,
+      slug: "fils-colores-dans-un-tiroir",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "4",
+      _id: "4",
       name: {
-        ar: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
         fr: "Tissus assortis colorés"
+      },
+      description: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Collection de tissus 100% coton, idéals pour patchwork, quilting et projets créatifs."
       },
       price: 35,
       images: [
         "https://static.mapetitemercerie.com/48913-large_default/machine-a-coudre-smarter-260c-pfaff.jpg"
       ],
-      rating: 4.6,
-      reviews: 143,
-      isNew: false,
-      isOnSale: false,
-      category: "Tissus",
-      material: "Coton",
-      height: "-",
-      color: "Multicolore",
+      category: {
+        _id: "cat2",
+        name: { fr: "Tissus", ar: "أقمشة" },
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      Characteristic: [
+        {
+          _id: "c7",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Multicolore", ar: "متعدد الألوان" }]
+        },
+        {
+          _id: "c8",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Coton", ar: "قطن" }]
+        }
+      ],
       inStock: true,
       quantity: 80,
-      description: {
-        ar: "ؤاعبا نتيبا بنابش  نبتلابلاب نمبابب",
-        fr: "Collection de tissus 100% coton, idéals pour patchwork, quilting et projets créatifs."
-      }
+      isNew: false,
+      isOnSale: false,
+      slug: "tissus-assortis-colores",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
   ]
 
@@ -215,8 +351,8 @@ const FeaturedProducts: React.FC = async () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCardStandard key={product.id} product={product} />
+          {products.map((product, index) => (
+            <ProductCard key={index} product={product} viewMode={"grid"} />
           ))}
         </div>
       </div>

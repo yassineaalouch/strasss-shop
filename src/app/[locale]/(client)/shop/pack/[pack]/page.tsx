@@ -3,7 +3,6 @@
 import React, { useState } from "react"
 import Image from "next/image"
 import {
-  Star,
   Heart,
   Share2,
   ShoppingCart,
@@ -21,11 +20,10 @@ import {
   Calculator,
   Eye,
   Sparkles,
-  Users,
-  Clock
+  Users
 } from "lucide-react"
 import { useLocale } from "next-intl"
-import { Product } from "@/types/type"
+import { Product } from "@/types/product"
 
 export type PackItem = {
   product: Product
@@ -61,62 +59,242 @@ const PackDetailPage: React.FC = () => {
   // Données d'exemple
   const exampleProducts: Product[] = [
     {
-      id: "1",
+      _id: "1",
       name: {
-        fr: "Bobines de fil multicolores",
-        ar: "بكرات خيط متعددة الألوان"
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Bobines de fil multicolores"
       },
-      price: 25.0,
-      originalPrice: 30.0,
+      description: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Un assortiment de belles bobines de fil multicolores, parfaites pour tous vos projets de couture."
+      },
+      price: 25,
+      originalPrice: 30,
       images: [
         "https://static.mapetitemercerie.com/98636-large_default/poincon-pour-pose-rivets-oeillets-boutons-couture-loisirs.jpg"
       ],
-      rating: 4.5,
-      reviews: 15,
-      category: "Fils et bobines",
-      material: "Polyester",
-      height: "5cm",
-      color: "Multicolore",
+      category: {
+        _id: "cat1",
+        name: { fr: "Accessoires de Couture", ar: "إكسسوارات الخياطة" },
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      discount: {
+        _id: "disc1",
+        name: { fr: "Promotion 10%", ar: "تخفيض 10%" },
+        type: "PERCENTAGE",
+        value: 10,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      Characteristic: [
+        {
+          _id: "c1",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [
+            { fr: "Multicolore", ar: "متعدد الألوان" },
+            { fr: "Blanc", ar: "أبيض" }
+          ]
+        },
+        {
+          _id: "c2",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [
+            { fr: "Polyester", ar: "بوليستر" },
+            { fr: "Coton", ar: "قطن" }
+          ]
+        }
+      ],
       inStock: true,
-      quantity: 50,
-      description: { fr: "Bobines de haute qualité", ar: "بكرات عالية الجودة" }
+      quantity: 20,
+      isNew: false,
+      isOnSale: true,
+      slug: "bobines-de-fil-multicolores",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "2",
-      name: { fr: "Ciseaux de couture professionnels", ar: "مقص خياطة مهني" },
-      price: 45.5,
+      _id: "2",
+      name: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Fournitures de couture"
+      },
+      description: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Collection d’outils de couture (fils, boutons, etc.) idéale pour atelier et DIY."
+      },
+      price: 40,
       images: [
         "https://static.mapetitemercerie.com/241747-large_default/ciseaux-classic-cranteurs-23-cm-droitier-fiskars.jpg"
       ],
-      rating: 4.8,
-      reviews: 32,
-      category: "Outils de couture",
-      material: "Acier inoxydable",
-      height: "23cm",
-      color: "Argent",
+      category: {
+        _id: "cat1",
+        name: { fr: "Accessoires de Couture", ar: "إكسسوارات الخياطة" },
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      Characteristic: [
+        {
+          _id: "c3",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Multicolore", ar: "متعدد الألوان" }]
+        },
+        {
+          _id: "c4",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Mix", ar: "خليط" }]
+        }
+      ],
       inStock: true,
-      quantity: 25,
-      description: { fr: "Ciseaux professionnels", ar: "مقص مهني" }
+      quantity: 50,
+      isNew: false,
+      isOnSale: false,
+      slug: "fournitures-de-couture",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: "3",
-      name: { fr: "Kit aiguilles assorties", ar: "طقم إبر متنوعة" },
-      price: 18.33,
+      _id: "3",
+      name: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Fils colorés dans un tiroir"
+      },
+      description: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Vue rapprochée de fils à coudre colorés bien rangés dans un tiroir."
+      },
+      price: 30,
       images: [
         "https://static.mapetitemercerie.com/99298-large_default/kit-de-11-fils-a-coudre-guetermann-accessoires.jpg"
       ],
-      rating: 4.2,
-      reviews: 8,
-      category: "Aiguilles",
-      material: "Acier",
-      height: "Variée",
-      color: "Argent",
+      category: {
+        _id: "cat1",
+        name: { fr: "Accessoires de Couture", ar: "إكسسوارات الخياطة" },
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      Characteristic: [
+        {
+          _id: "c5",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Multicolore", ar: "متعدد الألوان" }]
+        },
+        {
+          _id: "c6",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Coton", ar: "قطن" }]
+        }
+      ],
       inStock: true,
-      quantity: 75,
-      description: { fr: "Kit complet d'aiguilles", ar: "طقم كامل من الإبر" }
+      quantity: 70,
+      isNew: true,
+      isOnSale: false,
+      slug: "fils-colores-dans-un-tiroir",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      _id: "4",
+      name: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Tissus assortis colorés"
+      },
+      description: {
+        ar: "ؤاعبا نتيبا بنابش نبتلابلاب نمبابب",
+        fr: "Collection de tissus 100% coton, idéals pour patchwork, quilting et projets créatifs."
+      },
+      price: 35,
+      images: [
+        "https://static.mapetitemercerie.com/48913-large_default/machine-a-coudre-smarter-260c-pfaff.jpg"
+      ],
+      category: {
+        _id: "cat2",
+        name: { fr: "Tissus", ar: "أقمشة" },
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      Characteristic: [
+        {
+          _id: "c7",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Multicolore", ar: "متعدد الألوان" }]
+        },
+        {
+          _id: "c8",
+          name: {
+            _id: "68fcc6f03124d8faea297cb3",
+            name: { fr: "color", ar: "أبيض" },
+            values: [
+              { name: { fr: "Polyester", ar: "بوليستر" } },
+              { name: { fr: "Coton", ar: "قطن" } }
+            ]
+          },
+          values: [{ fr: "Coton", ar: "قطن" }]
+        }
+      ],
+      inStock: true,
+      quantity: 80,
+      isNew: false,
+      isOnSale: false,
+      slug: "tissus-assortis-colores",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
   ]
-
   const examplePack: ProductPack = {
     id: "pack-1",
     name: {
@@ -214,30 +392,6 @@ const PackDetailPage: React.FC = () => {
       return newSet
     })
   }
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${
-          i < Math.floor(rating)
-            ? "text-yellow-400 fill-current"
-            : i < rating
-            ? "text-yellow-400 fill-current opacity-50"
-            : "text-gray-300"
-        }`}
-      />
-    ))
-  }
-
-  const averageRating =
-    currentPack.items.reduce((sum, item) => sum + item.product.rating, 0) /
-    currentPack.items.length
-
-  const totalReviews = currentPack.items.reduce(
-    (sum, item) => sum + item.product.reviews,
-    0
-  )
 
   const isPackInStock = currentPack.items.every((item) => item.product.inStock)
 
@@ -386,16 +540,6 @@ const PackDetailPage: React.FC = () => {
                 {currentPack.name[locale]}
               </h1>
 
-              {/* Note et avis moyens */}
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex items-center">
-                  {renderStars(averageRating)}
-                </div>
-                <span className="text-sm text-gray-600">
-                  {averageRating.toFixed(1)} ({totalReviews} avis au total)
-                </span>
-              </div>
-
               {/* Prix */}
               <div className="space-y-2 mb-6">
                 <div className="flex items-center space-x-3">
@@ -451,18 +595,6 @@ const PackDetailPage: React.FC = () => {
                       0
                     )}
                   </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Star className="w-4 h-4 text-gray-600" />
-                  <span className="text-gray-600">Note moyenne:</span>
-                  <span className="font-medium">
-                    {averageRating.toFixed(1)}/5
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-gray-600" />
-                  <span className="text-gray-600">Avis totaux:</span>
-                  <span className="font-medium">{totalReviews}</span>
                 </div>
               </div>
             </div>
@@ -554,8 +686,7 @@ const PackDetailPage: React.FC = () => {
                 {
                   id: "items",
                   label: `Produits inclus (${currentPack.items.length})`
-                },
-                { id: "reviews", label: `Avis (${totalReviews})` }
+                }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -614,18 +745,8 @@ const PackDetailPage: React.FC = () => {
                                 {item.product.name[locale]}
                               </h4>
                               <p className="text-sm text-gray-500 mt-1">
-                                {item.product.category} •{" "}
-                                {item.product.material}
+                                {item.product.category?.name[locale]}
                               </p>
-                              <div className="flex items-center mt-2">
-                                <div className="flex items-center">
-                                  {renderStars(item.product.rating)}
-                                </div>
-                                <span className="text-xs text-gray-500 ml-2">
-                                  {item.product.rating} ({item.product.reviews}{" "}
-                                  avis)
-                                </span>
-                              </div>
                             </div>
 
                             <div className="text-right flex-shrink-0">
@@ -643,36 +764,24 @@ const PackDetailPage: React.FC = () => {
                           </div>
 
                           <button
-                            onClick={() => toggleItemExpansion(item.product.id)}
+                            onClick={() =>
+                              toggleItemExpansion(item.product._id)
+                            }
                             className="mt-3 text-sm text-purple-600 hover:text-purple-800 flex items-center"
                           >
                             <Eye className="w-4 h-4 mr-1" />
-                            {expandedItems.has(item.product.id)
+                            {expandedItems.has(item.product._id)
                               ? "Masquer"
                               : "Voir"}{" "}
                             les détails
                           </button>
 
-                          {expandedItems.has(item.product.id) && (
+                          {expandedItems.has(item.product._id) && (
                             <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                               <p className="text-sm text-gray-700">
                                 {item.product.description[locale]}
                               </p>
                               <div className="grid grid-cols-2 gap-4 mt-3 text-xs">
-                                <div>
-                                  <span className="text-gray-500">
-                                    Couleur:
-                                  </span>
-                                  <span className="ml-1 font-medium">
-                                    {item.product.color}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">Taille:</span>
-                                  <span className="ml-1 font-medium">
-                                    {item.product.height}
-                                  </span>
-                                </div>
                                 <div>
                                   <span className="text-gray-500">Stock:</span>
                                   <span className="ml-1 font-medium">
@@ -739,67 +848,6 @@ const PackDetailPage: React.FC = () => {
                       )}
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "reviews" && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Avis sur les produits du pack
-                  </h3>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center">
-                      {renderStars(averageRating)}
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      {averageRating.toFixed(1)}/5 • {totalReviews} avis au
-                      total
-                    </span>
-                  </div>
-                </div>
-
-                {/* Répartition des avis par produit */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {currentPack.items.map((item, index) => (
-                    <div
-                      key={index}
-                      className="bg-white rounded-lg p-4 border border-gray-200"
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                          <Image
-                            src={item.product.images[0]}
-                            alt={item.product.name[locale]}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h5 className="text-sm font-medium text-gray-900 truncate">
-                            {item.product.name[locale]}
-                          </h5>
-                          <div className="flex items-center mt-1">
-                            {renderStars(item.product.rating)}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {item.product.rating}/5 • {item.product.reviews}{" "}
-                            avis
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="text-center py-8 text-gray-500">
-                  <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Les avis détaillés des clients seront affichés ici.</p>
-                  <p className="text-sm mt-2">
-                    Note moyenne basée sur {totalReviews} avis sur tous les
-                    produits du pack.
-                  </p>
                 </div>
               </div>
             )}

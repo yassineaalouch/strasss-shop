@@ -12,50 +12,19 @@ import {
 import Link from "next/link"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
-import SideCart from "./CartContext"
-import { CartItem } from "@/types/type"
+import SideCart from "./SideCart"
+// import { CartItem } from "@/types/type"
 import { FREE_SHIPPING_THRESHOLD } from "@/data/data"
 import Image from "next/image"
 import LanguageToggle from "./LanguageToggle"
+import { useCartContext } from "@/app/context/CartContext"
 
 const Header: React.FC = () => {
   const t = useTranslations("Header")
+  const { cartItems, updateQuantity, removeItem } = useCartContext()
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
-
-  // État du panier
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: "1",
-      name: "Fil à coudre polyester - Lot de 10 bobines",
-      price: 45.0,
-      quantity: 2,
-      category: "Tissus",
-      image:
-        "https://static.mapetitemercerie.com/241747-large_default/ciseaux-classic-cranteurs-23-cm-droitier-fiskars.jpg",
-      color: "Multicolore"
-    },
-    {
-      id: "2",
-      name: "Ciseaux de couture professionnels 25cm",
-      price: 120.0,
-      quantity: 1,
-      category: "Boutons et Fermetures",
-      image:
-        "https://static.mapetitemercerie.com/99298-large_default/kit-de-11-fils-a-coudre-guetermann-accessoires.jpg"
-    },
-    {
-      id: "3",
-      name: "Épingles à tête colorée - 100 pièces",
-      price: 25.0,
-      quantity: 3,
-      category: "Fils et Aiguilles",
-      image:
-        "https://static.mapetitemercerie.com/48913-large_default/machine-a-coudre-smarter-260c-pfaff.jpg",
-      size: "Standard"
-    }
-  ])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -63,16 +32,6 @@ const Header: React.FC = () => {
 
   const toggleCart = () => {
     setIsCartOpen(!isCartOpen)
-  }
-
-  const updateQuantity = (id: string, quantity: number) => {
-    setCartItems((items) =>
-      items.map((item) => (item.id === id ? { ...item, quantity } : item))
-    )
-  }
-
-  const removeItem = (id: string) => {
-    setCartItems((items) => items.filter((item) => item.id !== id))
   }
 
   // Calcul du nombre total d'articles
@@ -115,8 +74,7 @@ const Header: React.FC = () => {
                 <span>
                   {t("freeShipping", { threshold: FREE_SHIPPING_THRESHOLD })}
                 </span>
-              </div>
-              s{" "}
+              </div>{" "}
             </div>
           </div>
         </div>
@@ -132,7 +90,7 @@ const Header: React.FC = () => {
                   alt="logo"
                   height={32}
                   width={32}
-                  className="w-full h-full object-cover rounded-lg animate-bounce"
+                  className="object-cover rounded-lg animate-bounce"
                 />
               </div>
               <div>

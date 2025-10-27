@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import Order from "@/models/Order"
+import { sendOrderEmail } from "@/lib/nodemailer"
+import { Discount } from "@/types/discount"
+import mongoose from "mongoose"
 
 // Types pour les données de commande
 interface OrderItem {
@@ -20,6 +23,7 @@ interface OrderRequestBody {
   subtotal: number
   shipping: number
   total: number
+  coupon: Discount | null
 }
 
 interface ValidationError extends Error {
@@ -56,7 +60,8 @@ export async function POST(request: NextRequest) {
       items,
       subtotal,
       shipping,
-      total
+      total,
+      coupon
     } = body
 
     // Validation des données
@@ -72,7 +77,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
     // Créer la nouvelle commande
     const newOrder = await Order.create({
       customerName: customerName.trim(),
@@ -82,9 +86,11 @@ export async function POST(request: NextRequest) {
       subtotal,
       shipping,
       total,
-      status: "pending"
+      status: "pending",
+      coupon: coupon?._id ? new mongoose.Types.ObjectId(coupon?._id) : null
     })
-
+    // await sendOrderEmail(newOrder)
+    await sendOrderEmail({ ...newOrder.toObject(), coupon })
     return NextResponse.json(
       {
         success: true,
@@ -124,7 +130,7 @@ export async function GET() {
   try {
     await connectToDatabase()
 
-    const orders = await Order.find().sort({ orderDate: -1 })
+    const orders = await Order.find().sort({ orderDate: -1 }).populate("coupon")
 
     return NextResponse.json({ success: true, orders }, { status: 200 })
   } catch (error: unknown) {

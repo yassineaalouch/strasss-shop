@@ -1,0 +1,305 @@
+// app/api/discounts/route.ts
+import { NextRequest, NextResponse } from "next/server"
+import { connectToDatabase } from "@/lib/mongodb"
+import Discount from "@/models/Discount"
+import { DiscountRequestBody, DiscountResponse } from "@/types/discount"
+import mongoose from "mongoose"
+// import Category from "@/models/Category"
+// import Product from "@/models/Product"
+interface ValidationError extends Error {
+  name: "ValidationError"
+  errors: {
+    [key: string]: {
+      message: string
+    }
+  }
+}
+
+function isValidationError(error: unknown): error is ValidationError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "ValidationError"
+  )
+}
+
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<DiscountResponse>> {
+  try {
+    await connectToDatabase()
+
+    // Récupération des paramètres de requête
+    const { searchParams } = new URL(request.url)
+    const isActive = searchParams.get("active")
+    const type = searchParams.get("type")
+    const status = searchParams.get("status")
+    const excludeCoupon = searchParams.get("excludeCoupon") // 👈 nouveau paramètre
+
+    // Construction de la requête
+    const query: Record<string, unknown> = {}
+
+    // Filtre actif / inactif
+    if (isActive !== null) {
+      query.isActive = isActive === "true"
+    }
+
+    // Filtre par type spécifique
+    if (type && type !== "all") {
+      query.type = type
+    }
+
+    // 👇 Nouveau filtre : exclure les COUPON si demandé
+    if (excludeCoupon === "true") {
+      query.type = { $ne: "COUPON" }
+    }
+
+    // Filtrage par statut
+    const now = new Date()
+    if (status && status !== "all") {
+      switch (status) {
+        case "active":
+          query.isActive = true
+          query.$or = [
+            { startDate: null, endDate: null },
+            { startDate: { $lte: now }, endDate: null },
+            { startDate: null, endDate: { $gte: now } },
+            { startDate: { $lte: now }, endDate: { $gte: now } }
+          ]
+          break
+        case "inactive":
+          query.isActive = false
+          break
+        case "expired":
+          query.endDate = { $lt: now }
+          break
+        case "upcoming":
+          query.startDate = { $gt: now }
+          break
+      }
+    }
+
+    const discounts = await Discount.find(query).sort({ createdAt: -1 })
+
+    return NextResponse.json(
+      {
+        success: true,
+        discounts: discounts.map((discount) => ({
+          _id: discount._id as string,
+          name: discount.name,
+          type: discount.type,
+          value: discount.value ?? undefined,
+          buyQuantity: discount.buyQuantity ?? undefined,
+          getQuantity: discount.getQuantity ?? undefined,
+          couponCode: discount.couponCode ?? undefined,
+          description: discount.description,
+          startDate: discount.startDate?.toISOString(),
+          endDate: discount.endDate?.toISOString(),
+          isActive: discount.isActive,
+          usageLimit: discount.usageLimit ?? undefined,
+          usageCount: discount.usageCount,
+          minimumPurchase: discount.minimumPurchase ?? undefined,
+          createdAt: discount.createdAt.toISOString(),
+          updatedAt: discount.updatedAt.toISOString()
+        }))
+      },
+      { status: 200 }
+    )
+  } catch (error: unknown) {
+    console.error("Erreur lors de la récupération des promotions:", error)
+    return NextResponse.json(
+      { success: false, message: "Erreur serveur" },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Créer une nouvelle promotion
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<DiscountResponse>> {
+  try {
+    await connectToDatabase()
+
+    const body = (await request.json()) as DiscountRequestBody
+    const {
+      name,
+      type,
+      value,
+      buyQuantity,
+      getQuantity,
+      couponCode,
+      description,
+      startDate,
+      endDate,
+      isActive,
+      usageLimit,
+      minimumPurchase
+    } = body
+
+    // Validation des données
+    if (!name?.fr || !name?.ar) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Les noms en français et en arabe sont requis"
+        },
+        { status: 400 }
+      )
+    }
+
+    if (!type) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Le type de promotion est requis"
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validation spécifique selon le type
+    if (type === "PERCENTAGE") {
+      if (!value || value <= 0 || value > 100) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Le pourcentage doit être entre 1 et 100"
+          },
+          { status: 400 }
+        )
+      }
+    } else if (type === "BUY_X_GET_Y") {
+      if (!buyQuantity || !getQuantity) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Les quantités sont requises pour ce type de promotion"
+          },
+          { status: 400 }
+        )
+      }
+    } else if (type === "COUPON") {
+      if (!couponCode) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Le code promo est requis"
+          },
+          { status: 400 }
+        )
+      }
+      if (!value || value <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "La valeur du coupon doit être positive"
+          },
+          { status: 400 }
+        )
+      }
+
+      // Vérifier l'unicité du code promo
+      const existingCoupon = await Discount.findOne({
+        couponCode: couponCode.toUpperCase()
+      })
+      if (existingCoupon) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Ce code promo existe déjà"
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Créer la nouvelle promotion
+    const newDiscount = await Discount.create({
+      name: {
+        fr: name.fr.trim(),
+        ar: name.ar.trim()
+      },
+      type,
+      value: value || undefined,
+      buyQuantity: buyQuantity || undefined,
+      getQuantity: getQuantity || undefined,
+      couponCode: couponCode?.toUpperCase() || undefined,
+      description: description
+        ? {
+            fr: description.fr.trim(),
+            ar: description.ar.trim()
+          }
+        : undefined,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
+      isActive: isActive !== undefined ? isActive : true,
+      usageLimit: usageLimit || null,
+      minimumPurchase: minimumPurchase || null
+    })
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Promotion créée avec succès",
+        discount: {
+          _id: newDiscount._id as string,
+          name: newDiscount.name,
+          type: newDiscount.type,
+          value: newDiscount.value,
+          buyQuantity: newDiscount.buyQuantity ?? undefined,
+          getQuantity: newDiscount.getQuantity ?? undefined,
+          couponCode: newDiscount.couponCode ?? undefined,
+          description: newDiscount.description,
+          startDate: newDiscount.startDate?.toISOString(),
+          endDate: newDiscount.endDate?.toISOString(),
+          isActive: newDiscount.isActive,
+          usageLimit: newDiscount.usageLimit ?? undefined,
+          usageCount: newDiscount.usageCount,
+          minimumPurchase: newDiscount.minimumPurchase ?? undefined,
+          applicableCategories: newDiscount.applicableCategories?.map(
+            (c: mongoose.Types.ObjectId) => c.toString()
+          ),
+          applicableProducts: newDiscount.applicableProducts?.map(
+            (p: mongoose.Types.ObjectId) => p.toString()
+          ),
+          createdAt: newDiscount.createdAt.toISOString(),
+          updatedAt: newDiscount.updatedAt.toISOString()
+        }
+      },
+      { status: 201 }
+    )
+  } catch (error: unknown) {
+    console.error("Erreur lors de la création de la promotion:", error)
+
+    if (isValidationError(error)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Erreur de validation",
+          errors: Object.values(error.errors).map((e) => e.message)
+        },
+        { status: 400 }
+      )
+    }
+
+    if (error instanceof Error && error.message.includes("duplicate key")) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Ce code promo existe déjà"
+        },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Erreur lors de la création de la promotion"
+      },
+      { status: 500 }
+    )
+  }
+}

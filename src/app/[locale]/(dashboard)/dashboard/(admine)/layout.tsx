@@ -10,7 +10,7 @@ export default function DashboardGlobalLayout({
 }>) {
   return (
     <SessionProvider>
-      <DashboardLayout currentPath="/dashboard">{children}</DashboardLayout>
+      <DashboardLayout>{children}</DashboardLayout>
     </SessionProvider>
   )
 }

@@ -21,77 +21,13 @@ import {
   Gift
 } from "lucide-react"
 import Image from "next/image"
-
-// Types pour les produits individuels
-interface OrderItem {
-  id: string
-  name: string
-  quantity: number
-  price: number
-  image: string
-  type: "product"
-}
-
-// Types pour les packs
-interface PackProduct {
-  id: string
-  name: string
-  quantity: number
-  price: number
-  image: string
-}
-
-interface OrderPack {
-  id: string
-  name: string
-  quantity: number
-  price: number
-  discountPrice?: number
-  image: string
-  type: "pack"
-  items: PackProduct[] // Produits inclus dans le pack
-}
-
-// Type unifié pour les articles de commande
-type OrderLineItem = OrderItem | OrderPack
-
-interface Order {
-  id: string
-  orderNumber: string
-  customerName: string
-  customerEmail: string
-  customerPhone: string
-  customerAddress: string
-  orderDate: Date
-  status:
-    | "pending"
-    | "confirmed"
-    | "rejected"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
-  total: number
-  paymentMethod: string
-  shippingMethod: string
-  items: OrderLineItem[]
-  notes?: string
-}
-
-interface FilterState {
-  search: string
-  status: string
-  dateFrom: string
-  dateTo: string
-  minAmount: string
-  maxAmount: string
-  itemType: string // Nouveau filtre pour type d'articles
-}
-
-interface SortState {
-  field: "date" | "total" | "customerName" | "orderNumber"
-  direction: "asc" | "desc"
-}
+import {
+  OrderFilterState,
+  OrderLineItem,
+  OrderPack,
+  Order,
+  SortState
+} from "@/types/type"
 
 const AdminOrdersTable: React.FC = () => {
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
@@ -100,7 +36,7 @@ const AdminOrdersTable: React.FC = () => {
   const [itemsPerPage] = useState(20)
   const [showFilters, setShowFilters] = useState(false)
 
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<OrderFilterState>({
     search: "",
     status: "",
     dateFrom: "",

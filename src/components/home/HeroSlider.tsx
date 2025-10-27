@@ -29,7 +29,7 @@ export default function HeroSlider({ images }: HeroSliderProps) {
           <Image
             src={img}
             alt={`Accessoire couture ${index + 1}`}
-            className="rounded-lg w-full h-80"
+            className="rounded-lg w-full h-auto"
             width={500}
             height={500}
           />

@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
 import { deleteFileFromS3 } from "@/lib/s3"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function DELETE(req: NextRequest) {
   const { fileName } = await req.json()

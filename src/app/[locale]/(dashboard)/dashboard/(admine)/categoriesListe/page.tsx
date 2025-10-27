@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
+import axios from "axios"
 import {
   FolderTree,
   Plus,
@@ -19,56 +20,16 @@ import {
   ArrowUp,
   ArrowDown,
   Eye,
-  EyeOff
+  EyeOff,
+  Loader2
 } from "lucide-react"
-
-// Interface pour les catégories
-export interface Category {
-  id: string
-  name: {
-    fr: string
-    ar: string
-  }
-  description?: {
-    fr: string
-    ar: string
-  }
-  parentId?: string
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
-interface CategoryFormData {
-  name: {
-    fr: string
-    ar: string
-  }
-  description: {
-    fr: string
-    ar: string
-  }
-  parentId: string
-  isActive: boolean
-}
-
-interface FilterState {
-  search: string
-  parentFilter: "all" | "root" | "children"
-  status: "all" | "active" | "inactive"
-}
-
-interface SortState {
-  field: "name" | "createdAt" | "updatedAt"
-  direction: "asc" | "desc"
-}
-
-// Interface pour l'arbre de catégories
-interface CategoryTreeNode {
-  category: Category
-  children: CategoryTreeNode[]
-  level: number
-}
+import {
+  Category,
+  CategoryFormData,
+  FilterState,
+  SortState,
+  CategoryTreeNode
+} from "@/types/category"
 
 const AdminCategoriesManager: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([])
@@ -78,6 +39,8 @@ const AdminCategoriesManager: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false)
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [viewMode, setViewMode] = useState<"tree" | "table">("tree")
+  const [loading, setLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [filters, setFilters] = useState<FilterState>({
     search: "",
@@ -97,114 +60,29 @@ const AdminCategoriesManager: React.FC = () => {
     isActive: true
   })
 
-  // Données d'exemple de catégories
-  const exampleCategories: Category[] = useMemo(
-    () => [
-      {
-        id: "1",
-        name: { fr: "Fils et Bobines", ar: "الخيوط والبكرات" },
-        description: {
-          fr: "Tous types de fils pour la couture et broderie",
-          ar: "جميع أنواع الخيوط للخياطة والتطريز"
-        },
-        isActive: true,
-        createdAt: new Date("2025-01-01"),
-        updatedAt: new Date("2025-01-01")
-      },
-      {
-        id: "2",
-        name: { fr: "Fils de Coton", ar: "خيوط القطن" },
-        parentId: "1",
-        description: {
-          fr: "Fils en coton naturel de haute qualité",
-          ar: "خيوط من القطن الطبيعي عالي الجودة"
-        },
-        isActive: true,
-        createdAt: new Date("2025-01-02"),
-        updatedAt: new Date("2025-01-02")
-      },
-      {
-        id: "3",
-        name: { fr: "Fils Polyester", ar: "خيوط البوليستر" },
-        parentId: "1",
-        description: {
-          fr: "Fils synthétiques résistants",
-          ar: "خيوط صناعية مقاومة"
-        },
-        isActive: true,
-        createdAt: new Date("2025-01-03"),
-        updatedAt: new Date("2025-01-03")
-      },
-      {
-        id: "4",
-        name: { fr: "Outils de Couture", ar: "أدوات الخياطة" },
-        description: {
-          fr: "Tous les outils nécessaires pour la couture",
-          ar: "جميع الأدوات اللازمة للخياطة"
-        },
-        isActive: true,
-        createdAt: new Date("2025-01-04"),
-        updatedAt: new Date("2025-01-04")
-      },
-      {
-        id: "5",
-        name: { fr: "Ciseaux", ar: "المقصات" },
-        parentId: "4",
-        description: {
-          fr: "Ciseaux de couture professionnels",
-          ar: "مقصات خياطة مهنية"
-        },
-        isActive: true,
-        createdAt: new Date("2025-01-05"),
-        updatedAt: new Date("2025-01-05")
-      },
-      {
-        id: "6",
-        name: { fr: "Aiguilles", ar: "الإبر" },
-        parentId: "4",
-        description: {
-          fr: "Aiguilles de différentes tailles",
-          ar: "إبر بأحجام مختلفة"
-        },
-        isActive: true,
-        createdAt: new Date("2025-01-06"),
-        updatedAt: new Date("2025-01-06")
-      },
-      {
-        id: "7",
-        name: { fr: "Aiguilles à Broderie", ar: "إبر التطريز" },
-        parentId: "6",
-        description: {
-          fr: "Aiguilles spécialisées pour la broderie",
-          ar: "إبر متخصصة للتطريز"
-        },
-        isActive: true,
-        createdAt: new Date("2025-01-07"),
-        updatedAt: new Date("2025-01-07")
-      },
-      {
-        id: "8",
-        name: { fr: "Tissus", ar: "الأقمشة" },
-        description: {
-          fr: "Différents types de tissus",
-          ar: "أنواع مختلفة من الأقمشة"
-        },
-        isActive: false,
-        createdAt: new Date("2025-01-08"),
-        updatedAt: new Date("2025-01-08")
-      }
-    ],
-    []
-  )
+  // Charger les catégories depuis l'API
+  useEffect(() => {
+    fetchCategories()
+  }, [])
 
-  // Initialiser avec les données d'exemple
-  React.useEffect(() => {
-    setCategories(exampleCategories)
-  }, [exampleCategories])
+  const fetchCategories = async () => {
+    try {
+      setLoading(true)
+      const response = await axios.get("/api/categories")
+      if (response.data.success) {
+        setCategories(response.data.categories)
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des catégories:", error)
+      alert("Erreur lors du chargement des catégories")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Fonction pour vérifier si une catégorie est descendante d'une autre
   const isDescendant = (ancestorId: string, categoryId: string): boolean => {
-    const category = categories.find((c) => c.id === categoryId)
+    const category = categories.find((c) => c._id === categoryId)
     if (!category || !category.parentId) return false
     if (category.parentId === ancestorId) return true
     return isDescendant(ancestorId, category.parentId)
@@ -216,8 +94,8 @@ const AdminCategoriesManager: React.FC = () => {
     const directChildren = categories.filter((c) => c.parentId === categoryId)
 
     for (const child of directChildren) {
-      descendants.push(child.id)
-      descendants.push(...getAllDescendants(child.id))
+      descendants.push(child._id)
+      descendants.push(...getAllDescendants(child._id))
     }
 
     return descendants
@@ -226,12 +104,12 @@ const AdminCategoriesManager: React.FC = () => {
   // Fonction pour obtenir le chemin complet d'une catégorie
   const getCategoryPath = (categoryId: string): Category[] => {
     const path: Category[] = []
-    let currentCategory = categories.find((c) => c.id === categoryId)
+    let currentCategory = categories.find((c) => c._id === categoryId)
 
     while (currentCategory) {
       path.unshift(currentCategory)
       currentCategory = currentCategory.parentId
-        ? categories.find((c) => c.id === currentCategory!.parentId)
+        ? categories.find((c) => c._id === currentCategory!.parentId)
         : undefined
     }
 
@@ -250,17 +128,17 @@ const AdminCategoriesManager: React.FC = () => {
       )
       .map((category) => ({
         category,
-        children: buildCategoryTree(category.id, level + 1),
+        children: buildCategoryTree(category._id, level + 1),
         level
       }))
   }
 
   // Obtenir les catégories qui peuvent être parents (éviter les boucles)
   const getAvailableParents = (excludeId?: string): Category[] => {
-    if (!excludeId) return categories.filter((c) => c.id !== excludeId)
+    if (!excludeId) return categories.filter((c) => c._id !== excludeId)
 
     const excludeIds = [excludeId, ...getAllDescendants(excludeId)]
-    return categories.filter((c) => !excludeIds.includes(c.id))
+    return categories.filter((c) => !excludeIds.includes(c._id))
   }
 
   const filteredAndSortedCategories = useMemo(() => {
@@ -305,10 +183,12 @@ const AdminCategoriesManager: React.FC = () => {
           )
           break
         case "createdAt":
-          comparison = a.createdAt.getTime() - b.createdAt.getTime()
+          comparison =
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           break
         case "updatedAt":
-          comparison = a.updatedAt.getTime() - b.updatedAt.getTime()
+          comparison =
+            new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
           break
       }
 
@@ -346,7 +226,7 @@ const AdminCategoriesManager: React.FC = () => {
     setEditingCategory(null)
   }
 
-  const handleSaveCategory = () => {
+  const handleSaveCategory = async () => {
     if (!formData.name.fr || !formData.name.ar) {
       alert("Veuillez remplir les noms en français et en arabe")
       return
@@ -354,12 +234,12 @@ const AdminCategoriesManager: React.FC = () => {
 
     // Vérifier les boucles si c'est une modification
     if (editingCategory && formData.parentId) {
-      if (formData.parentId === editingCategory.id) {
+      if (formData.parentId === editingCategory._id) {
         alert("Une catégorie ne peut pas être son propre parent")
         return
       }
 
-      if (isDescendant(editingCategory.id, formData.parentId)) {
+      if (isDescendant(editingCategory._id, formData.parentId)) {
         alert(
           "Impossible de créer une boucle : cette catégorie est déjà descendante de la catégorie sélectionnée"
         )
@@ -367,29 +247,51 @@ const AdminCategoriesManager: React.FC = () => {
       }
     }
 
-    const now = new Date()
-    const newCategory: Category = {
-      id: editingCategory?.id || `cat-${Date.now()}`,
-      name: formData.name,
-      description:
-        formData.description.fr || formData.description.ar
-          ? formData.description
-          : undefined,
-      parentId: formData.parentId || undefined,
-      isActive: formData.isActive,
-      createdAt: editingCategory?.createdAt || now,
-      updatedAt: now
-    }
+    setIsSubmitting(true)
 
-    if (editingCategory) {
-      setCategories((prev) =>
-        prev.map((cat) => (cat.id === editingCategory.id ? newCategory : cat))
-      )
-    } else {
-      setCategories((prev) => [...prev, newCategory])
-    }
+    try {
+      const categoryData = {
+        name: formData.name,
+        description:
+          formData.description.fr || formData.description.ar
+            ? formData.description
+            : undefined,
+        parentId: formData.parentId || undefined,
+        isActive: formData.isActive
+      }
 
-    resetForm()
+      if (editingCategory) {
+        // Mise à jour
+        const response = await axios.put(
+          `/api/categories/${editingCategory._id}`,
+          categoryData
+        )
+
+        if (response.data.success) {
+          alert("Catégorie mise à jour avec succès")
+          await fetchCategories()
+          resetForm()
+        }
+      } else {
+        // Création
+        const response = await axios.post("/api/categories", categoryData)
+
+        if (response.data.success) {
+          alert("Catégorie créée avec succès")
+          await fetchCategories()
+          resetForm()
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement:", error)
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        alert(error.response.data.message)
+      } else {
+        alert("Erreur lors de l'enregistrement de la catégorie")
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleEditCategory = (category: Category) => {
@@ -403,7 +305,7 @@ const AdminCategoriesManager: React.FC = () => {
     setIsCreating(true)
   }
 
-  const handleDeleteCategory = (categoryId: string) => {
+  const handleDeleteCategory = async (categoryId: string) => {
     const hasChildren = categories.some((cat) => cat.parentId === categoryId)
 
     if (hasChildren) {
@@ -414,18 +316,35 @@ const AdminCategoriesManager: React.FC = () => {
     }
 
     if (confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
-      setCategories((prev) => prev.filter((cat) => cat.id !== categoryId))
+      try {
+        const response = await axios.delete(`/api/categories/${categoryId}`)
+
+        if (response.data.success) {
+          alert("Catégorie supprimée avec succès")
+          await fetchCategories()
+        }
+      } catch (error) {
+        console.error("Erreur lors de la suppression:", error)
+        if (axios.isAxiosError(error) && error.response?.data?.message) {
+          alert(error.response.data.message)
+        } else {
+          alert("Erreur lors de la suppression de la catégorie")
+        }
+      }
     }
   }
 
-  const toggleCategoryStatus = (categoryId: string) => {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === categoryId
-          ? { ...cat, isActive: !cat.isActive, updatedAt: new Date() }
-          : cat
-      )
-    )
+  const toggleCategoryStatus = async (categoryId: string) => {
+    try {
+      const response = await axios.patch(`/api/categories/${categoryId}`)
+
+      if (response.data.success) {
+        await fetchCategories()
+      }
+    } catch (error) {
+      console.error("Erreur lors du changement de statut:", error)
+      alert("Erreur lors du changement de statut")
+    }
   }
 
   const toggleNodeExpansion = (nodeId: string) => {
@@ -443,16 +362,18 @@ const AdminCategoriesManager: React.FC = () => {
   const renderCategoryTree = (nodes: CategoryTreeNode[]): React.ReactNode => {
     return nodes.map((node) => {
       const hasChildren = node.children.length > 0
-      const isExpanded = expandedNodes.has(node.category.id)
+      const isExpanded = expandedNodes.has(node.category._id)
 
       return (
-        <div key={node.category.id} className="w-full">
+        <div key={node.category._id} className="w-full">
           <div
             className={`flex items-center py-2 px-4 hover:bg-gray-50 cursor-pointer border-l-2 ${
               node.category.isActive ? "border-green-500" : "border-red-500"
             }`}
             style={{ marginLeft: `${node.level * 20}px` }}
-            onClick={() => hasChildren && toggleNodeExpansion(node.category.id)}
+            onClick={() =>
+              hasChildren && toggleNodeExpansion(node.category._id)
+            }
           >
             <div className="flex items-center flex-1 min-w-0">
               {hasChildren ? (
@@ -523,7 +444,7 @@ const AdminCategoriesManager: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        toggleCategoryStatus(node.category.id)
+                        toggleCategoryStatus(node.category._id)
                       }}
                       className="p-1 text-gray-400 hover:text-gray-600"
                       title={node.category.isActive ? "Désactiver" : "Activer"}
@@ -549,7 +470,7 @@ const AdminCategoriesManager: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleDeleteCategory(node.category.id)
+                        handleDeleteCategory(node.category._id)
                       }}
                       className="p-1 text-red-600 hover:text-red-800"
                       title="Supprimer"
@@ -570,8 +491,8 @@ const AdminCategoriesManager: React.FC = () => {
     })
   }
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("fr-FR", {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("fr-FR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric"
@@ -579,6 +500,20 @@ const AdminCategoriesManager: React.FC = () => {
   }
 
   const categoryTree = buildCategoryTree()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2
+            className="animate-spin mx-auto mb-4 text-blue-500"
+            size={48}
+          />
+          <p className="text-gray-600">Chargement des catégories...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -764,11 +699,9 @@ const AdminCategoriesManager: React.FC = () => {
                   <button
                     onClick={() => {
                       if (expandedNodes.size === 0) {
-                        // Développer tous les nœuds
-                        const allIds = new Set(categories.map((c) => c.id))
+                        const allIds = new Set(categories.map((c) => c._id))
                         setExpandedNodes(allIds)
                       } else {
-                        // Réduire tous les nœuds
                         setExpandedNodes(new Set())
                       }
                     }}
@@ -835,14 +768,14 @@ const AdminCategoriesManager: React.FC = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredAndSortedCategories.map((category) => {
-                      const path = getCategoryPath(category.id)
+                      const path = getCategoryPath(category._id)
                       const hasChildren = categories.some(
-                        (c) => c.parentId === category.id
+                        (c) => c.parentId === category._id
                       )
 
                       return (
                         <tr
-                          key={category.id}
+                          key={category._id}
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-6 py-4">
@@ -877,7 +810,7 @@ const AdminCategoriesManager: React.FC = () => {
                             <div className="flex items-center text-sm text-gray-600">
                               {path.map((cat, index) => (
                                 <span
-                                  key={cat.id}
+                                  key={cat._id}
                                   className="flex items-center"
                                 >
                                   {index > 0 && (
@@ -917,7 +850,7 @@ const AdminCategoriesManager: React.FC = () => {
                             <div className="flex items-center space-x-2">
                               <button
                                 onClick={() =>
-                                  toggleCategoryStatus(category.id)
+                                  toggleCategoryStatus(category._id)
                                 }
                                 className={`p-2 rounded-lg ${
                                   category.isActive
@@ -943,7 +876,7 @@ const AdminCategoriesManager: React.FC = () => {
                               </button>
                               <button
                                 onClick={() =>
-                                  handleDeleteCategory(category.id)
+                                  handleDeleteCategory(category._id)
                                 }
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                                 title="Supprimer"
@@ -991,6 +924,7 @@ const AdminCategoriesManager: React.FC = () => {
                 <button
                   onClick={resetForm}
                   className="p-2 text-gray-400 hover:text-gray-600"
+                  disabled={isSubmitting}
                 >
                   <X size={20} />
                 </button>
@@ -1015,6 +949,7 @@ const AdminCategoriesManager: React.FC = () => {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Ex: Fils et Bobines"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -1034,6 +969,7 @@ const AdminCategoriesManager: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="الخيوط والبكرات"
                     dir="rtl"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -1052,16 +988,17 @@ const AdminCategoriesManager: React.FC = () => {
                     }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={isSubmitting}
                 >
                   <option value="">Aucune (catégorie racine)</option>
-                  {getAvailableParents(editingCategory?.id).map((category) => {
-                    const path = getCategoryPath(category.id)
+                  {getAvailableParents(editingCategory?._id).map((category) => {
+                    const path = getCategoryPath(category._id)
                     const pathString = path
                       .map((c) => c.name[currentLanguage])
                       .join(" > ")
 
                     return (
-                      <option key={category.id} value={category.id}>
+                      <option key={category._id} value={category._id}>
                         {pathString}
                       </option>
                     )
@@ -1105,6 +1042,7 @@ const AdminCategoriesManager: React.FC = () => {
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Description de la catégorie..."
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -1124,6 +1062,7 @@ const AdminCategoriesManager: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="وصف الفئة..."
                     dir="rtl"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -1141,6 +1080,7 @@ const AdminCategoriesManager: React.FC = () => {
                     }))
                   }
                   className="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  disabled={isSubmitting}
                 />
                 <label
                   htmlFor="isActive"
@@ -1158,7 +1098,7 @@ const AdminCategoriesManager: React.FC = () => {
                   </h4>
                   <div className="flex items-center text-sm text-gray-600">
                     {getCategoryPath(formData.parentId).map((cat, index) => (
-                      <span key={cat.id} className="flex items-center">
+                      <span key={cat._id} className="flex items-center">
                         {index > 0 && (
                           <ChevronRight className="mx-1" size={12} />
                         )}
@@ -1199,7 +1139,7 @@ const AdminCategoriesManager: React.FC = () => {
                     <div className="flex justify-between">
                       <span>Parent:</span>
                       <span>
-                        {categories.find((c) => c.id === formData.parentId)
+                        {categories.find((c) => c._id === formData.parentId)
                           ?.name[currentLanguage] || "Non trouvé"}
                       </span>
                     </div>
@@ -1223,15 +1163,26 @@ const AdminCategoriesManager: React.FC = () => {
               <button
                 onClick={resetForm}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={isSubmitting}
               >
                 Annuler
               </button>
               <button
                 onClick={handleSaveCategory}
-                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
               >
-                <Save className="mr-2" size={16} />
-                {editingCategory ? "Modifier" : "Créer"} la Catégorie
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 animate-spin" size={16} />
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2" size={16} />
+                    {editingCategory ? "Modifier" : "Créer"} la Catégorie
+                  </>
+                )}
               </button>
             </div>
           </div>
