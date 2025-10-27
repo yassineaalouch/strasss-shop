@@ -38,7 +38,7 @@ const AdminEditProduct: React.FC = () => {
     price: 0,
     originalPrice: undefined,
     images: [],
-    isNew: false,
+    isNewProduct: false,
     isOnSale: false,
     category: "",
     discount: "",
@@ -162,7 +162,7 @@ const AdminEditProduct: React.FC = () => {
           price: product.price || 0,
           originalPrice: product.originalPrice || undefined,
           images: product.images || [],
-          isNew: product.isNew || false,
+          isNewProduct: product.isNewProduct || false,
           isOnSale: product.isOnSale || false,
           category: product.category._id || "",
           discount: product.discount._id || "",
@@ -496,7 +496,7 @@ const AdminEditProduct: React.FC = () => {
         Characteristic: transformCharacteristicsForSubmit(),
         inStock: formData.inStock,
         quantity: formData.quantity,
-        isNew: formData.isNew,
+        isNewProduct: formData.isNewProduct,
         isOnSale: formData.isOnSale
       }
 
@@ -789,7 +789,7 @@ const AdminEditProduct: React.FC = () => {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={formData.isNew}
+                      checked={formData.isNewProduct}
                       onChange={(e) =>
                         handleInputChange("isNewProduct", e.target.checked)
                       }
@@ -840,7 +840,7 @@ const AdminEditProduct: React.FC = () => {
                           className="object-cover"
                         />
                         <div className="absolute top-2 left-2 flex flex-col space-y-1">
-                          {formData.isNew && (
+                          {formData.isNewProduct && (
                             <span className="bg-blue-500 text-white px-2 py-1 text-xs rounded">
                               Nouveau
                             </span>

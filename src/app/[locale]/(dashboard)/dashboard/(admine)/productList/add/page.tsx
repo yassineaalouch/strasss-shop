@@ -27,7 +27,7 @@ const AdminAddProduct: React.FC = () => {
     price: 0,
     originalPrice: undefined,
     images: [],
-    isNew: false,
+    isNewProduct: false,
     isOnSale: false,
     category: "",
     discount: "",
@@ -316,7 +316,7 @@ const AdminAddProduct: React.FC = () => {
         Characteristic: transformCharacteristicsForSubmit(),
         inStock: formData.inStock,
         quantity: formData.quantity,
-        isNew: formData.isNew,
+        isNewProduct: formData.isNewProduct,
         isOnSale: formData.isOnSale
       }
 
@@ -590,9 +590,9 @@ const AdminAddProduct: React.FC = () => {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={formData.isNew}
+                      checked={formData.isNewProduct}
                       onChange={(e) =>
-                        handleInputChange("isNew", e.target.checked)
+                        handleInputChange("isNewProduct", e.target.checked)
                       }
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       disabled={isSubmitting}
@@ -637,7 +637,7 @@ const AdminAddProduct: React.FC = () => {
                           className="object-cover"
                         />
                         <div className="absolute top-2 left-2 flex flex-col space-y-1">
-                          {formData.isNew && (
+                          {formData.isNewProduct && (
                             <span className="bg-blue-500 text-white px-2 py-1 text-xs rounded">
                               Nouveau
                             </span>

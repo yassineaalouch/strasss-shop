@@ -89,7 +89,7 @@ const ProductSchema = new mongoose.Schema(
       min: [0, "La quantité ne peut pas être négative"],
       default: 0
     },
-    isNew: {
+    isNewProduct: {
       type: Boolean,
       default: false
     },
@@ -111,7 +111,7 @@ const ProductSchema = new mongoose.Schema(
 // Index pour améliorer les performances
 ProductSchema.index({ category: 1 })
 ProductSchema.index({ inStock: 1 })
-ProductSchema.index({ isNew: 1 })
+ProductSchema.index({ isNewProduct: 1 })
 ProductSchema.index({ isOnSale: 1 })
 ProductSchema.index({ price: 1 })
 ProductSchema.index({ "name.fr": "text", "name.ar": "text" })

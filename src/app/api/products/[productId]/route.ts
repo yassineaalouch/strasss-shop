@@ -70,7 +70,7 @@ export async function GET(
           Characteristic: product.Characteristic,
           inStock: product.inStock,
           quantity: product.quantity,
-          isNew: product.isNew,
+          isNewProduct: product.isNewProduct,
           isOnSale: product.isOnSale,
           slug: product.slug,
           createdAt: product.createdAt
@@ -121,7 +121,7 @@ export async function PUT(
       Characteristic,
       inStock,
       quantity,
-      isNew,
+      isNewProduct,
       isOnSale
     } = body
     console.log("product.discount", discount)
@@ -194,7 +194,7 @@ export async function PUT(
         Characteristic: Characteristic,
         inStock: inStock !== undefined ? inStock : quantity > 0,
         quantity: quantity || 0,
-        isNew: isNew || false,
+        isNewProduct: isNewProduct || false,
         isOnSale: isOnSale || false
       },
       { new: true, runValidators: true }
@@ -227,7 +227,7 @@ export async function PUT(
           Characteristic: updatedProduct.Characteristic,
           inStock: updatedProduct.inStock,
           quantity: updatedProduct.quantity,
-          isNew: updatedProduct.isNew,
+          isNewProduct: updatedProduct.isNewProduct,
           isOnSale: updatedProduct.isOnSale,
           slug: updatedProduct.slug,
           createdAt: updatedProduct.createdAt

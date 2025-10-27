@@ -26,7 +26,7 @@ export interface Product {
   Characteristic?: ProductCharacteristic[]
   inStock: boolean
   quantity: number
-  isNew: boolean
+  isNewProduct: boolean
   isOnSale: boolean
   slug?: string
   createdAt: string
@@ -44,7 +44,7 @@ export interface ProductFormData {
   Characteristic?: ProductCharacteristic[]
   inStock: boolean
   quantity: number
-  isNew: boolean
+  isNewProduct: boolean
   isOnSale: boolean
 }
 
@@ -59,7 +59,7 @@ export interface ProductRequestBody {
   Characteristic?: ProductCharacteristic[]
   inStock: boolean
   quantity: number
-  isNew: boolean
+  isNewProduct: boolean
   isOnSale: boolean
 }
 

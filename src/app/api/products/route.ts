@@ -73,7 +73,7 @@ export async function GET(
           Characteristic: product.Characteristic,
           inStock: product.inStock,
           quantity: product.quantity,
-          isNew: product.isNew,
+          isNewProduct: product.isNewProduct,
           isOnSale: product.isOnSale,
           slug: product.slug,
           createdAt: product.createdAt
@@ -117,7 +117,7 @@ export async function POST(
       Characteristic,
       inStock,
       quantity,
-      isNew,
+      isNewProduct,
       isOnSale
     } = body
 
@@ -174,7 +174,7 @@ export async function POST(
       Characteristic: Characteristic,
       inStock: inStock !== undefined ? inStock : quantity > 0,
       quantity: quantity || 0,
-      isNew: isNew || false,
+      isNewProduct: isNewProduct || false,
       isOnSale: isOnSale || false
     })
 
@@ -194,7 +194,7 @@ export async function POST(
           Characteristic: newProduct.Characteristic,
           inStock: newProduct.inStock,
           quantity: newProduct.quantity,
-          isNew: newProduct.isNew,
+          isNewProduct: newProduct.isNewProduct,
           isOnSale: newProduct.isOnSale,
           slug: newProduct.slug,
           createdAt: newProduct.createdAt
