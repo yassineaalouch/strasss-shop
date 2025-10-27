@@ -13,7 +13,7 @@ interface MongooseCache {
   promise: Promise<Mongoose> | null
 }
 
-// Définition globale pour éviter la recréation de connexion en dev (hot reload)
+// Définition globale pour éviter   la recréation de connexion en dev (hot reload)
 declare global {
   var mongooseCache: MongooseCache | undefined
 }
