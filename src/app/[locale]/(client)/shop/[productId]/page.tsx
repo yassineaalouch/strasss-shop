@@ -325,7 +325,7 @@ const ProductPage: React.FC = () => {
 
                   {/* Badges */}
                   <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                    {product.isNew && (
+                    {product.isNewProduct && (
                       <span className="bg-blue-500 text-white px-3 py-1 text-sm rounded-full">
                         {locale === "fr" ? "Nouveau" : "جديد"}
                       </span>

@@ -42,14 +42,14 @@ export async function GET(
     type ProductQuery = {
       category?: string
       inStock?: boolean
-      isNew?: boolean
+      isNewProduct?: boolean
       isOnSale?: boolean
     }
     // Construire la requête
     const query: ProductQuery = {}
     if (category) query.category = category
     if (inStock !== null) query.inStock = inStock === "true"
-    if (isNew !== null) query.isNew = isNew === "true"
+    if (isNew !== null) query.isNewProduct = isNew === "true"
     if (isOnSale !== null) query.isOnSale = isOnSale === "true"
 
     const products = await Product.find(query)

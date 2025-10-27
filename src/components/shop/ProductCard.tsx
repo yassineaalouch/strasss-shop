@@ -137,7 +137,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {/* Badges pour mode liste */}
               <div className="absolute top-3 left-3 flex flex-col gap-2">
                 <AnimatePresence>
-                  {product.isNew && (
+                  {product.isNewProduct && (
                     <motion.span
                       key={`new-badge-list-${product._id}`}
                       initial={{ x: -50, opacity: 0 }}
@@ -443,7 +443,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {/* Badges avec animations */}
             <div className="absolute top-3 left-3 flex flex-col space-y-2">
               <AnimatePresence>
-                {product.isNew && (
+                {product.isNewProduct && (
                   <motion.span
                     key={`new-badge-grid-${product._id}`}
                     initial={{ x: -50, opacity: 0 }}

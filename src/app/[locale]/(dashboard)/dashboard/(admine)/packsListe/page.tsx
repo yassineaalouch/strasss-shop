@@ -1104,7 +1104,7 @@ const AdminPackCreator: React.FC = () => {
                                   />
                                 </div>
                               )}
-                              {product.isNew && (
+                              {product.isNewProduct && (
                                 <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl">
                                   NEW
                                 </div>

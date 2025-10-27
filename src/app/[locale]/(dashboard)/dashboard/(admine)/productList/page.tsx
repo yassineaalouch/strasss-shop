@@ -145,7 +145,7 @@ const AdminProductsTable: React.FC = () => {
           if (!product.inStock || product.quantity > 10) return false
           break
         case "new":
-          if (!product.isNew) return false
+          if (!product.isNewProduct) return false
           break
         case "onSale":
           if (!product.isOnSale) return false
@@ -594,7 +594,7 @@ const AdminProductsTable: React.FC = () => {
                             <Package className="text-gray-400" size={20} />
                           </div>
                         )}
-                        {product.isNew && (
+                        {product.isNewProduct && (
                           <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl">
                             NEW
                           </div>
