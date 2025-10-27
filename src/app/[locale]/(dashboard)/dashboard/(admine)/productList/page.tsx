@@ -86,8 +86,6 @@ const AdminProductsTable: React.FC = () => {
     }
   }
 
-  // Obtenir les catégories uniques
-  // const categories = [...new Set(products.map((product) => product.category))]
   const uniqueCategoriesMap = new Map()
 
   products.forEach((product) => {

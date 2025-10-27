@@ -2,24 +2,6 @@ import { ReactNode } from "react"
 import { Product } from "./product"
 import { Discount } from "./discount"
 
-// export interface Product {
-//   _id: string
-//   name: { ar: string; fr: string }
-//   price: number
-//   originalPrice?: number
-//   images: string[]
-//   rating: number
-//   reviews: number
-//   isNew?: boolean
-//   isOnSale?: boolean
-//   category: Category
-//   discount:Discount
-
-//   inStock: boolean
-//   quantity: number
-//   description: { ar: string; fr: string }
-// }
-
 export type ProductForm = Omit<Product, "id" | "rating" | "reviews">
 
 export interface FormData {
@@ -93,16 +75,6 @@ export interface ProductSorterProps {
   currentPage: number
   totalPages: number
   onPageChange: (page: number) => void
-}
-
-export interface Category {
-  id: string
-  name: {
-    fr: string
-    ar: string
-  }
-  image: string
-  productCount: number
 }
 
 export interface Service {
@@ -299,111 +271,4 @@ export interface UserProfile {
 export interface DashboardLayoutProps {
   children: React.ReactNode
   currentPath?: string
-}
-
-export type PackItem = {
-  productId: string
-  quantity: number
-}
-
-export type ProductPack = {
-  _id: string
-  name: {
-    fr: string
-    ar: string
-  }
-  description?: {
-    fr: string
-    ar: string
-  }
-  items: PackItem[]
-  totalPrice: number
-  discountPrice?: number
-  images?: string[]
-}
-
-export interface PackFormData {
-  name: {
-    fr: string
-    ar: string
-  }
-  description: {
-    fr: string
-    ar: string
-  }
-  discountPrice: string
-  images: string[]
-}
-
-// Types pour les produits individuels
-export interface OrderItem {
-  id: string
-  name: string
-  quantity: number
-  price: number
-  image: string
-  discount?: string | null
-  characteristic?: { name: string; value: string }[] | null
-  type: "product"
-}
-
-// Types pour les packs
-export interface PackProduct {
-  id: string
-  name: string
-  quantity: number
-  price: number
-  image: string
-}
-
-export interface OrderPack {
-  id: string
-  name: string
-  quantity: number
-  price: number
-  discountPrice?: number
-  image: string
-  type: "pack"
-  items: PackProduct[]
-}
-
-export type OrderLineItem = OrderItem | OrderPack
-
-export interface Order {
-  id: string
-  orderNumber: string
-  customerName: string
-  customerEmail: string
-  customerPhone: string
-  customerAddress: string
-  orderDate: Date
-  status:
-    | "pending"
-    | "confirmed"
-    | "rejected"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
-  total: number
-  paymentMethod: string
-  shippingMethod: string
-  items: OrderLineItem[]
-  notes?: string
-  coupon: string
-}
-
-export interface OrderFilterState {
-  search: string
-  status: string
-  dateFrom: string
-  dateTo: string
-  minAmount: string
-  maxAmount: string
-  itemType: string
-}
-
-export interface SortState {
-  field: "date" | "total" | "customerName" | "orderNumber"
-  direction: "asc" | "desc"
 }

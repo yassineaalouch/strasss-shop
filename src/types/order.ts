@@ -1,3 +1,5 @@
+import { PackProduct } from "./pack"
+
 export interface OrderItem {
   id: string
   name: string
@@ -52,4 +54,70 @@ export interface ValidationError extends Error {
       message: string
     }
   }
+}
+
+// Types pour les produits individuels
+export interface OrderItem {
+  id: string
+  name: string
+  quantity: number
+  price: number
+  image: string
+  discount?: string | null
+  characteristic?: { name: string; value: string }[] | null
+  type: "product"
+}
+
+// Types pour les packs
+
+export interface OrderPack {
+  id: string
+  name: string
+  quantity: number
+  price: number
+  discountPrice?: number
+  image: string
+  type: "pack"
+  items: PackProduct[]
+}
+
+export type OrderLineItem = OrderItem | OrderPack
+
+export interface Order {
+  id: string
+  orderNumber: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  customerAddress: string
+  orderDate: Date
+  status:
+    | "pending"
+    | "confirmed"
+    | "rejected"
+    | "processing"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+  total: number
+  paymentMethod: string
+  shippingMethod: string
+  items: OrderLineItem[]
+  notes?: string
+  coupon: string
+}
+
+export interface OrderFilterState {
+  search: string
+  status: string
+  dateFrom: string
+  dateTo: string
+  minAmount: string
+  maxAmount: string
+  itemType: string
+}
+
+export interface SortState {
+  field: "date" | "total" | "customerName" | "orderNumber"
+  direction: "asc" | "desc"
 }

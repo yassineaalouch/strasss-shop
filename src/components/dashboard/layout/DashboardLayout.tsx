@@ -20,7 +20,8 @@ import {
   Percent,
   Boxes,
   Layers,
-  LayoutDashboard
+  LayoutDashboard,
+  Palette
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -99,6 +100,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       icon: <Layers className="w-5 h-5" />,
       href: "/dashboard/categoriesListe",
       isActive: currentPath.includes("/dashboard/categoriesListe")
+    },
+    {
+      id: "properties",
+      label: "characteristiques",
+      icon: <Palette className="w-5 h-5" />,
+      href: "/dashboard/characteristics",
+      isActive: currentPath.includes("/dashboard/characteristics")
     },
     {
       id: "hero",

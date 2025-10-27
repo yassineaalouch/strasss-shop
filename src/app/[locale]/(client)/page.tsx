@@ -1,5 +1,5 @@
 import React from "react"
-import { Category } from "@/types/type"
+import { CategoriesHomPageSection } from "@/types/category"
 import HeroSection from "@/components/home/HeroSection"
 import ProductCard from "@/components/shop/ProductCard"
 import WhyChooseUs from "@/components/WhyCoseUs"
@@ -11,7 +11,7 @@ const CategoriesSection = async () => {
   const t = await getTranslations("HomePage")
   const locale = (await getLocale()) as "fr" | "ar"
 
-  const categories: Category[] = [
+  const categories: CategoriesHomPageSection[] = [
     {
       id: "1",
       name: {

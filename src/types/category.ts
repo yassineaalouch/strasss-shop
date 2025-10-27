@@ -7,7 +7,15 @@ export interface CategoryDescription {
   fr: string
   ar: string
 }
-
+export interface CategoriesHomPageSection {
+  id: string
+  name: {
+    fr: string
+    ar: string
+  }
+  image: string
+  productCount: number
+}
 export interface Category {
   _id: string
   name: CategoryName
