@@ -123,6 +123,7 @@ const AdminOrdersTable: React.FC = () => {
       paymentMethod: "Carte bancaire",
       shippingMethod: "Livraison standard",
       items: baseItems,
+      coupon: "yassine",
       notes: "Commande mixte : produits + pack débutant"
     }
 
@@ -136,16 +137,10 @@ const AdminOrdersTable: React.FC = () => {
       "shipped",
       "delivered"
     ]
-    const paymentMethods = [
-      "Carte bancaire",
-      "PayPal",
-      "Virement bancaire",
-      "À la livraison",
-      "Chèque"
-    ]
+    const paymentMethods = ["Virement bancaire", "À la livraison", "Chèque"]
     const customerNames = [
       "Fatima Zahra",
-      "Youssef Alami",
+      "Youssef Amine",
       "Aicha Bennani",
       "Omar Cherif",
       "Khadija Amrani",
@@ -302,6 +297,7 @@ const AdminOrdersTable: React.FC = () => {
         paymentMethod: paymentMethods[data.paymentIndex],
         shippingMethod: "Livraison standard",
         items: items,
+        coupon: "yassine",
         notes: i % 4 === 0 ? "Note spéciale" : undefined
       })
     }

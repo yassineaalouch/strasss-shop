@@ -3,18 +3,17 @@ import { QA, IQA } from "@/models/QA"
 import { connectToDatabase } from "@/lib/mongodb"
 import mongoose from "mongoose"
 
-interface Params {
-  params: {
-    id: string
-  }
-}
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params
 
-export async function PUT(req: NextRequest, { params }: Params) {
   try {
     await connectToDatabase()
     const body: IQA = await req.json()
 
-    const updated = await QA.findByIdAndUpdate(params.id, body, {
+    const updated = await QA.findByIdAndUpdate(id, body, {
       new: true
     })
 
@@ -33,16 +32,20 @@ export async function PUT(req: NextRequest, { params }: Params) {
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: Params) {
+export async function DELETE(
+  _: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params
   await connectToDatabase()
 
-  if (!mongoose.Types.ObjectId.isValid(params.id)) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json(
       { success: false, error: "Invalid ID" },
       { status: 400 }
     )
   }
 
-  await QA.findByIdAndDelete(params.id)
+  await QA.findByIdAndDelete(id)
   return NextResponse.json({ success: true })
 }

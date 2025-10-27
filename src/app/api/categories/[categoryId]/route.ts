@@ -25,20 +25,22 @@ function isValidationError(error: unknown): error is ValidationError {
 
 // GET - Récupérer une catégorie par ID
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  _: NextRequest,
+  context: { params: Promise<{ categoryId: string }> }
 ): Promise<NextResponse<CategoryResponse>> {
+  const { categoryId } = await context.params
+
   try {
     await connectToDatabase()
 
-    if (!mongoose.Types.ObjectId.isValid(params.categoryId)) {
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
       return NextResponse.json(
         { success: false, message: "ID de catégorie invalide" },
         { status: 400 }
       )
     }
 
-    const category = await Category.findById(params.categoryId)
+    const category = await Category.findById(categoryId)
 
     if (!category) {
       return NextResponse.json(
@@ -76,12 +78,13 @@ export async function GET(
 // PUT - Mettre à jour une catégorie
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  context: { params: Promise<{ categoryId: string }> }
 ): Promise<NextResponse<CategoryResponse>> {
+  const { categoryId } = await context.params
   try {
     await connectToDatabase()
 
-    if (!mongoose.Types.ObjectId.isValid(params.categoryId)) {
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
       return NextResponse.json(
         { success: false, message: "ID de catégorie invalide" },
         { status: 400 }
@@ -103,7 +106,7 @@ export async function PUT(
     }
 
     // Vérifier que la catégorie existe
-    const existingCategory = await Category.findById(params.categoryId)
+    const existingCategory = await Category.findById(categoryId)
     if (!existingCategory) {
       return NextResponse.json(
         { success: false, message: "Catégorie introuvable" },
@@ -112,7 +115,7 @@ export async function PUT(
     }
 
     // Empêcher une catégorie d'être son propre parent
-    if (parentId === params.categoryId) {
+    if (parentId === categoryId) {
       return NextResponse.json(
         {
           success: false,
@@ -149,7 +152,7 @@ export async function PUT(
 
     // Mettre à jour la catégorie
     const updatedCategory = await Category.findByIdAndUpdate(
-      params.categoryId,
+      categoryId,
       {
         name: {
           fr: name.fr.trim(),
@@ -218,20 +221,21 @@ export async function PUT(
 
 // DELETE - Supprimer une catégorie
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  _: NextRequest,
+  context: { params: Promise<{ categoryId: string }> }
 ): Promise<NextResponse<CategoryResponse>> {
+  const { categoryId } = await context.params
   try {
     await connectToDatabase()
 
-    if (!mongoose.Types.ObjectId.isValid(params.categoryId)) {
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
       return NextResponse.json(
         { success: false, message: "ID de catégorie invalide" },
         { status: 400 }
       )
     }
 
-    const category = await Category.findById(params.categoryId)
+    const category = await Category.findById(categoryId)
 
     if (!category) {
       return NextResponse.json(
@@ -253,7 +257,7 @@ export async function DELETE(
       )
     }
 
-    await Category.findByIdAndDelete(params.categoryId)
+    await Category.findByIdAndDelete(categoryId)
 
     return NextResponse.json(
       {
@@ -276,20 +280,21 @@ export async function DELETE(
 
 // PATCH - Basculer le statut actif/inactif
 export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  _: NextRequest,
+  context: { params: Promise<{ categoryId: string }> }
 ): Promise<NextResponse<CategoryResponse>> {
+  const { categoryId } = await context.params
   try {
     await connectToDatabase()
 
-    if (!mongoose.Types.ObjectId.isValid(params.categoryId)) {
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
       return NextResponse.json(
         { success: false, message: "ID de catégorie invalide" },
         { status: 400 }
       )
     }
 
-    const category = await Category.findById(params.categoryId)
+    const category = await Category.findById(categoryId)
 
     if (!category) {
       return NextResponse.json(
