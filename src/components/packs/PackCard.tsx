@@ -1,0 +1,207 @@
+"use client"
+
+import Link from "next/link"
+import Image from "next/image"
+import { ShoppingCart, Package, Percent, ArrowRight } from "lucide-react"
+import { useState } from "react"
+import { useLocale } from "next-intl"
+import { useCartContext } from "@/app/context/CartContext"
+import { useToast } from "@/components/ui/Toast"
+
+interface Product {
+  _id: string
+  name: {
+    fr: string
+    ar: string
+  }
+  description: {
+    fr: string
+    ar: string
+  }
+  price: number
+  images: string[]
+}
+
+interface Pack {
+  _id: string
+  name: {
+    fr: string
+    ar: string
+  }
+  description?: {
+    fr: string
+    ar: string
+  }
+  items: Array<{
+    productId: string
+    quantity: number
+    product?: Product
+  }>
+  totalPrice: number
+  discountPrice?: number
+  images?: string[]
+}
+
+interface PackCardProps {
+  pack: Pack
+}
+
+export function PackCard({ pack }: PackCardProps) {
+  const [imageError, setImageError] = useState(false)
+  const { addItem } = useCartContext()
+  const locale = useLocale() as "fr" | "ar"
+  const { showToast } = useToast()
+  const finalPrice = pack.discountPrice || pack.totalPrice
+  const hasDiscount = pack.discountPrice && pack.discountPrice < pack.totalPrice
+  const discountPercentage = hasDiscount
+    ? Math.round(
+        ((pack.totalPrice - pack.discountPrice!) / pack.totalPrice) * 100
+      )
+    : 0
+
+  const itemsCount = pack.items.reduce((sum, item) => sum + item.quantity, 0)
+  const handleAddToCart = async () => {
+    try {
+      // Fetch product details for each productId in the pack
+      const packItemsPromises = pack.items.map(async (item) => {
+        try {
+          const response = await fetch(`/api/products/${item.productId}`)
+          if (!response.ok) return null
+          const data = await response.json()
+          if (!data.success || !data.product) return null
+
+          return {
+            id: data.product._id,
+            name: data.product.name[locale],
+            quantity: item.quantity,
+            price: data.product.price,
+            image: data.product.images?.[0] ?? "/No_Image_Available.jpg"
+          }
+        } catch (error) {
+          // Erreur silencieuse pour éviter de spammer les toasts
+          return null
+        }
+      })
+
+      const packItems = (await Promise.all(packItemsPromises)).filter(
+        Boolean
+      ) as Array<{
+        id: string
+        name: string
+        quantity: number
+        price: number
+        image: string
+      }>
+
+      if (packItems.length === 0) {
+        showToast(
+          "Impossible de charger les détails des produits du pack",
+          "error"
+        )
+        return
+      }
+
+      addItem({
+        id: pack._id,
+        name: pack.name[locale],
+        price: pack.totalPrice,
+        image: pack.images?.[0] ?? "/No_Image_Available.jpg",
+        type: "pack",
+        packItems: packItems,
+        discountPrice: pack.discountPrice
+      })
+    } catch (error) {
+      showToast("Erreur lors de l'ajout du pack au panier", "error")
+    }
+  }
+
+  return (
+    <article className="group relative overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+      {/* Discount Badge */}
+      {hasDiscount && (
+        <div className="absolute left-4 top-4 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
+          <Percent className="h-3.5 w-3.5" />-{discountPercentage}%
+        </div>
+      )}
+
+      {/* Image Container */}
+      <Link href={`/packs/${pack._id}`} className="block">
+        <div className="relative h-64 overflow-hidden bg-gradient-to-br from-orange-100 to-amber-100">
+          {pack.images && pack.images.length > 0 && !imageError ? (
+            <Image
+              src={pack.images[0]}
+              alt={pack.name[locale]}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <Package className="h-20 w-20 text-orange-300" />
+            </div>
+          )}
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        </div>
+      </Link>
+
+      {/* Content */}
+      <div className="p-5">
+        {/* Title */}
+        <Link href={`/packs/${pack._id}`}>
+          <h3 className="mb-2 line-clamp-2 text-lg font-bold text-gray-900 transition-colors group-hover:text-firstColor">
+            {pack.name[locale]}
+          </h3>
+        </Link>
+
+        {/* Description */}
+        {pack.description && pack.description[locale] && (
+          <p className="mb-4 line-clamp-1 text-sm text-gray-600">
+            {pack.description[locale]}
+          </p>
+        )}
+
+        {/* Items Count */}
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-orange-50 px-3 py-2 text-sm text-orange-800">
+          <Package className="h-4 w-4" />
+          <span className="font-medium">
+            {itemsCount} produit{itemsCount > 1 ? "s" : ""} inclus
+          </span>
+        </div>
+
+        {/* Price Section */}
+        <div className="mb-4 flex items-end gap-3">
+          {hasDiscount && (
+            <span className="text-sm text-gray-400 line-through">
+              {pack.totalPrice.toFixed(2)} MAD
+            </span>
+          )}
+          <span className="text-2xl font-bold text-firstColor">
+            {finalPrice.toFixed(2)} MAD
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <Link
+            href={`/packs/${pack._id}`}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-firstColor bg-white px-4 py-2.5 font-medium text-firstColor transition-all hover:bg-orange-50"
+          >
+            Voir détails
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <button
+            className="flex items-center justify-center gap-2 rounded-lg bg-firstColor px-4 py-2.5 font-medium text-white transition-all hover:bg-secondColor"
+            aria-label="Ajouter au panier"
+            onClick={handleAddToCart}
+          >
+            <ShoppingCart className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Decorative Corner */}
+      <div className="absolute -right-12 -top-12 h-24 w-24 rotate-45 bg-gradient-to-br from-orange-400/20 to-amber-400/20 transition-transform duration-300 group-hover:scale-150" />
+    </article>
+  )
+}

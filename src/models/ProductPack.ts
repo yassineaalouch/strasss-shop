@@ -81,6 +81,7 @@
 // export default mongoose.models.ProductPack ||
 //   mongoose.model("ProductPack", ProductPackSchema)
 // models/ProductPack.ts
+
 import mongoose, { Document, Model } from "mongoose"
 
 // Interface pour les items du pack

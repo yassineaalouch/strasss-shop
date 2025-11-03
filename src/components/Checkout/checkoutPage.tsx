@@ -46,8 +46,8 @@
 //       // Préparer les données de la commande
 //       const orderData = {
 //         customerName: formData.customerName,
-//         city: formData.city,
-//         phoneNumber: formData.phoneNumber,
+//         customerAddress: formData.customerAddress,
+//         customerPhone: formData.customerPhone,
 //         items: cartItems,
 //         subtotal: totalPrice,
 //         shipping: hasFreeShipping,
@@ -250,10 +250,12 @@ import CartSummary from "@/components/Checkout/CartSummary"
 import { ShoppingBag, CheckCircle, XCircle } from "lucide-react"
 import { CheckoutFormData } from "@/types/type"
 import { useCartContext } from "@/app/context/CartContext"
+import { useToast } from "@/components/ui/Toast"
 
 export default function CheckoutPage() {
   const t = useTranslations("CheckoutPage")
   const router = useRouter()
+  const { showToast } = useToast()
 
   // Utilisez useCartContext comme avant
   const {
@@ -291,15 +293,50 @@ export default function CheckoutPage() {
         return
       }
 
+      // Transformer les items du panier en format de commande (produits et packs séparés)
+      const orderItems = cartItems.map((item) => {
+        if (item.type === "pack") {
+          // Créer un OrderPack
+          return {
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            discountPrice: item.discountPrice,
+            image: item.image,
+            type: "pack",
+            items: item.packItems || []
+          }
+        } else {
+          // Créer un OrderItem (produit)
+          return {
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            image: item.image,
+            discount: item.discount?.type || null,
+            characteristic: item.characteristic || null,
+            type: "product"
+          }
+        }
+      })
+
       // Préparer les données de la commande avec les informations du coupon
       const orderData = {
         customerName: formData.customerName,
-        city: formData.city,
-        phoneNumber: formData.phoneNumber,
-        items: cartItems,
+        customerAddress: formData.customerAddress,
+        customerPhone: formData.customerPhone,
+        items: orderItems,
         subtotal: subtotal, // Sous-total avant réduction
         discount: discountAmount, // Montant de la réduction
-        coupon: couponData,
+        coupon: couponData
+          ? {
+              code: couponData?.name.fr,
+              discountType: couponData?.type,
+              value: couponData?.value
+            }
+          : null,
         shipping: shipping, // Frais de livraison calculés
         total: totalPrice, // Total après réduction
         hasFreeShipping: hasFreeShipping
@@ -326,13 +363,11 @@ export default function CheckoutPage() {
         // Redirection après 3 secondes
         setTimeout(() => {
           router.push(`/order-confirmation`)
-        }, 3000)
+        }, 1000)
       } else {
         throw new Error(response.data.message || "Erreur inconnue")
       }
     } catch (error: unknown) {
-      console.error("Erreur lors de la soumission:", error)
-
       let message = t("checkout.error") || "Erreur lors de l'enregistrement"
 
       if (axios.isAxiosError(error)) {
@@ -347,6 +382,7 @@ export default function CheckoutPage() {
         }
       }
 
+      showToast(message, "error")
       setErrorMessage(message)
       setShowErrorModal(true)
     } finally {
@@ -355,7 +391,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white">
+    <div className="min-h-screen bg-orange-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">

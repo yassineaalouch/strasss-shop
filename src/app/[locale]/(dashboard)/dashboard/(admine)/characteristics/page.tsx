@@ -5,8 +5,10 @@ import axios from "axios"
 import { Trash2, Edit3, Save, X, Plus, Search, Filter } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ICharacteristic } from "@/types/characteristic"
+import { useToast } from "@/components/ui/Toast"
 
 export default function CharacteristicsPage() {
+  const { showToast } = useToast()
   const [characteristics, setCharacteristics] = useState<ICharacteristic[]>([])
   const [newChar, setNewChar] = useState<ICharacteristic>({
     _id: crypto.randomUUID(),
@@ -63,13 +65,14 @@ export default function CharacteristicsPage() {
       })
       setCharacteristics([...characteristics, res.data])
       setNewChar({
-        _id: crypto.randomUUID(),
+        _id: "",
         name: { ar: "", fr: "" },
         values: []
       })
       setIsAddingNew(false)
+      showToast("Caractéristique ajoutée avec succès", "success")
     } catch (error) {
-      console.error("Erreur lors de l'ajout:", error)
+      showToast("Erreur lors de l'ajout de la caractéristique", "error")
     }
     setLoading(false)
   }
@@ -117,8 +120,9 @@ export default function CharacteristicsPage() {
       await fetchData()
       setEditingId(null)
       setEditChar(null)
+      showToast("Caractéristique modifiée avec succès", "success")
     } catch (error) {
-      console.error("Erreur lors de la modification:", error)
+      showToast("Erreur lors de la modification de la caractéristique", "error")
     }
     setLoading(false)
   }
@@ -133,8 +137,9 @@ export default function CharacteristicsPage() {
     try {
       await axios.delete(`/api/characteristics/${id}`)
       setCharacteristics(characteristics.filter((c) => c._id !== id))
+      showToast("Caractéristique supprimée avec succès", "success")
     } catch (error) {
-      console.error("Erreur lors de la suppression:", error)
+      showToast("Erreur lors de la suppression de la caractéristique", "error")
     }
   }
 

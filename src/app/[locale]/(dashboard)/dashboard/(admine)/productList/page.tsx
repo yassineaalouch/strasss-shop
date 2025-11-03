@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Package,
   Search,
@@ -16,21 +16,47 @@ import {
   Tag,
   Trash2,
   Loader2,
-  RotateCcw
+  RotateCcw,
+  Grid3x3,
+  List,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { Product, ProductFilterState, ProductSortState } from "@/types/product"
+import { Category } from "@/types/category"
+import { Discount } from "@/types/discount"
+import { ManagementCard } from "@/components/dashboard/ManagementCard"
+import { useToast } from "@/components/ui/Toast"
 
 const AdminProductsTable: React.FC = () => {
+  const { showToast } = useToast()
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [currentLanguage, setCurrentLanguage] = useState<"fr" | "ar">("fr")
   const [showFilters, setShowFilters] = useState(false)
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalProducts, setTotalProducts] = useState(0)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [discounts, setDiscounts] = useState<Discount[]>([])
 
-  const [filters, setFilters] = useState<ProductFilterState>({
+  // Temporary filter state (for form inputs)
+  const [tempFilters, setTempFilters] = useState<ProductFilterState>({
+    search: "",
+    category: "",
+    discount: "",
+    status: "all",
+    minQuantity: "",
+    maxQuantity: ""
+  })
+
+  // Applied filter state (used in API calls)
+  const [appliedFilters, setAppliedFilters] = useState<ProductFilterState>({
     search: "",
     category: "",
     discount: "",
@@ -44,23 +70,112 @@ const AdminProductsTable: React.FC = () => {
     direction: "asc"
   })
 
-  // Charger les produits
+  // Charger les produits avec filtres et pagination
   useEffect(() => {
     fetchProducts()
+  }, [appliedFilters, sort, currentPage, currentLanguage])
+
+  // Charger les catégories et discounts au montage
+  useEffect(() => {
+    fetchCategories()
+    fetchDiscounts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const response = await axios.get("/api/products")
+      const params = new URLSearchParams()
+      
+      // Add filters
+      if (appliedFilters.search) params.append("search", appliedFilters.search)
+      if (appliedFilters.category) params.append("categoryName", appliedFilters.category)
+      if (appliedFilters.discount) params.append("discountName", appliedFilters.discount)
+      if (appliedFilters.status && appliedFilters.status !== "all") params.append("status", appliedFilters.status)
+      if (appliedFilters.minQuantity) params.append("minQuantity", appliedFilters.minQuantity)
+      if (appliedFilters.maxQuantity) params.append("maxQuantity", appliedFilters.maxQuantity)
+      
+      // Add sort
+      params.append("sortField", sort.field)
+      params.append("sortDirection", sort.direction)
+      params.append("language", currentLanguage)
+      
+      // Add pagination
+      params.append("page", currentPage.toString())
+      params.append("limit", "12")
+      
+      const response = await axios.get(`/api/products?${params.toString()}`)
       if (response.data.success) {
         setProducts(response.data.products)
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.totalPages)
+          setTotalProducts(response.data.pagination.totalProducts)
+        }
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des produits", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des produits:", error)
-      alert("Erreur lors du chargement des produits")
+      showToast("Erreur lors du chargement des produits", "error")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get("/api/categories")
+      console.log("Categories API response:", response.data)
+      if (response.data.success) {
+        const allCategories = response.data.categories || []
+        console.log("All categories from API:", allCategories)
+        // Filter categories that have names (required for display)
+        const validCategories = allCategories.filter(
+          (cat: Category) => cat && cat.name && (cat.name.fr || cat.name.ar)
+        )
+        console.log("Valid categories after filtering:", validCategories)
+        setCategories(validCategories)
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des catégories", "error")
+        setCategories([])
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des catégories:", error)
+      if (axios.isAxiosError(error)) {
+        console.error("Error details:", error.response?.data)
+        showToast(error.response?.data?.message || "Erreur lors du chargement des catégories", "error")
+      } else {
+        showToast("Erreur lors du chargement des catégories", "error")
+      }
+      setCategories([])
+    }
+  }
+
+  const fetchDiscounts = async () => {
+    try {
+      const response = await axios.get("/api/discounts")
+      console.log("Discounts API response:", response.data)
+      if (response.data.success) {
+        const allDiscounts = response.data.discounts || []
+        console.log("All discounts from API:", allDiscounts)
+        // Filter discounts that have names (required for display)
+        const validDiscounts = allDiscounts.filter(
+          (discount: Discount) => discount && discount.name && (discount.name.fr || discount.name.ar)
+        )
+        console.log("Valid discounts after filtering:", validDiscounts)
+        setDiscounts(validDiscounts)
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des promotions", "error")
+        setDiscounts([])
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des promotions:", error)
+      if (axios.isAxiosError(error)) {
+        console.error("Error details:", error.response?.data)
+        showToast(error.response?.data?.message || "Erreur lors du chargement des promotions", "error")
+      } else {
+        showToast("Erreur lors du chargement des promotions", "error")
+      }
+      setDiscounts([])
     }
   }
 
@@ -73,143 +188,21 @@ const AdminProductsTable: React.FC = () => {
       const response = await axios.delete(`/api/products/${productId}`)
 
       if (response.data.success) {
-        alert("Produit supprimé avec succès")
+        showToast("Produit supprimé avec succès", "success")
         await fetchProducts()
+      } else {
+        showToast(response.data.message || "Erreur lors de la suppression", "error")
       }
     } catch (error) {
-      console.error("Erreur lors de la suppression:", error)
       if (axios.isAxiosError(error) && error.response?.data?.message) {
-        alert(error.response.data.message)
+        showToast(error.response.data.message, "error")
       } else {
-        alert("Erreur lors de la suppression du produit")
+        showToast("Erreur lors de la suppression du produit", "error")
       }
     }
   }
 
-  const uniqueCategoriesMap = new Map()
-
-  products.forEach((product) => {
-    if (product.category && product.category._id) {
-      uniqueCategoriesMap.set(product.category._id.toString(), product.category)
-    }
-  })
-
-  const categories = [...uniqueCategoriesMap.values()]
-
-  const uniqueDiscountMap = new Map()
-
-  products.forEach((product) => {
-    if (product.discount && product.discount._id) {
-      uniqueDiscountMap.set(product.discount._id.toString(), product.discount)
-    }
-  })
-
-  const discounts = [...uniqueDiscountMap.values()]
-  // const discounts = [...new Set(products.map((product) => product.discount))]
-
-  const filteredAndSortedProducts = useMemo(() => {
-    const result = products.filter((product) => {
-      // Filtre de recherche
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase()
-        const matchesSearch =
-          product.name["fr"].toLowerCase().includes(searchLower) ||
-          product.name["ar"].toLowerCase().includes(searchLower)
-        if (!matchesSearch) return false
-      }
-
-      // Filtre par catégorie
-      if (
-        filters.category &&
-        product.category?.name[currentLanguage] !== filters.category
-      )
-        return false
-      // Filtre par descount
-      if (
-        filters.discount &&
-        product.discount?.name[currentLanguage] !== filters.discount
-      )
-        return false
-
-      // Filtre par statut
-      switch (filters.status) {
-        case "inStock":
-          if (!product.inStock || product.quantity === 0) return false
-          break
-        case "outOfStock":
-          if (product.inStock && product.quantity > 0) return false
-          break
-        case "lowStock":
-          if (!product.inStock || product.quantity > 10) return false
-          break
-        case "new":
-          if (!product.isNewProduct) return false
-          break
-        case "onSale":
-          if (!product.isOnSale) return false
-          break
-      }
-
-      // Filtre par quantité
-      if (
-        filters.minQuantity &&
-        product.quantity < parseInt(filters.minQuantity)
-      )
-        return false
-      if (
-        filters.maxQuantity &&
-        product.quantity > parseInt(filters.maxQuantity)
-      )
-        return false
-
-      return true
-    })
-
-    // Tri
-    result.sort((a, b) => {
-      let comparison = 0
-
-      switch (sort.field) {
-        case "name":
-          comparison = a.name[currentLanguage].localeCompare(
-            b.name[currentLanguage]
-          )
-          break
-
-        case "price":
-          comparison = a.price - b.price
-          break
-
-        case "quantity":
-          comparison = a.quantity - b.quantity
-          break
-
-        case "category":
-          // Vérifier si les catégories existent avant de comparer
-          const categoryA = a.category?.name?.[currentLanguage] || ""
-          const categoryB = b.category?.name?.[currentLanguage] || ""
-
-          // Si les deux sont vides, égalité (0)
-          if (!categoryA && !categoryB) comparison = 0
-          // Si A n’a pas de catégorie, on le met après B
-          else if (!categoryA) comparison = 1
-          // Si B n’a pas de catégorie, on le met après A
-          else if (!categoryB) comparison = -1
-          else comparison = categoryA.localeCompare(categoryB)
-          break
-
-        case "createdAt":
-          comparison =
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          break
-      }
-
-      // Si tu veux trier en ordre décroissant selon ton "sort.order"
-      return sort.direction === "desc" ? -comparison : comparison
-    })
-
-    return result
-  }, [products, filters, sort, currentLanguage])
+  // Remove client-side filtering - now handled server-side
 
   const handleSort = (field: ProductSortState["field"]) => {
     setSort((prev) => ({
@@ -217,6 +210,35 @@ const AdminProductsTable: React.FC = () => {
       direction:
         prev.field === field && prev.direction === "asc" ? "desc" : "asc"
     }))
+    setCurrentPage(1) // Reset to first page when sorting changes
+  }
+
+  const handleFilterInputChange = (newFilters: Partial<ProductFilterState>) => {
+    setTempFilters((prev) => ({ ...prev, ...newFilters }))
+  }
+
+  const handleApplyFilters = () => {
+    setAppliedFilters(tempFilters)
+    setCurrentPage(1) // Reset to first page when filters are applied
+  }
+
+  const handleResetFilters = () => {
+    const emptyFilters = {
+      search: "",
+      category: "",
+      discount: "",
+      status: "all" as const,
+      minQuantity: "",
+      maxQuantity: ""
+    }
+    setTempFilters(emptyFilters)
+    setAppliedFilters(emptyFilters)
+    setCurrentPage(1)
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleProductClick = (productId: string) => {
@@ -286,15 +308,12 @@ const AdminProductsTable: React.FC = () => {
                   Gestion des Produits
                 </h1>
                 <div className="text-sm text-gray-600 mt-1">
-                  {filteredAndSortedProducts.length} produit
-                  {filteredAndSortedProducts.length > 1 ? "s" : ""} •
-                  {products.filter((p) => p.inStock && p.quantity > 0).length}{" "}
-                  en stock •
-                  {
-                    products.filter((p) => !p.inStock || p.quantity === 0)
-                      .length
-                  }{" "}
-                  en rupture
+                  {totalProducts} produit{totalProducts > 1 ? "s" : ""} au total
+                  {totalProducts > 0 && (
+                    <>
+                      {" "}• Page {currentPage} sur {totalPages}
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -319,6 +338,31 @@ const AdminProductsTable: React.FC = () => {
                     }`}
                   >
                     AR
+                  </button>
+                </div>
+
+                <div className="flex items-center bg-white rounded-lg border">
+                  <button
+                    onClick={() => setViewMode("table")}
+                    className={`px-3 py-2 text-sm font-medium rounded-l-lg ${
+                      viewMode === "table"
+                        ? "bg-blue-500 text-white"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                    title="Vue tableau"
+                  >
+                    <List size={16} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`px-3 py-2 text-sm font-medium rounded-r-lg ${
+                      viewMode === "grid"
+                        ? "bg-blue-500 text-white"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                    title="Vue grille"
+                  >
+                    <Grid3x3 size={16} />
                   </button>
                 </div>
 
@@ -357,12 +401,9 @@ const AdminProductsTable: React.FC = () => {
                     <input
                       type="text"
                       placeholder="Nom"
-                      value={filters.search}
+                      value={tempFilters.search}
                       onChange={(e) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          search: e.target.value
-                        }))
+                        handleFilterInputChange({ search: e.target.value })
                       }
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -374,25 +415,28 @@ const AdminProductsTable: React.FC = () => {
                     Catégorie
                   </label>
                   <select
-                    value={filters.category}
+                    value={tempFilters.category}
                     onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        category: e.target.value
-                      }))
+                      handleFilterInputChange({ category: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Toutes les catégories</option>
-                    {categories.length > 0 &&
-                      categories.map((category) => (
-                        <option
-                          key={category?._id}
-                          value={category?.name[currentLanguage]}
-                        >
-                          {category?.name[currentLanguage]}
-                        </option>
-                      ))}
+                    {categories.length === 0 ? (
+                      <option value="" disabled>Aucune catégorie disponible</option>
+                    ) : (
+                      categories.map((category) => {
+                        const categoryName = category?.name?.[currentLanguage] || category?.name?.fr || category?.name?.ar || "Sans nom"
+                        return (
+                          <option
+                            key={category?._id}
+                            value={categoryName}
+                          >
+                            {categoryName}
+                          </option>
+                        )
+                      })
+                    )}
                   </select>
                 </div>
                 <div>
@@ -400,25 +444,28 @@ const AdminProductsTable: React.FC = () => {
                     Solde
                   </label>
                   <select
-                    value={filters.discount}
+                    value={tempFilters.discount}
                     onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        discount: e.target.value
-                      }))
+                      handleFilterInputChange({ discount: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Toutes les catégories</option>
-                    {discounts.length > 0 &&
-                      discounts.map((discount) => (
-                        <option
-                          key={discount?._id}
-                          value={discount?.name[currentLanguage]}
-                        >
-                          {discount?.name[currentLanguage]}
-                        </option>
-                      ))}
+                    <option value="">Toutes les promotions</option>
+                    {discounts.length === 0 ? (
+                      <option value="" disabled>Aucune promotion disponible</option>
+                    ) : (
+                      discounts.map((discount) => {
+                        const discountName = discount?.name?.[currentLanguage] || discount?.name?.fr || discount?.name?.ar || "Sans nom"
+                        return (
+                          <option
+                            key={discount?._id}
+                            value={discountName}
+                          >
+                            {discountName}
+                          </option>
+                        )
+                      })
+                    )}
                   </select>
                 </div>
 
@@ -427,12 +474,9 @@ const AdminProductsTable: React.FC = () => {
                     Statut
                   </label>
                   <select
-                    value={filters.status}
+                    value={tempFilters.status}
                     onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        status: e.target.value as ProductFilterState["status"]
-                      }))
+                      handleFilterInputChange({ status: e.target.value as ProductFilterState["status"] })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
@@ -452,12 +496,9 @@ const AdminProductsTable: React.FC = () => {
                   <input
                     type="number"
                     placeholder="0"
-                    value={filters.minQuantity}
+                    value={tempFilters.minQuantity}
                     onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        minQuantity: e.target.value
-                      }))
+                      handleFilterInputChange({ minQuantity: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -470,30 +511,18 @@ const AdminProductsTable: React.FC = () => {
                   <input
                     type="number"
                     placeholder="100"
-                    value={filters.maxQuantity}
+                    value={tempFilters.maxQuantity}
                     onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        maxQuantity: e.target.value
-                      }))
+                      handleFilterInputChange({ maxQuantity: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-end gap-3 mt-4">
                 <button
-                  onClick={() => {
-                    setFilters({
-                      search: "",
-                      category: "",
-                      discount: "",
-                      status: "all",
-                      minQuantity: "",
-                      maxQuantity: ""
-                    })
-                  }}
+                  onClick={handleResetFilters}
                   className="
                             flex items-center gap-1.5 
                             px-4 py-2 cursor-pointer
@@ -505,11 +534,25 @@ const AdminProductsTable: React.FC = () => {
                   <RotateCcw className="h-4 w-4" />
                   Réinitialiser
                 </button>
+                <button
+                  onClick={handleApplyFilters}
+                  className="
+                            flex items-center gap-1.5 
+                            px-4 py-2 cursor-pointer
+                            text-sm font-semibold text-white 
+                            border bg-blue-500 border-transparent rounded-lg 
+                            hover:bg-blue-600 
+                            focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors duration-200"
+                >
+                  <Filter className="h-4 w-4" />
+                  Appliquer les filtres
+                </button>
               </div>
             </div>
           )}
 
-          {/* Tableau */}
+          {/* Tableau ou Grille */}
+          {viewMode === "table" ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
@@ -571,7 +614,7 @@ const AdminProductsTable: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAndSortedProducts.map((product) => (
+                {products.map((product) => (
                   <tr
                     key={product._id}
                     onClick={() => handleProductClick(product._id)}
@@ -699,19 +742,168 @@ const AdminProductsTable: React.FC = () => {
                 ))}
               </tbody>
             </table>
-          </div>
 
-          {/* Message si aucun produit */}
-          {filteredAndSortedProducts.length === 0 && (
-            <div className="p-8 text-center">
-              <Package className="mx-auto mb-4 text-gray-400" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Aucun produit trouvé
-              </h3>
-              <p className="text-gray-500">
-                Essayez de modifier vos filtres de recherche ou ajoutez votre
-                premier produit.
-              </p>
+            {/* Message si aucun produit - Table */}
+            {products.length === 0 && (
+              <div className="p-8 text-center">
+                <Package className="mx-auto mb-4 text-gray-400" size={48} />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Aucun produit trouvé
+                </h3>
+                <p className="text-gray-500">
+                  Essayez de modifier vos filtres de recherche ou ajoutez votre
+                  premier produit.
+                </p>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="bg-gray-50 px-6 py-4 border-t flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Affichage de {((currentPage - 1) * 12) + 1} à{" "}
+                  {Math.min(currentPage * 12, totalProducts)} sur {totalProducts} produits
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    <ChevronLeft size={16} className="mr-1" />
+                    Précédent
+                  </button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number
+                      if (totalPages <= 5) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i
+                      } else {
+                        pageNum = currentPage - 2 + i
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                            currentPage === pageNum
+                              ? "bg-blue-500 text-white"
+                              : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    Suivant
+                    <ChevronRight size={16} className="ml-1" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          ) : (
+            /* Vue Grille */
+            <div className="p-6">
+              {products.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Package className="mx-auto mb-4 text-gray-400" size={48} />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Aucun produit trouvé
+                  </h3>
+                  <p className="text-gray-500">
+                    Essayez de modifier vos filtres de recherche ou ajoutez votre
+                    premier produit.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {products.map((product) => (
+                      <ManagementCard
+                        key={`product-${product._id}`}
+                        type="product"
+                        item={product}
+                        currentLanguage={currentLanguage}
+                        onView={(id) => handleProductClick(id)}
+                        editPath={`/dashboard/productList/${product._id}`}
+                        onDelete={handleDeleteProduct}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Pagination Controls for Grid View */}
+                  {totalPages > 1 && (
+                    <div className="mt-6 bg-gray-50 px-6 py-4 border-t flex items-center justify-between">
+                      <div className="text-sm text-gray-700">
+                        Affichage de {((currentPage - 1) * 12) + 1} à{" "}
+                        {Math.min(currentPage * 12, totalProducts)} sur {totalProducts} produits
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                        >
+                          <ChevronLeft size={16} className="mr-1" />
+                          Précédent
+                        </button>
+                        
+                        <div className="flex items-center space-x-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum: number
+                            if (totalPages <= 5) {
+                              pageNum = i + 1
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i
+                            } else {
+                              pageNum = currentPage - 2 + i
+                            }
+                            
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                                  currentPage === pageNum
+                                    ? "bg-blue-500 text-white"
+                                    : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                        >
+                          Suivant
+                          <ChevronRight size={16} className="ml-1" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>

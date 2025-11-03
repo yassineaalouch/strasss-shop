@@ -12,18 +12,15 @@ import {
   ICharacteristic,
   ICharacteristicValue,
   LocalizedName,
-  ProductCharacteristic
+  ProductCharacteristic,
+  SelectedCharacteristic
 } from "@/types/characteristic"
-
-interface SelectedCharacteristic {
-  characteristicId: string | mongoose.Types.ObjectId
-  characteristicName: LocalizedName
-  selectedValues: ICharacteristicValue[]
-}
+import { useToast } from "@/components/ui/Toast"
 
 const AdminEditProduct: React.FC = () => {
   const { productId } = useParams()
   const router = useRouter()
+  const { showToast } = useToast()
   const [categories, setCategories] = useState<Category[]>([])
   const [discounts, setDiscounts] = useState<Discount[]>([])
   const [characteristics, setCharacteristics] = useState<ICharacteristic[]>([])
@@ -121,7 +118,7 @@ const AdminEditProduct: React.FC = () => {
           await fetchProduct()
         }
       } catch (error) {
-        console.error("Erreur lors du chargement des données:", error)
+        showToast("Erreur lors du chargement des données", "error")
       } finally {
         setLoading(false)
       }
@@ -136,8 +133,7 @@ const AdminEditProduct: React.FC = () => {
       const response = await axios.get("/api/characteristics")
       setCharacteristics(response.data)
     } catch (error) {
-      console.error("Erreur lors du chargement des caractéristiques:", error)
-      alert("Erreur lors du chargement des caractéristiques")
+      showToast("Erreur lors du chargement des caractéristiques", "error")
     } finally {
       setLoadingCharacteristics(false)
     }
@@ -182,13 +178,12 @@ const AdminEditProduct: React.FC = () => {
             characteristics
           )
           setSelectedCharacteristics(mappedCharacteristics)
-          console.log("mappedCharacteristics", mappedCharacteristics)
         }
       } else {
-        console.error("Erreur:", response.data.message)
+        showToast(response.data.message || "Erreur lors du chargement du produit", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du chargement du produit:", error)
+      showToast("Erreur lors du chargement du produit", "error")
     }
   }
 
@@ -295,10 +290,11 @@ const AdminEditProduct: React.FC = () => {
       const response = await axios.get("/api/categories")
       if (response.data.success) {
         setCategories(response.data.categories)
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des catégories", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des catégories:", error)
-      alert("Erreur lors du chargement des catégories")
+      showToast("Erreur lors du chargement des catégories", "error")
     } finally {
       setLoadingCategories(false)
     }
@@ -311,10 +307,11 @@ const AdminEditProduct: React.FC = () => {
       const response = await axios.get("/api/discounts?excludeCoupon=true")
       if (response.data.success) {
         setDiscounts(response.data.discounts)
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des promotions", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des catégories:", error)
-      alert("Erreur lors du chargement des discounts")
+      showToast("Erreur lors du chargement des promotions", "error")
     } finally {
       setLoadingDiscounts(false)
     }
@@ -399,7 +396,7 @@ const AdminEditProduct: React.FC = () => {
 
       return response.data.urls
     } catch (err) {
-      console.error("Erreur upload:", err)
+      showToast("Erreur lors de l'upload des images", "error")
       throw new Error("Erreur lors de l'upload des images")
     } finally {
       setUploadingImages(false)
@@ -418,8 +415,7 @@ const AdminEditProduct: React.FC = () => {
         console.log(`Image ${fileName} supprimée de S3`)
       }
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'image S3:", error)
-      // Ne pas bloquer le processus si la suppression échoue
+      // Erreur silencieuse - ne pas bloquer le processus si la suppression échoue
     }
   }
 
@@ -508,15 +504,16 @@ const AdminEditProduct: React.FC = () => {
       )
 
       if (response.data.success) {
-        alert("Produit modifié avec succès!")
+        showToast("Produit modifié avec succès!", "success")
         router.push("/dashboard/productList")
+      } else {
+        showToast(response.data.message || "Erreur lors de la modification du produit", "error")
       }
     } catch (error) {
-      console.error("Erreur:", error)
       if (axios.isAxiosError(error) && error.response?.data?.message) {
-        alert(error.response.data.message)
+        showToast(error.response.data.message, "error")
       } else {
-        alert("Erreur lors de la modification du produit")
+        showToast("Erreur lors de la modification du produit", "error")
       }
     } finally {
       setIsSubmitting(false)

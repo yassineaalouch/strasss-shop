@@ -51,7 +51,7 @@ export default function PolitiqueConfidentialitePage() {
             <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
               <li>{t("section2.identification.name")}</li>
               <li>{t("section2.identification.email")}</li>
-              <li>{t("section2.identification.phoneNumber")}</li>
+              <li>{t("section2.identification.customerPhone")}</li>
               <li>{t("section2.identification.postalAddress")}</li>
               <li>{t("section2.identification.birthDate")}</li>
             </ul>
@@ -477,7 +477,7 @@ export default function PolitiqueConfidentialitePage() {
               <br />
               {t("section12.authority.address")}
               <br />
-              {t("section12.authority.city")}
+              {t("section12.authority.customerAddress")}
               <br />
               {t("section12.authority.phone")}
               <br />

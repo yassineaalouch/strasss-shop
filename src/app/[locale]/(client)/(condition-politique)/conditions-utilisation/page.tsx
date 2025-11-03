@@ -54,7 +54,7 @@ export default function ConditionsUtilisationPage() {
                 <p className="text-gray-600">
                   {t("section2.contact.address")}
                   <br />
-                  {t("section2.contact.city")}
+                  {t("section2.contact.customerAddress")}
                   <br />
                   {t("section2.contact.phone")}
                   <br />

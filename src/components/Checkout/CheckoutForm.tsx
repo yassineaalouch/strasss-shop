@@ -14,8 +14,8 @@ export default function CheckoutForm({
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     customerName: "",
-    city: "",
-    phoneNumber: ""
+    customerAddress: "",
+    customerPhone: ""
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -31,21 +31,21 @@ export default function CheckoutForm({
     }
 
     // Validation ville
-    if (!formData.city.trim()) {
-      newErrors.city = t("validation.city.required")
-    } else if (formData.city.trim().length < 2) {
-      newErrors.city = t("validation.city.minLength")
+    if (!formData.customerAddress.trim()) {
+      newErrors.customerAddress = t("validation.customerAddress.required")
+    } else if (formData.customerAddress.trim().length < 2) {
+      newErrors.customerAddress = t("validation.customerAddress.minLength")
     }
 
     // Validation numéro de téléphone
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = t("validation.phoneNumber.required")
+    if (!formData.customerPhone.trim()) {
+      newErrors.customerPhone = t("validation.customerPhone.required")
     } else if (
       !/^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/.test(
-        formData.phoneNumber.trim()
+        formData.customerPhone.trim()
       )
     ) {
-      newErrors.phoneNumber = t("validation.phoneNumber.invalid")
+      newErrors.customerPhone = t("validation.customerPhone.invalid")
     }
 
     setErrors(newErrors)
@@ -119,28 +119,28 @@ export default function CheckoutForm({
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             <MapPin className="inline w-4 h-4 mr-2" />
-            {t("fields.city.label")}
+            {t("fields.customerAddress.label")}
           </label>
           <input
             type="text"
-            value={formData.city}
-            onChange={(e) => handleChange("city", e.target.value)}
+            value={formData.customerAddress}
+            onChange={(e) => handleChange("customerAddress", e.target.value)}
             className={`w-full px-3 sm:px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-firstColor focus:border-transparent transition-all text-base ${
-              errors.city
+              errors.customerAddress
                 ? "border-red-500"
                 : "border-gray-300 hover:border-orange-300"
             }`}
-            placeholder={t("fields.city.placeholder")}
+            placeholder={t("fields.customerAddress.placeholder")}
             disabled={isProcessing}
           />
-          {errors.city && (
+          {errors.customerAddress && (
             <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-red-500 text-sm mt-2 flex items-start"
             >
               <span className="mr-1 flex-shrink-0">⚠️</span>
-              <span className="break-words">{errors.city}</span>
+              <span className="break-words">{errors.customerAddress}</span>
             </motion.p>
           )}
         </div>
@@ -149,28 +149,28 @@ export default function CheckoutForm({
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             <Phone className="inline w-4 h-4 mr-2" />
-            {t("fields.phoneNumber.label")}
+            {t("fields.customerPhone.label")}
           </label>
           <input
             type="tel"
-            value={formData.phoneNumber}
-            onChange={(e) => handleChange("phoneNumber", e.target.value)}
+            value={formData.customerPhone}
+            onChange={(e) => handleChange("customerPhone", e.target.value)}
             className={`w-full px-3 sm:px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-firstColor focus:border-transparent transition-all text-base ${
-              errors.phoneNumber
+              errors.customerPhone
                 ? "border-red-500"
                 : "border-gray-300 hover:border-orange-300"
             }`}
-            placeholder={t("fields.phoneNumber.placeholder")}
+            placeholder={t("fields.customerPhone.placeholder")}
             disabled={isProcessing}
           />
-          {errors.phoneNumber && (
+          {errors.customerPhone && (
             <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-red-500 text-sm mt-2 flex items-start"
             >
               <span className="mr-1 flex-shrink-0">⚠️</span>
-              <span className="break-words">{errors.phoneNumber}</span>
+              <span className="break-words">{errors.customerPhone}</span>
             </motion.p>
           )}
         </div>
@@ -183,9 +183,10 @@ export default function CheckoutForm({
           </h3>
           <p className="text-gray-600 text-sm leading-relaxed">
             {t("delivery.description", {
-              city: formData.city || t("delivery.placeholderCity"),
-              phoneNumber:
-                formData.phoneNumber || t("delivery.placeholderPhone")
+              customerAddress:
+                formData.customerAddress || t("delivery.placeholderCity"),
+              customerPhone:
+                formData.customerPhone || t("delivery.placeholderPhone")
             })}
           </p>
         </div>

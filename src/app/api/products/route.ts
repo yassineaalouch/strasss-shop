@@ -1,12 +1,12 @@
-//api/products/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
-import "@/models/Characteristic" // permet d’enregistrer le schéma Category
-import "@/models/Category" // permet d’enregistrer le schéma Category
-import "@/models/Discount" // permet d’enregistrer le schéma Category
+import "@/models/Characteristic"
+import "@/models/Category"
+import "@/models/Discount"
 import Product from "@/models/Product"
 import { ProductResponse, ProductRequestBody } from "@/types/product"
 import mongoose from "mongoose"
+import { FilterQuery, SortOptions } from "@/types/searchParams"
 
 interface ValidationError extends Error {
   name: "ValidationError"
@@ -26,7 +26,7 @@ function isValidationError(error: unknown): error is ValidationError {
   )
 }
 
-// GET - Récupérer tous les produits
+// GET - Récupérer tous les produits avec filtrage et pagination
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<ProductResponse>> {
@@ -35,28 +35,220 @@ export async function GET(
 
     // Récupérer les paramètres de recherche
     const searchParams = request.nextUrl.searchParams
-    const category = searchParams.get("category")
+
+    // Paramètres de filtrage (client shop)
+    const categories = searchParams.getAll("category")
+    const characteristics = searchParams.getAll("characteristics")
+    const minPrice = searchParams.get("minPrice")
+    const maxPrice = searchParams.get("maxPrice")
     const inStock = searchParams.get("inStock")
     const isNew = searchParams.get("isNew")
-    const isOnSale = searchParams.get("isOnSale")
-    type ProductQuery = {
-      category?: string
-      inStock?: boolean
-      isNewProduct?: boolean
-      isOnSale?: boolean
+    const isOnSale = searchParams.get("onSale")
+
+    // Paramètres de filtrage (dashboard)
+    const search = searchParams.get("search") // Search in product names
+    const categoryName = searchParams.get("categoryName") // Category by name (dashboard)
+    const discountName = searchParams.get("discountName") // Discount by name (dashboard)
+    const status = searchParams.get("status") // Status filter (dashboard)
+    const minQuantity = searchParams.get("minQuantity")
+    const maxQuantity = searchParams.get("maxQuantity")
+    const language = searchParams.get("language") || "fr" // Language for sorting
+
+    // Paramètres de tri
+    const sortBy = searchParams.get("sortBy") || "newest"
+    const sortField = searchParams.get("sortField") // For dashboard: name, price, quantity, category, createdAt
+    const sortDirection = searchParams.get("sortDirection") || "asc" // asc or desc
+
+    // Paramètres de pagination
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "12")
+    const skip = (page - 1) * limit
+
+    // Construire la requête de filtrage
+    const query: FilterQuery = {}
+    const orConditions: any[] = []
+
+    // Filtre par recherche de nom (dashboard)
+    if (search) {
+      orConditions.push(
+        { "name.fr": { $regex: search, $options: "i" } },
+        { "name.ar": { $regex: search, $options: "i" } }
+      )
     }
-    // Construire la requête
-    const query: ProductQuery = {}
-    if (category) query.category = category
+
+    // Filtre par catégories (client shop - multiple categories)
+    if (categories.length > 0) {
+      const Category = mongoose.model("Category")
+      const categoryDocs = await Category.find({
+        $or: [
+          { "name.fr": { $in: categories } },
+          { "name.ar": { $in: categories } }
+        ]
+      })
+      const categoryIds = categoryDocs.map((cat) => cat._id)
+      if (categoryIds.length > 0) {
+        query.category = { $in: categoryIds }
+      }
+    }
+
+    // Filtre par nom de catégorie (dashboard - single category)
+    if (categoryName) {
+      const Category = mongoose.model("Category")
+      const categoryDoc = await Category.findOne({
+        $or: [
+          { "name.fr": categoryName },
+          { "name.ar": categoryName }
+        ]
+      })
+      if (categoryDoc) {
+        query.category = categoryDoc._id
+      }
+    }
+
+    // Filtre par nom de discount (dashboard)
+    if (discountName) {
+      const Discount = mongoose.model("Discount")
+      const discountDoc = await Discount.findOne({
+        $or: [
+          { "name.fr": discountName },
+          { "name.ar": discountName }
+        ]
+      })
+      if (discountDoc) {
+        query.discount = discountDoc._id
+      }
+    }
+
+    // Filtre par caractéristiques
+    if (characteristics.length > 0) {
+      query["Characteristic.values"] = {
+        $elemMatch: {
+          $or: [
+            { fr: { $in: characteristics } },
+            { ar: { $in: characteristics } }
+          ]
+        }
+      }
+    }
+
+    // Filtre par prix
+    if (minPrice || maxPrice) {
+      query.price = {}
+      if (minPrice) query.price.$gte = parseFloat(minPrice)
+      if (maxPrice) query.price.$lte = parseFloat(maxPrice)
+    }
+
+    // Filtre par statut (dashboard) - doit être fait avant la quantité pour éviter les conflits
+    if (status && status !== "all") {
+      switch (status) {
+        case "inStock":
+          query.inStock = true
+          break
+        case "outOfStock":
+          orConditions.push(
+            { inStock: false },
+            { quantity: 0 }
+          )
+          break
+        case "lowStock":
+          query.inStock = true
+          break
+        case "new":
+          query.isNewProduct = true
+          break
+        case "onSale":
+          query.isOnSale = true
+          break
+      }
+    }
+
+    // Filtre par quantité (dashboard) - après le statut
+    const quantityConditions: { $gte?: number; $lte?: number; $gt?: number } = {}
+    if (minQuantity) quantityConditions.$gte = parseInt(minQuantity)
+    if (maxQuantity) quantityConditions.$lte = parseInt(maxQuantity)
+    
+    // Add status-specific quantity conditions
+    if (status === "inStock") {
+      quantityConditions.$gt = 0
+    } else if (status === "lowStock") {
+      quantityConditions.$lte = 10
+      quantityConditions.$gt = 0
+    }
+    
+    // Only set quantity if we have conditions
+    if (Object.keys(quantityConditions).length > 0) {
+      query.quantity = quantityConditions
+    }
+
+    // Ajouter les conditions $or si nécessaire
+    if (orConditions.length > 0) {
+      query.$or = orConditions
+    }
+
+    // Filtres booléens (client shop)
     if (inStock !== null) query.inStock = inStock === "true"
     if (isNew !== null) query.isNewProduct = isNew === "true"
     if (isOnSale !== null) query.isOnSale = isOnSale === "true"
 
+    // Définir l'ordre de tri
+    let sortOptions: SortOptions = {}
+    
+    // Dashboard sort (using sortField and sortDirection)
+    if (sortField) {
+      switch (sortField) {
+        case "name":
+          sortOptions = { [`name.${language}`]: sortDirection === "desc" ? -1 : 1 }
+          break
+        case "price":
+          sortOptions = { price: sortDirection === "desc" ? -1 : 1 }
+          break
+        case "quantity":
+          sortOptions = { quantity: sortDirection === "desc" ? -1 : 1 }
+          break
+        case "category":
+          // Sort by category name requires aggregation, simplified to createdAt
+          sortOptions = { createdAt: sortDirection === "desc" ? -1 : 1 }
+          break
+        case "createdAt":
+          sortOptions = { createdAt: sortDirection === "desc" ? -1 : 1 }
+          break
+        default:
+          sortOptions = { createdAt: -1 }
+      }
+    } else {
+      // Client shop sort (using sortBy)
+      switch (sortBy) {
+        case "name-asc":
+          sortOptions = { "name.fr": 1 }
+          break
+        case "name-desc":
+          sortOptions = { "name.fr": -1 }
+          break
+        case "price-asc":
+          sortOptions = { price: 1 }
+          break
+        case "price-desc":
+          sortOptions = { price: -1 }
+          break
+        case "newest":
+        default:
+          sortOptions = { createdAt: -1 }
+          break
+      }
+    }
+
+    // Compter le nombre total de produits correspondant aux filtres
+    const totalProducts = await Product.countDocuments(query)
+    const totalPages = Math.ceil(totalProducts / limit)
+
+    // Récupérer les produits avec pagination
     const products = await Product.find(query)
       .populate("category")
       .populate("discount")
       .populate("Characteristic.name")
-      .sort({ createdAt: -1 })
+      .sort(sortOptions as Record<string, 1 | -1>)
+      .skip(skip)
+      .limit(limit)
 
     return NextResponse.json(
       {
@@ -82,7 +274,15 @@ export async function GET(
           updatedAt: product.updatedAt
             ? product.updatedAt.toISOString()
             : new Date().toISOString()
-        }))
+        })),
+        pagination: {
+          page,
+          limit,
+          totalProducts,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        }
       },
       { status: 200 }
     )

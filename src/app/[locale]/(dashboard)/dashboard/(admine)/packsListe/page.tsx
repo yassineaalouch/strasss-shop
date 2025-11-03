@@ -13,15 +13,16 @@ import {
   Minus,
   Calculator,
   Loader2,
-  Edit,
   Upload
 } from "lucide-react"
-import { PackFormData, ProductPack } from "@/types/type"
 import Image from "next/image"
 import { Product } from "@/types/product"
-import { SelectedPackItem } from "@/types/pack"
+import { PackFormData, ProductPack, SelectedPackItem } from "@/types/pack"
+import { ManagementCard } from "@/components/dashboard/ManagementCard"
+import { useToast } from "@/components/ui/Toast"
 
 const AdminPackCreator: React.FC = () => {
+  const { showToast } = useToast()
   const [isCreating, setIsCreating] = useState(false)
   const [editingPack, setEditingPack] = useState<ProductPack | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -64,10 +65,14 @@ const AdminPackCreator: React.FC = () => {
       const response = await axios.get("/api/products")
       if (response.data.success) {
         setAvailableProducts(response.data.products || [])
-        console.log("response.data.products ", response.data.products)
+      } else {
+        showToast(
+          response.data.message || "Erreur lors du chargement des produits",
+          "error"
+        )
       }
     } catch (err) {
-      console.error("Erreur lors du chargement des produits:", err)
+      showToast("Erreur lors du chargement des produits", "error")
       setError("Impossible de charger les produits")
       setAvailableProducts([])
     } finally {
@@ -85,10 +90,18 @@ const AdminPackCreator: React.FC = () => {
 
       if (response.data.success) {
         setPacks(response.data.data || [])
+      } else {
+        showToast(
+          response.data.message || "Erreur lors du chargement des packs",
+          "error"
+        )
       }
     } catch (err) {
-      console.error("Erreur:", err)
       if (axios.isAxiosError(err)) {
+        showToast(
+          err.response?.data?.message || "Erreur de connexion au serveur",
+          "error"
+        )
         setError(
           err.response?.data?.message || "Erreur de connexion au serveur"
         )
@@ -174,7 +187,7 @@ const AdminPackCreator: React.FC = () => {
 
       return response.data.urls
     } catch (err) {
-      console.error("Erreur upload:", err)
+      showToast("Erreur lors de l'upload des images", "error")
       throw new Error("Erreur lors de l'upload des images")
     } finally {
       setUploadingImages(false)
@@ -201,7 +214,7 @@ const AdminPackCreator: React.FC = () => {
       }
       return false
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'image S3:", error)
+      // Erreur silencieuse pour les suppressions S3
       return false
     }
   }
@@ -271,8 +284,7 @@ const AdminPackCreator: React.FC = () => {
           try {
             await deleteImageFromS3(deletedImage)
           } catch (error) {
-            console.error(`Erreur suppression S3 pour ${deletedImage}:`, error)
-            // Continuer même si une suppression échoue
+            // Erreur silencieuse - continuer même si une suppression échoue
           }
         }
         // Vider la liste des images à supprimer après traitement
@@ -320,10 +332,22 @@ const AdminPackCreator: React.FC = () => {
         // Recharger la liste des packs
         await fetchPacks()
         resetForm()
+        showToast(
+          editingPack ? "Pack modifié avec succès" : "Pack créé avec succès",
+          "success"
+        )
+      } else {
+        showToast(
+          response.data.message || "Erreur lors de la sauvegarde",
+          "error"
+        )
       }
     } catch (err) {
-      console.error("Erreur:", err)
       if (axios.isAxiosError(err)) {
+        showToast(
+          err.response?.data?.message || "Erreur lors de la sauvegarde",
+          "error"
+        )
         if (err.response) {
           setError(
             err.response.data?.message ||
@@ -347,17 +371,6 @@ const AdminPackCreator: React.FC = () => {
     return availableProducts.find((p) => p._id === productId)
   }
 
-  // Fonction pour obtenir les détails complets d'un pack
-  const getPackWithProducts = (pack: ProductPack) => {
-    return {
-      ...pack,
-      itemsWithProducts: pack.items.map((item) => ({
-        ...item,
-        product: getProductById(item.productId)
-      }))
-    }
-  }
-
   // Fonction pour supprimer un pack
   const handleDeletePack = async (packId: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce pack ?")) {
@@ -375,10 +388,19 @@ const AdminPackCreator: React.FC = () => {
 
         // Recharger la liste des packs
         await fetchPacks()
+        showToast("Pack supprimé avec succès", "success")
+      } else {
+        showToast(
+          response.data.message || "Erreur lors de la suppression",
+          "error"
+        )
       }
     } catch (err) {
-      console.error("Erreur:", err)
       if (axios.isAxiosError(err)) {
+        showToast(
+          err.response?.data?.message || "Erreur lors de la suppression",
+          "error"
+        )
         setError(err.response?.data?.message || "Erreur lors de la suppression")
       } else {
         setError("Erreur inattendue")
@@ -601,125 +623,19 @@ const AdminPackCreator: React.FC = () => {
                 </p>
               </div>
             ) : (
-              packs.map((pack) => {
-                const packWithProducts = getPackWithProducts(pack)
-
-                return (
-                  <div
-                    key={`pack-${pack._id}`}
-                    className="bg-white rounded-lg shadow-lg overflow-hidden"
-                  >
-                    <div className="relative h-48 bg-gray-200">
-                      {pack.images && pack.images[0] ? (
-                        <Image
-                          src={pack.images[0]}
-                          width={400}
-                          height={400}
-                          alt={pack.name[currentLanguage]}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="text-gray-400" size={48} />
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2 flex space-x-2">
-                        <button
-                          onClick={() => handleEditPack(pack)}
-                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50"
-                        >
-                          <Edit size={16} className="text-gray-600" />
-                        </button>
-                        <button
-                          onClick={() => handleDeletePack(pack._id)}
-                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50"
-                        >
-                          <Trash2 size={16} className="text-red-600" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                        {pack.name[currentLanguage]}
-                      </h3>
-
-                      {pack.description && (
-                        <p className="text-gray-600 text-sm mb-3">
-                          {pack.description[currentLanguage]}
-                        </p>
-                      )}
-
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-500 mb-1">
-                          {pack.items.length} produit
-                          {pack.items.length > 1 ? "s" : ""}
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {packWithProducts.itemsWithProducts
-                            .slice(0, 3)
-                            .map((item, index) => (
-                              <span
-                                key={`pack-${pack._id}-item-${item.productId}-${index}`}
-                                className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700"
-                              >
-                                {item.product
-                                  ? item.product.name[
-                                      currentLanguage
-                                    ]?.substring(0, 20) || "Produit sans nom"
-                                  : "Produit inconnu"}
-                                ...
-                                {item.quantity > 1 && (
-                                  <span className="ml-1 bg-gray-200 rounded-full px-1">
-                                    ×{item.quantity}
-                                  </span>
-                                )}
-                              </span>
-                            ))}
-                          {pack.items.length > 3 && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-200 text-gray-600">
-                              +{pack.items.length - 3} autres
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="border-t pt-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            {pack.discountPrice ? (
-                              <div>
-                                <span className="text-lg font-bold text-green-600">
-                                  {pack.discountPrice.toFixed(2)} DH
-                                </span>
-                                <span className="text-sm text-gray-500 line-through ml-2">
-                                  {pack.totalPrice.toFixed(2)} DH
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-lg font-bold text-gray-800">
-                                {pack.totalPrice.toFixed(2)} DH
-                              </span>
-                            )}
-                          </div>
-
-                          {pack.discountPrice && (
-                            <div className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                              -
-                              {Math.round(
-                                ((pack.totalPrice - pack.discountPrice) /
-                                  pack.totalPrice) *
-                                  100
-                              )}
-                              %
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })
+              packs.map((pack) => (
+                <ManagementCard
+                  key={`pack-${pack._id}`}
+                  type="pack"
+                  item={pack}
+                  currentLanguage={currentLanguage}
+                  onEdit={(id) => {
+                    const packToEdit = packs.find((p) => p._id === id)
+                    if (packToEdit) handleEditPack(packToEdit)
+                  }}
+                  onDelete={handleDeletePack}
+                />
+              ))
             )}
           </div>
         )}

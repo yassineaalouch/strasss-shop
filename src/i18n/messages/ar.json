@@ -29,7 +29,8 @@
     "navigation": {
       "home": "الرئيسية",
       "shop": "المتجر",
-      "fabrics": "الأقمشة"
+      "packages": "الحزم",
+      "contact": "تواصل معنا "
     },
     "security": "اتصال آمن"
   },
@@ -44,11 +45,16 @@
     "quickLinks": {
       "title": "روابط سريعة",
       "home": "الرئيسية",
-      "shop": "المتجر",
+      "products": "المنتجات",
+      "packages": "الحزم",
       "contact": "اتصال"
     },
     "categories": {
       "title": "الفئات",
+      "threads": "خيوط",
+      "needles": "إبر",
+      "scissors": "مقصات",
+      "machines": "آلات",
       "rigidFencing": "أسوار صلبة",
       "flexibleMesh": "شبك مرن",
       "gates": "بوابات",
@@ -95,7 +101,7 @@
       "contact": {
         "title": "معلومات الاتصال:",
         "address": "123 شارع الخياطة",
-        "city": "75001 باريس، فرنسا",
+        "customerAddress": "75001 باريس، فرنسا",
         "phone": "هاتف: 01 23 45 67 89",
         "email": "البريد الإلكتروني: contact@accessoires-couture.fr"
       }
@@ -291,7 +297,7 @@
         "title": "2.1 بيانات الهوية",
         "name": "الاسم، اللقب",
         "email": "عنوان البريد الإلكتروني",
-        "phoneNumber": "رقم الهاتف",
+        "customerPhone": "رقم الهاتف",
         "postalAddress": "العنوان البريدي",
         "birthDate": "تاريخ الميلاد (اختياري)"
       },
@@ -464,7 +470,7 @@
         "intro": "إذا كنت تعتقد أن حقوقك لا تُحترم، يمكنك تقديم شكوى إلى:",
         "name": "CNIL (اللجنة الوطنية للمعلوماتية والحريات)",
         "address": "3 Place de Fontenoy, TSA 80715",
-        "city": "75334 Paris Cedex 07",
+        "customerAddress": "75334 Paris Cedex 07",
         "phone": "هاتف: 01 53 73 22 22",
         "website": "الموقع: www.cnil.fr"
       }
@@ -488,7 +494,7 @@
       "measurement": "قياس"
     },
     "checkout": {
-      "success": "شكراً {customerName}! سيتم توصيل طلبك بقيمة {total} درهم إلى {city}.",
+      "success": "شكراً {customerName}! سيتم توصيل طلبك بقيمة {total} درهم إلى {customerAddress}.",
       "emptyCart": "السلة فارغة",
       "error": "خطأ أثناء تسجيل الطلب",
       "errorTitle": "خطأ",
@@ -525,11 +531,11 @@
         "label": "الاسم الكامل *",
         "placeholder": "الاسم الأول واللقب"
       },
-      "city": {
+      "customerAddress": {
         "label": "المدينة *",
         "placeholder": "مدينة التوصيل الخاصة بك"
       },
-      "phoneNumber": {
+      "customerPhone": {
         "label": "الهاتف *",
         "placeholder": "06 12 34 56 78"
       }
@@ -539,18 +545,18 @@
         "required": "اسم العميل مطلوب",
         "minLength": "يجب أن يحتوي الاسم على حرفين على الأقل"
       },
-      "city": {
+      "customerAddress": {
         "required": "المدينة مطلوبة",
         "minLength": "يجب أن يحتوي اسم المدينة على حرفين على الأقل"
       },
-      "phoneNumber": {
+      "customerPhone": {
         "required": "رقم الهاتف مطلوب",
         "invalid": "تنسيق الهاتف غير صحيح (مثال: 06 12 34 56 78)"
       }
     },
     "delivery": {
       "title": "التوصيل",
-      "description": "سيتم توصيل طلبك إلى {city} خلال 2-3 أيام عمل. سنتصل بك على {phoneNumber} لتنظيم التوصيل.",
+      "description": "سيتم توصيل طلبك إلى {customerAddress} خلال 2-3 أيام عمل. سنتصل بك على {customerPhone} لتنظيم التوصيل.",
       "placeholderCity": "[مدينتك]",
       "placeholderPhone": "[رقمك]"
     },
@@ -621,7 +627,7 @@
         "title": "صالة العرض",
         "address1": "الشارع 4 رقم 2",
         "address2": "حي البساتين",
-        "city": "مكناس"
+        "customerAddress": "مكناس"
       }
     },
     "OpeningHours": {

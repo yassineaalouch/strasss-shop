@@ -1,25 +1,30 @@
 import { PackProduct } from "./pack"
 
-export interface OrderItem {
-  id: string
-  name: string
-  category: string
-  price: number
-  quantity: number
-  image: string
-}
-
 // Type pour les données envoyées lors de la création d'une commande
+// export interface OrderRequestBody {
+//   customerName: string
+//   customerAddress: string
+//   customerPhone: string
+//   items: OrderItem[]
+//   subtotal: number
+//   shipping: number
+//   total: number
+// }
+
 export interface OrderRequestBody {
   customerName: string
-  city: string
-  phoneNumber: string
+  customerAddress: string
+  customerPhone: string
   items: OrderItem[]
   subtotal: number
   shipping: number
   total: number
+  coupon?: { code: string; discountType: string; value: number } | null
+  paymentMethod?: string
+  shippingMethod?: string
+  notes?: string
+  status?: string
 }
-
 // Type pour la réponse de l'API (utilisé dans les routes API)
 export interface OrderResponse {
   success: boolean
@@ -34,8 +39,8 @@ export interface OrderResponse {
 export interface OrderDocument {
   _id: string
   customerName: string
-  city: string
-  phoneNumber: string
+  customerAddress: string
+  customerPhone: string
   items: OrderItem[]
   subtotal: number
   shipping: number
@@ -44,6 +49,7 @@ export interface OrderDocument {
   orderDate: Date
   createdAt: Date
   updatedAt: Date
+  coupon: { code: string; discountType: string; value: number } | null
 }
 
 // Type pour les erreurs de validation
@@ -56,7 +62,6 @@ export interface ValidationError extends Error {
   }
 }
 
-// Types pour les produits individuels
 export interface OrderItem {
   id: string
   name: string
@@ -80,14 +85,17 @@ export interface OrderPack {
   type: "pack"
   items: PackProduct[]
 }
+export interface UpdateOrderData {
+  status?: string
+  paymentMethod?: string
+}
 
 export type OrderLineItem = OrderItem | OrderPack
 
 export interface Order {
-  id: string
+  _id: string
   orderNumber: string
   customerName: string
-  customerEmail: string
   customerPhone: string
   customerAddress: string
   orderDate: Date
@@ -104,7 +112,7 @@ export interface Order {
   shippingMethod: string
   items: OrderLineItem[]
   notes?: string
-  coupon: string
+  coupon: { code: string; discountType: string; value: number } | null
 }
 
 export interface OrderFilterState {
@@ -120,4 +128,27 @@ export interface OrderFilterState {
 export interface SortState {
   field: "date" | "total" | "customerName" | "orderNumber"
   direction: "asc" | "desc"
+}
+
+export interface CreateOrderModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onOrderCreated: () => void
+}
+
+export interface SelectedItem {
+  id: string
+  name: string
+  type: "product" | "pack"
+  price: number
+  discountPrice?: number
+  image: string
+  quantity: number
+  packItems?: Array<{
+    id: string
+    name: string
+    quantity: number
+    price: number
+    image: string
+  }>
 }

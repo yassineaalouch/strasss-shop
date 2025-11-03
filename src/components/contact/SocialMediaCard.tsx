@@ -49,9 +49,11 @@ const SocialMediaCard: React.FC = () => {
             .filter((link: SocialLink) => link.isActive)
             .sort((a: SocialLink, b: SocialLink) => a.order - b.order)
           setSocialMediaLinks(activeLinks)
+        } else {
+          // Erreur silencieuse pour le contenu Hero
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération du contenu Hero:", error)
+        // Erreur silencieuse pour le contenu Hero
       }
     }
 

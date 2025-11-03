@@ -3,41 +3,13 @@ import React, { useState, ChangeEvent } from "react"
 import { Eye, EyeOff, Lock, User, Shield, AlertCircle } from "lucide-react"
 import Image from "next/image"
 import { signIn } from "next-auth/react"
-
-// Types TypeScript
-interface FormData {
-  username: string
-  password: string
-}
-
-interface FormErrors {
-  username?: string
-  password?: string
-  general?: string
-}
-
-interface ValidationResult {
-  isValid: boolean
-  errors: FormErrors
-}
-
-interface InputFieldProps {
-  type: "text" | "password"
-  value: string
-  onChange: (value: string) => void
-  placeholder: string
-  icon: React.ElementType
-  error?: string
-  disabled: boolean
-  showPasswordToggle?: boolean
-  onTogglePassword?: () => void
-  showPassword?: boolean
-}
-
-interface LoadingSpinnerProps {
-  size?: "sm" | "md" | "lg"
-  className?: string
-}
+import {
+  LoginFormData,
+  LoginFormErrors,
+  ValidationResult,
+  InputFieldProps,
+  LoadingSpinnerProps
+} from "@/types/auth"
 
 // Configuration
 const CONFIG = {
@@ -137,19 +109,19 @@ const InputField: React.FC<InputFieldProps> = ({
 
 // Composant principal
 const AdminLoginPage: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<LoginFormData>({
     username: "",
     password: ""
   })
 
   const [showPassword, setShowPassword] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [errors, setErrors] = useState<FormErrors>({})
+  const [errors, setErrors] = useState<LoginFormErrors>({})
   const [loginAttempts, setLoginAttempts] = useState<number>(0)
   const [isBlocked, setIsBlocked] = useState<boolean>(false)
   const [blockTimer, setBlockTimer] = useState<NodeJS.Timeout | null>(null)
 
-  const handleChange = (field: keyof FormData, value: string): void => {
+  const handleChange = (field: keyof LoginFormData, value: string): void => {
     setFormData((prev) => ({ ...prev, [field]: value }))
 
     if (errors[field]) {
@@ -158,7 +130,7 @@ const AdminLoginPage: React.FC = () => {
   }
 
   const validateForm = (): ValidationResult => {
-    const newErrors: FormErrors = {}
+    const newErrors: LoginFormErrors = {}
 
     if (!formData.username.trim()) {
       newErrors.username = "Le nom d'utilisateur est requis"
@@ -277,8 +249,7 @@ const AdminLoginPage: React.FC = () => {
         window.location.href = "/fr/dashboard"
       }
     } catch (error) {
-      console.error(error)
-      setErrors({ general: "Erreur de connexion" })
+      setErrors({ general: "Erreur de connexion. Veuillez réessayer." })
     } finally {
       setIsLoading(false)
     }

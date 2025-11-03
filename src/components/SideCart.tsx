@@ -303,9 +303,41 @@ const SideCart: React.FC<SideCartProps> = ({
 }) => {
   const t = useTranslations("SideCart")
 
-  // Calcul du total
+  // 💰 Calcul du prix d'un item en tenant compte des réductions
+  const calculateItemTotal = (item: CartItem): number => {
+    // Pour les packs, utiliser discountPrice si disponible
+    if (item.type === "pack" && item.discountPrice) {
+      return item.discountPrice * item.quantity
+    }
+
+    let total = item.price * item.quantity
+
+    if (item.discount) {
+      // 🟡 Cas 1 : réduction en pourcentage
+      if (item.discount.type === "PERCENTAGE") {
+        const percent = item.discount.value ?? 0
+        total -= (total * percent) / 100
+      }
+
+      // 🟢 Cas 2 : "Buy A get B free" (ex: buy2get1)
+      else if (item.discount.type === "BUY_X_GET_Y") {
+        const buyQuantity = item.discount.buyQuantity
+        const getQuantity = item.discount.getQuantity
+        if (getQuantity && buyQuantity) {
+          const group = buyQuantity + getQuantity
+          const freeCount = Math.floor(item.quantity / group) * getQuantity
+          const paidCount = item.quantity - freeCount
+          total = paidCount * item.price
+        }
+      }
+    }
+
+    return total
+  }
+
+  // Calcul du total avec réductions
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + calculateItemTotal(item),
     0
   )
 
@@ -358,11 +390,11 @@ const SideCart: React.FC<SideCartProps> = ({
         initial={{ x: "100%" }}
         animate={{ x: isOpen ? 0 : "100%" }}
         transition={{ type: "spring", damping: 20, stiffness: 100 }}
-        className="fixed top-0 right-0 h-full w-full max-w-md bg-gradient-to-b from-white to-gray-50 shadow-2xl z-[110] overflow-hidden"
+        className="fixed top-0 right-0 h-full w-full max-w-sm bg-gradient-to-b from-white to-gray-50 shadow-2xl z-[110] overflow-hidden"
       >
         <div className="flex flex-col h-full">
-          {/* Header amélioré avec gradient */}
-          <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 shadow-lg">
+          {/* Header compact */}
+          <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 shadow-lg">
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="relative flex items-center justify-between">
               <motion.div
@@ -371,14 +403,14 @@ const SideCart: React.FC<SideCartProps> = ({
                 transition={{ delay: 0.2 }}
                 className="flex items-center"
               >
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full mr-4">
-                  <ShoppingBag size={28} />
+                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-full mr-3">
+                  <ShoppingBag size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold tracking-wide">
+                  <h2 className="text-lg font-bold tracking-wide">
                     {t("header.title")}
                   </h2>
-                  <p className="text-orange-100 text-sm mt-1">
+                  <p className="text-orange-100 text-xs mt-0.5">
                     {getItemCountText(items.length)}
                   </p>
                 </div>
@@ -387,14 +419,14 @@ const SideCart: React.FC<SideCartProps> = ({
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onClose}
-                className="p-3 hover:bg-white/20 rounded-full transition-all duration-300 backdrop-blur-sm"
+                className="p-2 hover:bg-white/20 rounded-full transition-all duration-300 backdrop-blur-sm"
               >
-                <X size={24} />
+                <X size={20} />
               </motion.button>
             </div>
           </div>
 
-          {/* Progress Bar amélioré pour livraison gratuite */}
+          {/* Progress Bar compact pour livraison gratuite */}
           <AnimatePresence mode="wait">
             {totalPrice < FREE_SHIPPING_THRESHOLD ? (
               <motion.div
@@ -403,57 +435,37 @@ const SideCart: React.FC<SideCartProps> = ({
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="bg-gradient-to-r from-orange-50 to-yellow-50 p-5 border-b border-orange-100 shadow-sm"
+                className="bg-gradient-to-r from-orange-50 to-yellow-50 p-3 border-b border-orange-100 shadow-sm"
               >
-                <div className="mb-3">
-                  <div className="flex items-center justify-between text-sm">
+                <div className="mb-2">
+                  <div className="flex items-center justify-between text-xs">
                     <motion.span
                       initial={{ x: -10, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       className="text-gray-700 flex items-center font-medium"
                     >
-                      <div className="p-1.5 bg-orange-200 rounded-full mr-2">
-                        <Truck size={18} className="text-orange-700" />
-                      </div>
+                      <Truck size={14} className="text-orange-600 mr-1" />
                       {t("freeShipping.label")}
                     </motion.span>
                     <motion.span
                       initial={{ scale: 0.8 }}
                       animate={{ scale: 1 }}
-                      className="text-orange-600 font-bold text-base"
+                      className="text-orange-600 font-bold text-sm"
                     >
                       {remainingForFreeShipping.toFixed(2)} MAD
                     </motion.span>
                   </div>
                 </div>
                 <div className="relative">
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${progressPercentage}%` }}
                       transition={{ duration: 0.8, ease: "easeOut" }}
-                      className="bg-gradient-to-r from-orange-400 to-orange-500 h-3 rounded-full shadow-sm relative"
-                    >
-                      <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                    </motion.div>
+                      className="bg-gradient-to-r from-orange-400 to-orange-500 h-2 rounded-full"
+                    />
                   </div>
-                  {progressPercentage > 10 && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.5 }}
-                      className="absolute -top-1 h-5 w-5 bg-orange-500 rounded-full shadow-md"
-                      style={{ left: `calc(${progressPercentage}% - 10px)` }}
-                    >
-                      <div className="w-full h-full bg-white/30 rounded-full animate-ping"></div>
-                    </motion.div>
-                  )}
                 </div>
-                <p className="text-xs text-gray-600 mt-2 italic">
-                  {t("freeShipping.progressText", {
-                    amount: remainingForFreeShipping.toFixed(2)
-                  })}
-                </p>
               </motion.div>
             ) : (
               <motion.div
@@ -461,22 +473,13 @@ const SideCart: React.FC<SideCartProps> = ({
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", duration: 0.5 }}
-                className="bg-gradient-to-r from-green-50 to-emerald-50 p-5 border-b border-green-200 shadow-sm"
+                className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 border-b border-green-200 shadow-sm"
               >
                 <div className="flex items-center">
-                  <motion.div
-                    animate={{ rotate: [0, -10, 10, -10, 0] }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="p-2 bg-green-200 rounded-full mr-3"
-                  >
-                    <Sparkles size={24} className="text-green-700" />
-                  </motion.div>
+                  <Sparkles size={16} className="text-green-700 mr-2" />
                   <div className="flex-1">
-                    <p className="font-bold text-green-800 text-base">
+                    <p className="font-bold text-green-800 text-sm">
                       {t("freeShipping.achieved")}
-                    </p>
-                    <p className="text-sm text-green-600 mt-0.5">
-                      {t("freeShipping.achievedSubtext")}
                     </p>
                   </div>
                 </div>
@@ -484,145 +487,263 @@ const SideCart: React.FC<SideCartProps> = ({
             )}
           </AnimatePresence>
 
-          {/* Cart Items avec animations */}
+          {/* Cart Items - Compact avec séparation produits/packs */}
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-300 scrollbar-track-gray-100">
             {items.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-center h-full text-gray-500 p-8"
+                className="flex flex-col items-center justify-center h-full text-gray-500 p-6"
               >
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="p-6 bg-gray-100 rounded-full mb-6"
+                  className="p-4 bg-gray-100 rounded-full mb-4"
                 >
-                  <Package size={72} className="text-gray-300" />
+                  <Package size={48} className="text-gray-300" />
                 </motion.div>
-                <h3 className="text-xl font-bold mb-3 text-gray-700">
+                <h3 className="text-lg font-bold mb-2 text-gray-700">
                   {t("emptyCart.title")}
                 </h3>
-                <p className="text-sm text-center px-4 text-gray-500 leading-relaxed">
+                <p className="text-xs text-center px-4 text-gray-500">
                   {t("emptyCart.subtitle")}
                 </p>
               </motion.div>
             ) : (
-              <div className="p-5 space-y-4">
-                <AnimatePresence>
-                  {items.map((item, index) => (
-                    <motion.div
-                      key={index}
-                      layout
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      whileHover={{ scale: 1.02 }}
-                      className="group bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-lg transition-all duration-300"
-                    >
-                      <div className="flex">
-                        {/* Product Image avec effet hover */}
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          className="relative w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl mr-4 overflow-hidden shadow-sm"
-                        >
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            width={96}
-                            height={96}
-                            className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
-                          />
-                        </motion.div>
-
-                        {/* Product Details */}
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors">
-                            {item.name}
-                          </h4>
-
-                          {item.characteristic && (
-                            <div className="space-y-1 mb-3">
-                              {item.characteristic.map((char, idx) => (
+              <div className="p-3 space-y-3">
+                {/* Section Produits */}
+                {items.filter((item) => item.type !== "pack").length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-2 px-2">
+                      <Package size={14} className="text-blue-600" />
+                      <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                        Produits ({items.filter((item) => item.type !== "pack").length})
+                      </h3>
+                    </div>
+                    <div className="space-y-2">
+                      <AnimatePresence>
+                        {items
+                          .filter((item) => item.type !== "pack")
+                          .map((item, index) => (
+                            <motion.div
+                              key={item.id}
+                              layout
+                              initial={{ opacity: 0, x: 50 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -50 }}
+                              transition={{ duration: 0.3, delay: index * 0.05 }}
+                              whileHover={{ scale: 1.01 }}
+                              className="group bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm hover:shadow-md transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-2">
+                                {/* Product Image compact */}
                                 <motion.div
-                                  key={char.name}
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ delay: 0.1 + idx * 0.05 }}
-                                  className="inline-flex items-center bg-gray-100 rounded-full px-2 py-0.5 text-xs text-gray-600 mr-2"
+                                  whileHover={{ scale: 1.05 }}
+                                  className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0"
                                 >
-                                  <span className="font-medium">
-                                    {char.name}:
-                                  </span>
-                                  <span className="ml-1">{char.value}</span>
+                                  <Image
+                                    src={item.image}
+                                    alt={item.name}
+                                    width={64}
+                                    height={64}
+                                    className="object-cover w-full h-full"
+                                  />
                                 </motion.div>
-                              ))}
-                            </div>
-                          )}
 
-                          <div className="flex items-center justify-between">
-                            {/* Quantity Controls améliorés */}
-                            <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full shadow-sm">
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleQuantityChange(item, -1)}
-                                className="p-2 hover:bg-orange-100 rounded-full transition-all duration-200"
-                              >
-                                <Minus size={18} className="text-gray-600" />
-                              </motion.button>
-                              <AnimatePresence mode="wait">
-                                <motion.span
-                                  key={item.quantity}
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: 10 }}
-                                  className="px-4 py-1 text-sm font-bold text-gray-800 min-w-[40px] text-center"
+                                {/* Product Details compact */}
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-gray-800 text-xs mb-1 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                                    {item.name}
+                                  </h4>
+
+                                  {item.characteristic && item.characteristic.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mb-1">
+                                      {item.characteristic.slice(0, 2).map((char) => (
+                                        <span
+                                          key={char.name}
+                                          className="bg-gray-100 rounded px-1.5 py-0.5 text-[10px] text-gray-600"
+                                        >
+                                          {char.name}: {char.value}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  <div className="flex items-center justify-between">
+                                    {/* Quantity Controls compact */}
+                                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg">
+                                      <button
+                                        onClick={() => handleQuantityChange(item, -1)}
+                                        className="p-1 hover:bg-orange-100 rounded-l-lg transition-colors"
+                                      >
+                                        <Minus size={12} className="text-gray-600" />
+                                      </button>
+                                      <span className="px-2 py-0.5 text-xs font-bold text-gray-800 min-w-[28px] text-center">
+                                        {item.quantity}
+                                      </span>
+                                      <button
+                                        onClick={() => handleQuantityChange(item, 1)}
+                                        className="p-1 hover:bg-orange-100 rounded-r-lg transition-colors"
+                                      >
+                                        <Plus size={12} className="text-gray-600" />
+                                      </button>
+                                    </div>
+
+                                    {/* Price and Remove compact */}
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="flex flex-col items-end">
+                                        {(() => {
+                                          const itemTotal = calculateItemTotal(item)
+                                          const originalTotal = item.price * item.quantity
+                                          const hasDiscount = itemTotal < originalTotal
+                                          
+                                          return hasDiscount ? (
+                                            <>
+                                              <span className="font-bold text-xs text-green-600">
+                                                {itemTotal.toFixed(2)} MAD
+                                              </span>
+                                              <span className="text-[10px] text-gray-400 line-through">
+                                                {originalTotal.toFixed(2)} MAD
+                                              </span>
+                                            </>
+                                          ) : (
+                                            <span className="font-bold text-sm text-orange-600">
+                                              {itemTotal.toFixed(2)} MAD
+                                            </span>
+                                          )
+                                        })()}
+                                      </div>
+                                      <button
+                                        onClick={() => onRemoveItem(item)}
+                                        className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                )}
+
+                {/* Section Packs */}
+                {items.filter((item) => item.type === "pack").length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-2 px-2">
+                      <Sparkles size={14} className="text-purple-600" />
+                      <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                        Packs ({items.filter((item) => item.type === "pack").length})
+                      </h3>
+                    </div>
+                    <div className="space-y-2">
+                      <AnimatePresence>
+                        {items
+                          .filter((item) => item.type === "pack")
+                          .map((item, index) => (
+                            <motion.div
+                              key={item.id}
+                              layout
+                              initial={{ opacity: 0, x: 50 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -50 }}
+                              transition={{ duration: 0.3, delay: index * 0.05 }}
+                              whileHover={{ scale: 1.01 }}
+                              className="group bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg p-2.5 shadow-sm hover:shadow-md transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-2">
+                                {/* Pack Image compact avec badge */}
+                                <motion.div
+                                  whileHover={{ scale: 1.05 }}
+                                  className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0"
                                 >
-                                  {item.quantity}
-                                </motion.span>
-                              </AnimatePresence>
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleQuantityChange(item, 1)}
-                                className="p-2 hover:bg-orange-100 rounded-full transition-all duration-200"
-                              >
-                                <Plus size={18} className="text-gray-600" />
-                              </motion.button>
-                            </div>
+                                  <Image
+                                    src={item.image}
+                                    alt={item.name}
+                                    width={64}
+                                    height={64}
+                                    className="object-cover w-full h-full"
+                                  />
+                                  <div className="absolute top-0 right-0 bg-purple-500 text-white text-[8px] px-1 rounded-bl font-bold">
+                                    PACK
+                                  </div>
+                                </motion.div>
 
-                            {/* Price and Remove avec animations */}
-                            <div className="flex items-center space-x-3">
-                              <motion.span
-                                key={item.price * item.quantity}
-                                initial={{ scale: 0.8 }}
-                                animate={{ scale: 1 }}
-                                className="font-bold text-lg bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent"
-                              >
-                                {(item.price * item.quantity).toFixed(2)} MAD
-                              </motion.span>
-                              <motion.button
-                                whileHover={{ scale: 1.2, rotate: 10 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => onRemoveItem(item)}
-                                className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
-                              >
-                                <Trash2 size={18} />
-                              </motion.button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                                {/* Pack Details compact */}
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-gray-800 text-xs mb-1 line-clamp-1 group-hover:text-purple-600 transition-colors">
+                                    {item.name}
+                                  </h4>
+
+                                  {item.packItems && (
+                                    <p className="text-[10px] text-purple-600 mb-1 font-medium">
+                                      {item.packItems.length} produit{item.packItems.length > 1 ? "s" : ""} inclus
+                                    </p>
+                                  )}
+
+                                  <div className="flex items-center justify-between">
+                                    {/* Quantity Controls compact */}
+                                    <div className="flex items-center bg-white border border-purple-200 rounded-lg">
+                                      <button
+                                        onClick={() => handleQuantityChange(item, -1)}
+                                        className="p-1 hover:bg-purple-100 rounded-l-lg transition-colors"
+                                      >
+                                        <Minus size={12} className="text-gray-600" />
+                                      </button>
+                                      <span className="px-2 py-0.5 text-xs font-bold text-gray-800 min-w-[28px] text-center">
+                                        {item.quantity}
+                                      </span>
+                                      <button
+                                        onClick={() => handleQuantityChange(item, 1)}
+                                        className="p-1 hover:bg-purple-100 rounded-r-lg transition-colors"
+                                      >
+                                        <Plus size={12} className="text-gray-600" />
+                                      </button>
+                                    </div>
+
+                                    {/* Price and Remove compact */}
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="flex flex-col items-end">
+                                        {item.discountPrice ? (
+                                          <>
+                                            <span className="font-bold text-xs text-green-600">
+                                              {(item.discountPrice * item.quantity).toFixed(2)} MAD
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 line-through">
+                                              {(item.price * item.quantity).toFixed(2)} MAD
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <span className="font-bold text-sm text-purple-600">
+                                            {(item.price * item.quantity).toFixed(2)} MAD
+                                          </span>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={() => onRemoveItem(item)}
+                                        className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          {/* Footer amélioré */}
+          {/* Footer compact */}
           <AnimatePresence>
             {items.length > 0 && (
               <motion.div
@@ -630,11 +751,11 @@ const SideCart: React.FC<SideCartProps> = ({
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 100, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 100 }}
-                className="border-t-2 border-gray-100 bg-white p-6 shadow-2xl"
+                className="border-t-2 border-gray-100 bg-white p-4 shadow-2xl"
               >
-                {/* Total avec animation */}
-                <div className="flex justify-between items-center mb-5">
-                  <span className="text-lg font-semibold text-gray-700">
+                {/* Total compact */}
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-base font-semibold text-gray-700">
                     {t("total")}
                   </span>
                   <motion.div
@@ -644,47 +765,47 @@ const SideCart: React.FC<SideCartProps> = ({
                     transition={{ type: "spring", stiffness: 200 }}
                     className="flex items-baseline"
                   >
-                    <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+                    <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
                       {totalPrice.toFixed(2)}
                     </span>
-                    <span className="ml-1 text-lg font-semibold text-gray-600">
+                    <span className="ml-1 text-sm font-semibold text-gray-600">
                       MAD
                     </span>
                   </motion.div>
                 </div>
 
-                {/* Shipping Info avec icône */}
+                {/* Shipping Info compact */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="flex items-center justify-center text-xs mb-5 p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-center text-xs mb-3 p-2 bg-gray-50 rounded-lg"
                 >
-                  <Truck size={16} className="mr-2 text-gray-500" />
+                  <Truck size={12} className="mr-1 text-gray-500" />
                   {totalPrice >= FREE_SHIPPING_THRESHOLD ? (
-                    <span className="text-green-600 font-semibold">
+                    <span className="text-green-600 font-semibold text-xs">
                       ✨ {t("freeShipping.included")}
                     </span>
                   ) : (
-                    <span className="text-gray-500">
+                    <span className="text-gray-500 text-xs">
                       {t("freeShipping.cost")}
                     </span>
                   )}
                 </motion.div>
 
-                {/* Action Buttons avec animations */}
-                <div className="space-y-3">
+                {/* Action Buttons compact */}
+                <div className="space-y-2">
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <Link
-                      className="block w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-xl font-bold text-center shadow-lg hover:shadow-xl transform transition-all duration-300 hover:from-orange-600 hover:to-orange-700"
+                      className="block w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-bold text-sm text-center shadow-lg hover:shadow-xl transform transition-all duration-300"
                       href="/checkout"
                       onClick={onClose}
                     >
                       <span className="flex items-center justify-center">
-                        <ShoppingBag size={20} className="mr-2" />
+                        <ShoppingBag size={16} className="mr-2" />
                         {t("buttons.validateOrder")}
                       </span>
                     </Link>
@@ -695,7 +816,7 @@ const SideCart: React.FC<SideCartProps> = ({
                     whileTap={{ scale: 0.98 }}
                   >
                     <Link
-                      className="block w-full bg-white text-orange-600 border-2 border-orange-500 py-4 rounded-xl font-bold text-center hover:bg-orange-50 transform transition-all duration-300 shadow-sm hover:shadow-md"
+                      className="block w-full bg-white text-orange-600 border-2 border-orange-500 py-3 rounded-lg font-bold text-sm text-center hover:bg-orange-50 transform transition-all duration-300"
                       href="/shop"
                       onClick={onClose}
                     >

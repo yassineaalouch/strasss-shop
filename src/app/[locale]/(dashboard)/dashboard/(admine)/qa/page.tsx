@@ -13,20 +13,11 @@ import {
   MessageCircleQuestion
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-
-interface ILocalizedText {
-  ar: string
-  fr: string
-}
-
-interface IQA {
-  _id?: string
-  question: ILocalizedText
-  answer: ILocalizedText
-  createdAt?: string
-}
+import { ILocalizedText, IQA } from "@/types/qa"
+import { useToast } from "@/components/ui/Toast"
 
 export default function QAManager() {
+  const { showToast } = useToast()
   const [qas, setQAs] = useState<IQA[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingQA, setEditingQA] = useState<IQA | null>(null)
@@ -43,9 +34,13 @@ export default function QAManager() {
   const fetchQAs = async () => {
     try {
       const { data } = await axios.get("/api/qa")
-      setQAs(data.data || [])
+      if (data.success) {
+        setQAs(data.data || [])
+      } else {
+        showToast(data.message || "Erreur lors du chargement des Q&A", "error")
+      }
     } catch (error) {
-      console.error("Error fetching QAs:", error)
+      showToast("Erreur lors du chargement des Q&A", "error")
     }
   }
 
@@ -84,9 +79,10 @@ export default function QAManager() {
         })
       }
       await fetchQAs()
+      showToast(editingQA ? "Q&A mise à jour avec succès" : "Q&A créée avec succès", "success")
       closeForm()
     } catch (error) {
-      console.error("Error saving QA:", error)
+      showToast("Erreur lors de la sauvegarde de la Q&A", "error")
     } finally {
       setLoading(false)
     }
@@ -120,10 +116,11 @@ export default function QAManager() {
     try {
       await axios.put(`/api/qa/${editForm._id}`, editForm)
       await fetchQAs()
+      showToast("Q&A mise à jour avec succès", "success")
       setEditingId(null)
       setEditForm(null)
     } catch (error) {
-      console.error("Error updating QA:", error)
+      showToast("Erreur lors de la mise à jour de la Q&A", "error")
     } finally {
       setLoading(false)
     }
@@ -153,8 +150,9 @@ export default function QAManager() {
     try {
       await axios.delete(`/api/qa/${id}`)
       await fetchQAs()
+      showToast("Q&A supprimée avec succès", "success")
     } catch (error) {
-      console.error("Error deleting QA:", error)
+      showToast("Erreur lors de la suppression de la Q&A", "error")
     }
   }
 

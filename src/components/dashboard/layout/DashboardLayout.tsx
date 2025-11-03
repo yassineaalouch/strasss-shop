@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { signOut } from "next-auth/react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Menu,
   X,
@@ -37,30 +37,19 @@ interface NavigationItem {
   submenu?: NavigationItem[]
 }
 
-interface UserProfile {
-  name: string
-  email: string
-  avatar: string
-  role: string
-}
-
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const currentPath = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showSearchResults, setShowSearchResults] = useState(false)
   console.log("currentPath", currentPath)
-  // Profil utilisateur
-  const userProfile: UserProfile = {
-    name: "Taha larhrissi",
-    email: "admin@strass-shop.com",
-    avatar: "/api/placeholder/40/40",
-    role: "Administrateur"
-  }
 
   // Navigation items (exemple)
   const navigationItems: NavigationItem[] = [
@@ -109,11 +98,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       isActive: currentPath.includes("/dashboard/characteristics")
     },
     {
-      id: "hero",
-      label: "Hero Content",
+      id: "homepage-content",
+      label: "Home Page Content",
       icon: <LayoutDashboard className="w-5 h-5" />,
-      href: "/dashboard/pagesContent",
-      isActive: currentPath.includes("/dashboard/pagesContent")
+      href: "/dashboard/homepage-content",
+      isActive: currentPath.includes("/dashboard/homepage-content")
     },
     {
       id: "marketing",
@@ -140,6 +129,34 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       newExpanded.add(menuId)
     }
     setExpandedMenus(newExpanded)
+  }
+
+  // Search functionality
+  const filteredNavigationItems = navigationItems.filter((item) => {
+    if (!searchQuery.trim()) return false
+    const query = searchQuery.toLowerCase()
+    return (
+      item.label.toLowerCase().includes(query) ||
+      item.id.toLowerCase().includes(query) ||
+      item.href.toLowerCase().includes(query) ||
+      (item.submenu &&
+        item.submenu.some(
+          (subItem) =>
+            subItem.label.toLowerCase().includes(query) ||
+            subItem.href.toLowerCase().includes(query)
+        ))
+    )
+  })
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value)
+    setShowSearchResults(e.target.value.trim().length > 0)
+  }
+
+  const handleSearchItemClick = (href: string) => {
+    setSearchQuery("")
+    setShowSearchResults(false)
+    router.push(href)
   }
 
   // Largeur de la sidebar selon l'état
@@ -222,47 +239,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </button>
         </div>
 
-        {/* Profil utilisateur - Section fixe */}
-        {!sidebarCollapsed && (
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-b from-gray-50 to-white shrink-0">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <Image
-                  src={userProfile.avatar || "/api/placeholder/40/40"}
-                  alt="T.L"
-                  width={40}
-                  height={40}
-                  className="rounded-full border-2 border-firstColor/20"
-                />
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {userProfile.name}
-                </p>
-                <p className="text-xs text-gray-600 truncate">
-                  {userProfile.role}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Avatar réduit pour mode collapsed */}
-        {sidebarCollapsed && (
-          <div className="p-2 border-b border-gray-200 bg-gradient-to-b from-gray-50 to-white shrink-0 flex justify-center">
-            <div className="relative">
-              <Image
-                src={userProfile.avatar || "/api/placeholder/32/32"}
-                alt="T.L"
-                width={32}
-                height={32}
-                className="rounded-full border-2 border-firstColor/20"
-              />
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-            </div>
-          </div>
-        )}
 
         {/* Navigation - Section scrollable */}
         <div className="flex-1 overflow-y-auto">
@@ -484,29 +460,58 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Rechercher..."
+                  placeholder="Rechercher dans le menu..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={() => setShowSearchResults(searchQuery.trim().length > 0)}
+                  onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-firstColor focus:border-firstColor transition-colors w-64"
                 />
-              </div>
-
-              {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-
-              {/* Avatar utilisateur */}
-              <div className="flex items-center space-x-2">
-                <Image
-                  src={userProfile.avatar || "/api/placeholder/32/32"}
-                  alt="T.L"
-                  width={32}
-                  height={32}
-                  className="rounded-full border border-gray-300"
-                />
-                <span className="hidden md:block text-sm font-medium text-gray-700">
-                  {userProfile.name}
-                </span>
+                
+                {/* Search Results Dropdown */}
+                {showSearchResults && filteredNavigationItems.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+                    {filteredNavigationItems.map((item) => (
+                      <div key={item.id}>
+                        <button
+                          onClick={() => handleSearchItemClick(item.href)}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center space-x-3 border-b border-gray-100 last:border-b-0"
+                        >
+                          <span className="text-gray-400">{item.icon}</span>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{item.label}</p>
+                            <p className="text-xs text-gray-500 truncate">{item.href}</p>
+                          </div>
+                        </button>
+                        {/* Submenu items */}
+                        {item.submenu &&
+                          item.submenu
+                            .filter((subItem) =>
+                              searchQuery.toLowerCase().includes(subItem.label.toLowerCase()) ||
+                              subItem.label.toLowerCase().includes(searchQuery.toLowerCase())
+                            )
+                            .map((subItem) => (
+                              <button
+                                key={subItem.id}
+                                onClick={() => handleSearchItemClick(subItem.href)}
+                                className="w-full text-left px-4 py-2 pl-12 hover:bg-gray-50 transition-colors flex items-center space-x-3 border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="flex-1">
+                                  <p className="text-sm text-gray-700">{subItem.label}</p>
+                                  <p className="text-xs text-gray-500 truncate">{subItem.href}</p>
+                                </div>
+                              </button>
+                            ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {showSearchResults && filteredNavigationItems.length === 0 && searchQuery.trim().length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
+                    <p className="text-sm text-gray-500 text-center">Aucun résultat trouvé</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

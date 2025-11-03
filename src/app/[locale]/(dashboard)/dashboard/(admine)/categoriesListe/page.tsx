@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react"
@@ -30,8 +31,10 @@ import {
   SortState,
   CategoryTreeNode
 } from "@/types/category"
+import { useToast } from "@/components/ui/Toast"
 
 const AdminCategoriesManager: React.FC = () => {
+  const { showToast } = useToast()
   const [categories, setCategories] = useState<Category[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
@@ -71,10 +74,11 @@ const AdminCategoriesManager: React.FC = () => {
       const response = await axios.get("/api/categories")
       if (response.data.success) {
         setCategories(response.data.categories)
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des catégories", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des catégories:", error)
-      alert("Erreur lors du chargement des catégories")
+      showToast("Erreur lors du chargement des catégories", "error")
     } finally {
       setLoading(false)
     }
@@ -116,13 +120,45 @@ const AdminCategoriesManager: React.FC = () => {
     return path
   }
 
-  // Construire l'arbre de catégories
+  // Fonction pour filtrer les catégories selon les critères
+  const filterCategory = (category: Category): boolean => {
+    // Filtre de recherche
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      const matchesSearch =
+        category.name[currentLanguage].toLowerCase().includes(searchLower) ||
+        (category.description &&
+          category.description[currentLanguage]
+            .toLowerCase()
+            .includes(searchLower))
+      if (!matchesSearch) return false
+    }
+
+    // Filtre par type parent
+    switch (filters.parentFilter) {
+      case "root":
+        if (category.parentId) return false
+        break
+      case "children":
+        if (!category.parentId) return false
+        break
+    }
+
+    // Filtre par statut
+    if (filters.status === "active" && !category.isActive) return false
+    if (filters.status === "inactive" && category.isActive) return false
+
+    return true
+  }
+
+  // Construire l'arbre de catégories filtré
   const buildCategoryTree = (
     parentId?: string,
     level: number = 0
   ): CategoryTreeNode[] => {
     return categories
       .filter((cat) => cat.parentId === parentId)
+      .filter(filterCategory) // Appliquer le filtre
       .sort((a, b) =>
         a.name[currentLanguage].localeCompare(b.name[currentLanguage])
       )
@@ -142,35 +178,7 @@ const AdminCategoriesManager: React.FC = () => {
   }
 
   const filteredAndSortedCategories = useMemo(() => {
-    const result = categories.filter((category) => {
-      // Filtre de recherche
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase()
-        const matchesSearch =
-          category.name[currentLanguage].toLowerCase().includes(searchLower) ||
-          (category.description &&
-            category.description[currentLanguage]
-              .toLowerCase()
-              .includes(searchLower))
-        if (!matchesSearch) return false
-      }
-
-      // Filtre par type parent
-      switch (filters.parentFilter) {
-        case "root":
-          if (category.parentId) return false
-          break
-        case "children":
-          if (!category.parentId) return false
-          break
-      }
-
-      // Filtre par statut
-      if (filters.status === "active" && !category.isActive) return false
-      if (filters.status === "inactive" && category.isActive) return false
-
-      return true
-    })
+    const result = categories.filter(filterCategory)
 
     // Tri
     result.sort((a, b) => {
@@ -277,17 +285,18 @@ const AdminCategoriesManager: React.FC = () => {
         const response = await axios.post("/api/categories", categoryData)
 
         if (response.data.success) {
-          alert("Catégorie créée avec succès")
+          showToast("Catégorie créée avec succès", "success")
           await fetchCategories()
           resetForm()
+        } else {
+          showToast(response.data.message || "Erreur lors de l'enregistrement", "error")
         }
       }
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement:", error)
       if (axios.isAxiosError(error) && error.response?.data?.message) {
-        alert(error.response.data.message)
+        showToast(error.response.data.message, "error")
       } else {
-        alert("Erreur lors de l'enregistrement de la catégorie")
+        showToast("Erreur lors de l'enregistrement de la catégorie", "error")
       }
     } finally {
       setIsSubmitting(false)
@@ -320,15 +329,16 @@ const AdminCategoriesManager: React.FC = () => {
         const response = await axios.delete(`/api/categories/${categoryId}`)
 
         if (response.data.success) {
-          alert("Catégorie supprimée avec succès")
+          showToast("Catégorie supprimée avec succès", "success")
           await fetchCategories()
+        } else {
+          showToast(response.data.message || "Erreur lors de la suppression", "error")
         }
       } catch (error) {
-        console.error("Erreur lors de la suppression:", error)
         if (axios.isAxiosError(error) && error.response?.data?.message) {
-          alert(error.response.data.message)
+          showToast(error.response.data.message, "error")
         } else {
-          alert("Erreur lors de la suppression de la catégorie")
+          showToast("Erreur lors de la suppression de la catégorie", "error")
         }
       }
     }
@@ -340,10 +350,12 @@ const AdminCategoriesManager: React.FC = () => {
 
       if (response.data.success) {
         await fetchCategories()
+        showToast("Statut mis à jour avec succès", "success")
+      } else {
+        showToast(response.data.message || "Erreur lors du changement de statut", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du changement de statut:", error)
-      alert("Erreur lors du changement de statut")
+      showToast("Erreur lors du changement de statut", "error")
     }
   }
 
@@ -695,6 +707,14 @@ const AdminCategoriesManager: React.FC = () => {
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-medium text-gray-800">
                     Arbre des Catégories
+                    {filters.search ||
+                    filters.parentFilter !== "all" ||
+                    filters.status !== "all" ? (
+                      <span className="text-sm font-normal text-gray-500 ml-2">
+                        (filtré - {categoryTree.length} résultat
+                        {categoryTree.length > 1 ? "s" : ""})
+                      </span>
+                    ) : null}
                   </h3>
                   <button
                     onClick={() => {
@@ -724,7 +744,11 @@ const AdminCategoriesManager: React.FC = () => {
                         Aucune catégorie trouvée
                       </h3>
                       <p className="text-gray-500">
-                        Créez votre première catégorie ou modifiez vos filtres.
+                        {filters.search ||
+                        filters.parentFilter !== "all" ||
+                        filters.status !== "all"
+                          ? "Aucune catégorie ne correspond aux filtres actuels. Essayez de modifier vos critères de recherche."
+                          : "Créez votre première catégorie."}
                       </p>
                     </div>
                   ) : (
@@ -904,7 +928,11 @@ const AdminCategoriesManager: React.FC = () => {
                     Aucune catégorie trouvée
                   </h3>
                   <p className="text-gray-500">
-                    Créez votre première catégorie ou modifiez vos filtres.
+                    {filters.search ||
+                    filters.parentFilter !== "all" ||
+                    filters.status !== "all"
+                      ? "Aucune catégorie ne correspond aux filtres actuels. Essayez de modifier vos critères de recherche."
+                      : "Créez votre première catégorie."}
                   </p>
                 </div>
               )}

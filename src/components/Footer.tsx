@@ -1,9 +1,29 @@
 import { Mail, MapPin, Phone } from "lucide-react"
-import { getTranslations } from "next-intl/server"
+import { getTranslations, getLocale } from "next-intl/server"
 import Image from "next/image"
 import Link from "next/link"
+
+async function getSiteInfo() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const response = await fetch(`${baseUrl}/api/site-info`, {
+      cache: "no-store"
+    })
+    if (response.ok) {
+      const data = await response.json()
+      return data.success ? data.siteInfo : null
+    }
+  } catch (error) {
+    // Erreur silencieuse - retourner null
+  }
+  return null
+}
+
 export default async function Footer() {
   const t = await getTranslations("Footer")
+  const locale = await getLocale()
+  const siteInfo = await getSiteInfo()
+
   return (
     <footer className="bg-gray-900 text-white pt-16 pb-8">
       <div className="container mx-auto px-4">
@@ -25,15 +45,21 @@ export default async function Footer() {
             <p className="text-gray-400 mb-4">{t("company.description")}</p>
             <div className="flex items-center mb-2">
               <MapPin size={16} className="mr-2" />
-              <span className="text-sm">{t("company.location")}</span>
+              <span className="text-sm">
+                {siteInfo?.location?.[locale as "fr" | "ar"] || t("company.location")}
+              </span>
             </div>
             <div className="flex items-center mb-2">
               <Phone size={16} className="mr-2" />
-              <span className="text-sm">{t("company.phone")}</span>
+              <span className="text-sm">
+                {siteInfo?.phone || t("company.phone")}
+              </span>
             </div>
             <div className="flex items-center">
               <Mail size={16} className="mr-2" />
-              <span className="text-sm">{t("company.email")}</span>
+              <span className="text-sm">
+                {siteInfo?.email || t("company.email")}
+              </span>
             </div>
           </div>
 
@@ -50,7 +76,12 @@ export default async function Footer() {
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  {t("quickLinks.shop")}
+                  {t("quickLinks.products")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/packs" className="hover:text-white">
+                  {t("quickLinks.packages")}
                 </Link>
               </li>
               <li>
@@ -69,33 +100,27 @@ export default async function Footer() {
             <ul className="space-y-2 text-gray-400">
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  {t("categories.rigidFencing")}
+                  {t("categories.threads")}
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  {t("categories.flexibleMesh")}
+                  {t("categories.needles")}
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  {t("categories.gates")}
+                  {t("categories.scissors")}
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-white">
-                  {t("categories.accessories")}
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop" className="hover:text-white">
-                  {t("categories.completePacks")}
+                  {t("categories.machines")}
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Customer Service */}
           <div>
             <h3 className="text-lg font-semibold mb-4">
               {t("customerService.title")}

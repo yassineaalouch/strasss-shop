@@ -15,6 +15,56 @@ export interface CategoriesHomPageSection {
   }
   image: string
   productCount: number
+  url?: string
+  order?: number
+  isActive?: boolean
+}
+
+export interface HomePageCategory {
+  _id: string
+  name: {
+    fr: string
+    ar: string
+  }
+  image: string
+  productCount: number
+  url: string
+  order: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface HomePageCategoryFormData {
+  name: {
+    fr: string
+    ar: string
+  }
+  image: string
+  productCount: number
+  url: string
+  order: number
+  isActive: boolean
+}
+
+export interface HomePageCategoryRequestBody {
+  name: {
+    fr: string
+    ar: string
+  }
+  image: string
+  productCount: number
+  url: string
+  order: number
+  isActive: boolean
+}
+
+export interface HomePageCategoryResponse {
+  success: boolean
+  message?: string
+  category?: HomePageCategory
+  categories?: HomePageCategory[]
+  errors?: string[]
 }
 export interface Category {
   _id: string

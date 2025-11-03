@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react"
 import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import axios from "axios"
+import SiteInfoButtons from "./SiteInfoButtons"
+import { useToast } from "@/components/ui/Toast"
 
 export interface FAQ {
   _id: string
@@ -16,6 +18,7 @@ const FAQSection: React.FC = () => {
   const [openFAQ, setOpenFAQ] = useState<string | null>(null)
   const locale = useLocale()
   const t = useTranslations("ContactPage.FAQSection")
+  const { showToast } = useToast()
 
   useEffect(() => {
     fetchFAQs()
@@ -26,9 +29,11 @@ const FAQSection: React.FC = () => {
       const res = await axios.get("/api/qa")
       if (res.data.success) {
         setFaqs(res.data.data)
+      } else {
+        showToast(res.data.message || "Erreur lors du chargement des FAQ", "error")
       }
     } catch (error) {
-      console.error("Failed to fetch FAQs", error)
+      showToast("Erreur lors du chargement des questions fréquentes", "error")
     }
   }
 
@@ -93,20 +98,7 @@ const FAQSection: React.FC = () => {
             {t("contact.title")}
           </h3>
           <p className="text-green-700 mb-4">{t("contact.subtitle")}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="tel:+212 670366581"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors duration-300 font-semibold"
-            >
-              {t("contact.callButton")}
-            </a>
-            <a
-              href="mailto:Denon_taha@hotmail.fr"
-              className="bg-white text-green-600 border-2 border-green-600 px-6 py-3 rounded-lg hover:bg-green-600 hover:text-white transition-colors duration-300 font-semibold"
-            >
-              {t("contact.emailButton")}
-            </a>
-          </div>
+          <SiteInfoButtons />
         </div>
       </div>
     </section>

@@ -10,21 +10,54 @@ import {
   Scissors
 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
-import { useTranslations } from "next-intl"
+import { useState, useEffect } from "react"
+import { useTranslations, useLocale } from "next-intl"
 import SideCart from "./SideCart"
-// import { CartItem } from "@/types/type"
 import { FREE_SHIPPING_THRESHOLD } from "@/data/data"
 import Image from "next/image"
 import LanguageToggle from "./LanguageToggle"
 import { useCartContext } from "@/app/context/CartContext"
+import { useToast } from "@/components/ui/Toast"
+
+interface SiteInfo {
+  email: string
+  phone: string
+  location: {
+    fr: string
+    ar: string
+  }
+}
 
 const Header: React.FC = () => {
   const t = useTranslations("Header")
+  const locale = useLocale()
   const { cartItems, updateQuantity, removeItem } = useCartContext()
+  const { showToast } = useToast()
+  const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null)
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+
+  useEffect(() => {
+    fetchSiteInfo()
+  }, [])
+
+  const fetchSiteInfo = async () => {
+    try {
+      const response = await fetch("/api/site-info")
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération des informations")
+      }
+      const data = await response.json()
+      if (data.success) {
+        setSiteInfo(data.siteInfo)
+      } else {
+        showToast(data.message || "Erreur lors du chargement des informations", "error")
+      }
+    } catch (error) {
+      showToast("Erreur lors du chargement des informations du site", "error")
+    }
+  }
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -47,7 +80,19 @@ const Header: React.FC = () => {
     },
     {
       href: "/shop",
-      label: t("navigation.fabrics"),
+      label: t("navigation.shop"),
+      icon: Scissors,
+      delay: "delay-300"
+    },
+    {
+      href: "/packs",
+      label: t("navigation.packages"),
+      icon: Scissors,
+      delay: "delay-300"
+    },
+    {
+      href: "/contact",
+      label: t("navigation.contact"),
       icon: Scissors,
       delay: "delay-300"
     }
@@ -63,11 +108,11 @@ const Header: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center">
                   <Phone size={12} className="mr-1" />
-                  <span>{t("contact.phone")}</span>
+                  <span>{siteInfo?.phone || t("contact.phone")}</span>
                 </div>
                 <div className="flex items-center">
                   <Mail size={12} className="mr-1" />
-                  <span>{t("contact.email")}</span>
+                  <span>{siteInfo?.email || t("contact.email")}</span>
                 </div>
               </div>
               <div>
@@ -165,10 +210,18 @@ const Header: React.FC = () => {
               </li>
               <li>
                 <Link
-                  href="/shop"
+                  href="/packs"
                   className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
                 >
-                  {t("navigation.fabrics")}
+                  {t("navigation.packages")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
+                >
+                  {t("navigation.contact")}
                 </Link>
               </li>
             </ul>
@@ -216,11 +269,11 @@ const Header: React.FC = () => {
           <div className="mt-16 text-center space-y-4">
             <div className="flex items-center justify-center text-gray-600">
               <Phone size={18} className="mr-2" />
-              <span>{t("contact.phone")}</span>
+              <span>{siteInfo?.phone || t("contact.phone")}</span>
             </div>
             <div className="flex items-center justify-center text-gray-600">
               <Mail size={18} className="mr-2" />
-              <span>{t("contact.email")}</span>
+              <span>{siteInfo?.email || t("contact.email")}</span>
             </div>
           </div>
 

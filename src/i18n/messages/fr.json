@@ -29,7 +29,8 @@
     "navigation": {
       "home": "Accueil",
       "shop": "Boutique",
-      "fabrics": "Tissus"
+      "packages": "Les paquets",
+      "contact": "Contactez-nous"
     },
     "security": "Connexion sécurisée"
   },
@@ -44,11 +45,16 @@
     "quickLinks": {
       "title": "Liens Rapides",
       "home": "Accueil",
-      "shop": "Boutique",
+      "products": "Produits",
+      "packages": "Packs",
       "contact": "Contact"
     },
     "categories": {
       "title": "Catégories",
+      "threads": "Fils",
+      "needles": "Aiguilles",
+      "scissors": "Ciseaux",
+      "machines": "Machines",
       "rigidFencing": "Clôtures Rigides",
       "flexibleMesh": "Grillages Souples",
       "gates": "Portails",
@@ -91,7 +97,7 @@
       "contact": {
         "title": "Coordonnées :",
         "address": "123 Rue de la Couture",
-        "city": "75001 Paris, France",
+        "customerAddress": "75001 Paris, France",
         "phone": "Tél : 01 23 45 67 89",
         "email": "Email : contact@accessoires-couture.fr"
       }
@@ -283,7 +289,7 @@
         "title": "2.1 Données d'identification",
         "name": "Nom, prénom",
         "email": "Adresse email",
-        "phoneNumber": "Numéro de téléphone",
+        "customerPhone": "Numéro de téléphone",
         "postalAddress": "Adresse postale",
         "birthDate": "Date de naissance (facultative)"
       },
@@ -456,7 +462,7 @@
         "intro": "Si vous estimez que vos droits ne sont pas respectés, vous pouvez déposer une réclamation auprès de :",
         "name": "CNIL (Commission Nationale de l'Informatique et des Libertés)",
         "address": "3 Place de Fontenoy, TSA 80715",
-        "city": "75334 Paris Cedex 07",
+        "customerAddress": "75334 Paris Cedex 07",
         "phone": "Tél : 01 53 73 22 22",
         "website": "Site web : www.cnil.fr"
       }
@@ -480,7 +486,7 @@
       "measurement": "Mesure"
     },
     "checkout": {
-      "success": "Merci {customerName} ! Votre commande de {total} MAD sera livrée à {city}.",
+      "success": "Merci {customerName} ! Votre commande de {total} MAD sera livrée à {customerAddress}.",
       "emptyCart": "Le panier est vide",
       "error": "Erreur lors de l'enregistrement de la commande",
       "errorTitle": "Erreur",
@@ -517,11 +523,11 @@
         "label": "Nom complet *",
         "placeholder": "Prénom et nom"
       },
-      "city": {
+      "customerAddress": {
         "label": "Ville *",
         "placeholder": "Votre ville de livraison"
       },
-      "phoneNumber": {
+      "customerPhone": {
         "label": "Téléphone *",
         "placeholder": "06 12 34 56 78"
       }
@@ -531,18 +537,18 @@
         "required": "Le nom du client est requis",
         "minLength": "Le nom doit contenir au moins 2 caractères"
       },
-      "city": {
+      "customerAddress": {
         "required": "La ville est requise",
         "minLength": "Le nom de la ville doit contenir au moins 2 caractères"
       },
-      "phoneNumber": {
+      "customerPhone": {
         "required": "Le numéro de téléphone est requis",
         "invalid": "Format de téléphone invalide (ex: 06 12 34 56 78)"
       }
     },
     "delivery": {
       "title": "Livraison",
-      "description": "Votre commande sera livrée à {city} sous 2-3 jours ouvrés. Nous vous contacterons au {phoneNumber} pour organiser la livraison.",
+      "description": "Votre commande sera livrée à {customerAddress} sous 2-3 jours ouvrés. Nous vous contacterons au {customerPhone} pour organiser la livraison.",
       "placeholderCity": "[Votre ville]",
       "placeholderPhone": "[Votre numéro]"
     },
@@ -613,7 +619,7 @@
         "title": "Showroom",
         "address1": "rue 4 numero 2",
         "address2": "quartier el bassatine",
-        "city": "Meknes"
+        "customerAddress": "Meknes"
       }
     },
     "OpeningHours": {

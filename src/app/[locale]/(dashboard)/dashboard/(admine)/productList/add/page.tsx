@@ -11,11 +11,14 @@ import { Discount } from "@/types/discount"
 import {
   ICharacteristic,
   ICharacteristicValue,
-  LocalizedName
+  LocalizedName,
+  SelectedCharacteristic
 } from "@/types/characteristic"
+import { useToast } from "@/components/ui/Toast"
 
 const AdminAddProduct: React.FC = () => {
   const router = useRouter()
+  const { showToast } = useToast()
   const [categories, setCategories] = useState<Category[]>([])
   const [discounts, setDiscounts] = useState<Discount[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
@@ -42,14 +45,6 @@ const AdminAddProduct: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [previewMode, setPreviewMode] = useState<"fr" | "ar">("fr")
   const [uploadingImages, setUploadingImages] = useState(false)
-  // Ajoutez ces interfaces
-  interface SelectedCharacteristic {
-    characteristicId: string
-    characteristicName: LocalizedName
-    selectedValues: ICharacteristicValue[]
-  }
-
-  // Ajoutez cet état dans votre composant
   const [selectedCharacteristics, setSelectedCharacteristics] = useState<
     SelectedCharacteristic[]
   >([])
@@ -63,8 +58,7 @@ const AdminAddProduct: React.FC = () => {
       const response = await axios.get("/api/characteristics")
       setCharacteristics(response.data)
     } catch (error) {
-      console.error("Erreur lors du chargement des caractéristiques:", error)
-      alert("Erreur lors du chargement des caractéristiques")
+      showToast("Erreur lors du chargement des caractéristiques", "error")
     } finally {
       setLoadingCharacteristics(false)
     }
@@ -160,10 +154,11 @@ const AdminAddProduct: React.FC = () => {
       const response = await axios.get("/api/categories")
       if (response.data.success) {
         setCategories(response.data.categories)
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des catégories", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des catégories:", error)
-      alert("Erreur lors du chargement des catégories")
+      showToast("Erreur lors du chargement des catégories", "error")
     } finally {
       setLoadingCategories(false)
     }
@@ -176,10 +171,11 @@ const AdminAddProduct: React.FC = () => {
 
       if (response.data.success) {
         setDiscounts(response.data.discounts)
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des promotions", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des catégories:", error)
-      alert("Erreur lors du chargement des discounts")
+      showToast("Erreur lors du chargement des promotions", "error")
     } finally {
       setLoadingDiscounts(false)
     }
@@ -264,7 +260,7 @@ const AdminAddProduct: React.FC = () => {
 
       return response.data.urls
     } catch (err) {
-      console.error("Erreur upload:", err)
+      showToast("Erreur lors de l'upload des images", "error")
       throw new Error("Erreur lors de l'upload des images")
     } finally {
       setUploadingImages(false)
@@ -323,12 +319,13 @@ const AdminAddProduct: React.FC = () => {
       const response = await axios.post("/api/products", productData)
 
       if (response.data.success) {
-        alert("Produit ajouté avec succès!")
+        showToast("Produit ajouté avec succès!", "success")
         router.push("/dashboard/productList")
+      } else {
+        showToast(response.data.message || "Erreur lors de l'ajout du produit", "error")
       }
     } catch (error) {
-      console.error("Erreur:", error)
-      alert("Erreur lors de l'ajout du produit")
+      showToast("Erreur lors de l'ajout du produit", "error")
     } finally {
       setIsSubmitting(false)
     }
@@ -815,7 +812,7 @@ const AdminAddProduct: React.FC = () => {
                           Nom de la caractéristique *
                         </label>
                         <select
-                          value={char.characteristicId}
+                          value={char.characteristicId.toString()}
                           onChange={(e) =>
                             handleCharacteristicChange(index, e.target.value)
                           }

@@ -2,29 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import Order from "@/models/Order"
 import { sendOrderEmail } from "@/lib/nodemailer"
-import { Discount } from "@/types/discount"
 import mongoose from "mongoose"
+import { OrderRequestBody } from "@/types/order"
 
 // Types pour les données de commande
-interface OrderItem {
-  id: string
-  name: string
-  category: string
-  price: number
-  quantity: number
-  image: string
-}
-
-interface OrderRequestBody {
-  customerName: string
-  city: string
-  phoneNumber: string
-  items: OrderItem[]
-  subtotal: number
-  shipping: number
-  total: number
-  coupon: Discount | null
-}
 
 interface ValidationError extends Error {
   name: "ValidationError"
@@ -55,8 +36,8 @@ export async function POST(request: NextRequest) {
 
     const {
       customerName,
-      city,
-      phoneNumber,
+      customerAddress,
+      customerPhone,
       items,
       subtotal,
       shipping,
@@ -67,8 +48,8 @@ export async function POST(request: NextRequest) {
     // Validation des données
     if (
       !customerName ||
-      !city ||
-      !phoneNumber ||
+      !customerAddress ||
+      !customerPhone ||
       !items ||
       items.length === 0
     ) {
@@ -77,18 +58,34 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    // Créer la nouvelle commande
-    const newOrder = await Order.create({
+    // Build order data - handle optional fields from admin form
+    const orderData: any = {
       customerName: customerName.trim(),
-      city: city.trim(),
-      phoneNumber: phoneNumber.trim(),
+      customerAddress: customerAddress.trim(),
+      customerPhone: customerPhone.trim(),
       items,
       subtotal,
       shipping,
       total,
       status: "pending",
-      coupon: coupon?._id ? new mongoose.Types.ObjectId(coupon?._id) : null
-    })
+      coupon: coupon || null
+    }
+
+    // Add optional fields if present in request body
+    const bodyData = body as any
+    if (bodyData.paymentMethod) {
+      orderData.paymentMethod = bodyData.paymentMethod
+    }
+    if (bodyData.shippingMethod) {
+      orderData.shippingMethod = bodyData.shippingMethod
+    }
+    if (bodyData.notes !== undefined) {
+      orderData.notes = bodyData.notes
+    }
+
+    // Créer la nouvelle commande
+    const newOrder = await Order.create(orderData)
+
     // await sendOrderEmail(newOrder)
     await sendOrderEmail({ ...newOrder.toObject(), coupon })
     return NextResponse.json(
@@ -125,14 +122,105 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Optionnel : récupérer toutes les commandes
-export async function GET() {
+// Récupérer les commandes avec pagination et filtres côté serveur
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase()
 
-    const orders = await Order.find().sort({ orderDate: -1 }).populate("coupon")
+    const searchParams = request.nextUrl.searchParams
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "30")
+    const skip = (page - 1) * limit
 
-    return NextResponse.json({ success: true, orders }, { status: 200 })
+    // Filtres
+    const search = searchParams.get("search") || ""
+    const status = searchParams.get("status") || ""
+    const dateFrom = searchParams.get("dateFrom")
+    const dateTo = searchParams.get("dateTo")
+    const minAmount = searchParams.get("minAmount")
+    const maxAmount = searchParams.get("maxAmount")
+    const itemType = searchParams.get("itemType")
+
+    // Construire la requête de filtrage
+    const query: any = {}
+
+    // Filtre par statut
+    if (status) {
+      query.status = status
+    }
+
+    // Filtre par date
+    if (dateFrom || dateTo) {
+      query.createdAt = {}
+      if (dateFrom) {
+        query.createdAt.$gte = new Date(dateFrom)
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo)
+        toDate.setHours(23, 59, 59, 999)
+        query.createdAt.$lte = toDate
+      }
+    }
+
+    // Filtre par montant
+    if (minAmount || maxAmount) {
+      query.total = {}
+      if (minAmount) {
+        query.total.$gte = parseFloat(minAmount)
+      }
+      if (maxAmount) {
+        query.total.$lte = parseFloat(maxAmount)
+      }
+    }
+
+    // Recherche dans orderNumber et customerName
+    if (search) {
+      query.$or = [
+        { orderNumber: { $regex: search, $options: "i" } },
+        { customerName: { $regex: search, $options: "i" } }
+      ]
+    }
+
+    // Compter le total pour la pagination
+    const total = await Order.countDocuments(query)
+
+    // Récupérer les commandes avec pagination
+    const orders = await Order.find(query)
+      .sort({ createdAt: -1 }) // Tri par date décroissante (newest first)
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+    // Si filtre par type d'item, filtrer en JavaScript (car MongoDB ne peut pas facilement filtrer sur les arrays imbriqués)
+    let filteredOrders = orders
+    if (itemType && itemType !== "") {
+      filteredOrders = orders.filter((order: any) => {
+        if (itemType === "products") {
+          return order.items.some((item: any) => item.type === "product")
+        } else if (itemType === "packs") {
+          return order.items.some((item: any) => item.type === "pack")
+        } else if (itemType === "mixed") {
+          const hasProducts = order.items.some((item: any) => item.type === "product")
+          const hasPacks = order.items.some((item: any) => item.type === "pack")
+          return hasProducts && hasPacks
+        }
+        return true
+      })
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        orders: filteredOrders,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(filteredOrders.length / limit)
+        }
+      },
+      { status: 200 }
+    )
   } catch (error: unknown) {
     console.error("Erreur lors de la récupération des commandes:", error)
     return NextResponse.json(

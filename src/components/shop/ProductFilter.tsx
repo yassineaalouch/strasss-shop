@@ -8,6 +8,8 @@ import { Category } from "@/types/category"
 import { ProductFilterProps } from "@/types/shopFilter"
 import { ICharacteristic } from "@/types/characteristic"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { useToast } from "@/components/ui/Toast"
+
 const ProductFilter: React.FC<ProductFilterProps> = ({
   filters,
   onFiltersChange,
@@ -16,6 +18,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
 }) => {
   const t = useTranslations("ShopPage.ProductFilter")
   const locale = useLocale() as "fr" | "ar"
+  const { showToast } = useToast()
   const [categories, setCategories] = useState<string[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [characteristics, setCharacteristics] = useState<ICharacteristic[]>([])
@@ -45,10 +48,11 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
             (category: Category) => category?.name?.[locale]
           )
         )
+      } else {
+        showToast(response.data.message || "Erreur lors du chargement des catégories", "error")
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des catégories:", error)
-      alert("Erreur lors du chargement des catégories")
+      showToast("Erreur lors du chargement des catégories", "error")
     } finally {
       setLoadingCategories(false)
     }
@@ -105,36 +109,39 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
 
       <div className={sidebarClasses}>
         <div className="p-4 sm:p-6 h-full overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-              <Filter className="mr-2" size={20} />
+          {/* Header - Modern design */}
+          <div className="flex items-center justify-between mb-6 sm:mb-8 pb-4 border-b-2 border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md">
+                <Filter className="text-white" size={20} />
+              </div>
               {t("title")}
             </h2>
             <div className="flex items-center space-x-2">
               <button
                 onClick={clearAllFilters}
-                className="text-sm text-yellow-600 hover:text-yellow-800 transition-colors duration-200"
+                className="text-xs px-3 py-1.5 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg font-medium transition-all duration-200 border border-orange-200"
               >
                 {t("reset")}
               </button>
               <button
                 onClick={onClose}
-                className="lg:hidden text-gray-500 hover:text-gray-700 p-1"
+                className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
           </div>
 
-          {/* Prix */}
-          <div className="mb-5">
-            <h3 className="font-semibold text-gray-700 mb-3 text-sm sm:text-base">
+          {/* Prix - Modern design */}
+          <div className="mb-6 p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-4 text-sm sm:text-base flex items-center gap-2">
+              <div className="w-1 h-4 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
               {t("sections.price.title")}
             </h3>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <input
-                type="number"
+                type="text"
                 placeholder={t("sections.price.min")}
                 value={filters.priceRange[0]}
                 onChange={(e) =>
@@ -146,9 +153,9 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                     ]
                   })
                 }
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-1/2 px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
-              <span>-</span>
+              <span className="text-gray-400 font-medium">-</span>
               <input
                 type="number"
                 placeholder={t("sections.price.max")}
@@ -162,37 +169,38 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                     ]
                   })
                 }
-                className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-1/2 px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
             </div>
           </div>
 
-          {/* Catégories */}
+          {/* Catégories - Modern design */}
           {categories.length > 0 && (
-            <div className="mb-5">
-              <h3 className="font-semibold text-gray-700 mb-3 text-sm sm:text-base">
+            <div className="mb-6 p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
+              <h3 className="font-bold text-gray-800 mb-4 text-sm sm:text-base flex items-center gap-2">
+                <div className="w-1 h-4 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
                 {t("sections.categories.title")}
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-60 overflow-y-auto">
                 {!loadingCategories ? (
                   categories.map((category, i) => (
                     <label
                       key={i}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                      className="flex items-center gap-3 cursor-pointer hover:bg-orange-50 p-2.5 rounded-lg transition-all duration-200 border border-transparent hover:border-orange-200"
                     >
                       <input
                         type="checkbox"
                         checked={filters.category.includes(category)}
                         onChange={() => handleCategoryChange(category)}
-                        className="mr-3 text-yellow-500 focus:ring-yellow-500 rounded"
+                        className="w-4 h-4 text-orange-600 focus:ring-orange-500 rounded border-gray-300"
                       />
-                      <span className="text-sm text-gray-700 flex-1">
+                      <span className="text-sm text-gray-700 flex-1 font-medium">
                         {category}
                       </span>
                     </label>
                   ))
                 ) : (
-                  <div>loding</div>
+                  <div className="text-center text-gray-500 py-4">Chargement...</div>
                 )}
               </div>
             </div>
@@ -322,7 +330,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           </div>
 
           {/* Filtres actifs */}
-          {hasActiveFilters && (
+          {/* {hasActiveFilters && (
             <div className="border-t border-gray-200 pt-4">
               <h4 className="text-sm font-semibold text-gray-700 mb-3">
                 {t("activeFilters")}
@@ -342,9 +350,9 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                     </button>
                   </span>
                 ))}
-                {filters.characteristics.map((char) => (
+                {filters.characteristics.map((char, index) => (
                   <span
-                    key={char}
+                    key={index}
                     className="bg-green-50 text-green-700 px-2 py-1 rounded-lg text-xs flex items-center border border-green-200"
                   >
                     {char}
@@ -358,7 +366,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                 ))}
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </>

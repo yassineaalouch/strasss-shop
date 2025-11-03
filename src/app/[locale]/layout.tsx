@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl"
 import { routing } from "@/i18n/routing"
 import { getMessages } from "next-intl/server"
 import { ReactNode, ReactElement } from "react"
+import { ToastProvider } from "@/components/ui/Toast"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,9 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <div className="min-h-screen">{children}</div>
+          <ToastProvider>
+            <div className="min-h-screen">{children}</div>
+          </ToastProvider>
         </NextIntlClientProvider>
       </body>
     </html>

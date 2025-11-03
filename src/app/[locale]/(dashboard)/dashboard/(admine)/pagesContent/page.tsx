@@ -1221,6 +1221,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import axios from "axios"
+import { useToast } from "@/components/ui/Toast"
 
 // Types
 interface HeroContent {
@@ -1250,6 +1251,7 @@ interface SocialMediaLink {
 }
 
 const HeroContentAdmin: React.FC = () => {
+  const { showToast } = useToast()
   const [currentLanguage, setCurrentLanguage] = useState<"fr" | "ar">("fr")
   const [activeTab, setActiveTab] = useState<"content" | "images" | "social">(
     "content"
@@ -1309,11 +1311,12 @@ const HeroContentAdmin: React.FC = () => {
         setInitialImages(response.data.data.images || [])
         setSocialLinks(response.data.data.socialLinks || [])
       } else {
+        showToast("Erreur lors du chargement des données", "error")
         setError("Erreur lors du chargement des données")
       }
     } catch (err) {
-      console.error("Erreur:", err)
       if (axios.isAxiosError(err)) {
+        showToast(err.response?.data?.message || "Erreur de connexion au serveur", "error")
         setError(
           err.response?.data?.message || "Erreur de connexion au serveur"
         )
@@ -1378,7 +1381,7 @@ const HeroContentAdmin: React.FC = () => {
 
       return response.data.urls
     } catch (err) {
-      console.error("Erreur upload:", err)
+      showToast("Erreur lors de l'upload des images", "error")
       throw new Error("Erreur lors de l'upload des images")
     } finally {
       setUploadingImages(false)
@@ -1406,8 +1409,7 @@ const HeroContentAdmin: React.FC = () => {
       }
       return false
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'image S3:", error)
-      // Ne pas propager l'erreur pour ne pas bloquer le processus
+      // Erreur silencieuse - ne pas propager l'erreur pour ne pas bloquer le processus
       return false
     }
   }
@@ -1578,8 +1580,7 @@ const HeroContentAdmin: React.FC = () => {
           try {
             await deleteImageFromS3(deletedImage)
           } catch (error) {
-            console.error(`Erreur suppression S3 pour ${deletedImage}:`, error)
-            // Continuer même si une suppression échoue
+            // Erreur silencieuse - continuer même si une suppression échoue
           }
         }
       }
@@ -1601,11 +1602,12 @@ const HeroContentAdmin: React.FC = () => {
         setImagePreviews([])
         setTimeout(() => setSuccessMessage(null), 3000)
       } else {
+        showToast(response.data.message || "Erreur lors de la sauvegarde", "error")
         setError(response.data.message || "Erreur lors de la sauvegarde")
       }
     } catch (err) {
-      console.error("Erreur:", err)
       if (axios.isAxiosError(err)) {
+        showToast(err.response?.data?.message || "Erreur lors de la sauvegarde", "error")
         setError(
           err.response?.data?.message ||
             `Erreur ${err.response?.status}: ${err.response?.statusText}`

@@ -1,228 +1,3 @@
-// "use client"
-
-// import { CartItem } from "@/types/type"
-// import { useState, useEffect } from "react"
-
-// export const useCart = () => {
-//   // 📦 Livraison gratuite à partir de 1000 DH
-//   const FREE_SHIPPING_THRESHOLD = 1000
-
-//   const [cartItems, setCartItems] = useState<CartItem[]>([])
-//   const [isCartOpen, setIsCartOpen] = useState(false)
-//   const [coupon, setCoupon] = useState<string | null>(null)
-
-//   // 🧠 Charger le panier au démarrage
-//   useEffect(() => {
-//     const savedCart = localStorage.getItem("couture-cart")
-//     const savedCoupon = localStorage.getItem("couture-coupon")
-//     if (savedCart) {
-//       try {
-//         setCartItems(JSON.parse(savedCart))
-//       } catch (error) {
-//         console.error("Erreur lors du chargement du panier:", error)
-//       }
-//     }
-//     if (savedCoupon) setCoupon(savedCoupon)
-//   }, [])
-
-//   // 💾 Sauvegarder à chaque modification
-//   useEffect(() => {
-//     localStorage.setItem("couture-cart", JSON.stringify(cartItems))
-//     if (coupon) {
-//       localStorage.setItem("couture-coupon", coupon)
-//     } else {
-//       localStorage.removeItem("couture-coupon")
-//     }
-//   }, [cartItems, coupon])
-
-//   const areCharacteristicsEqual = (
-//     a: { name: string; value: string }[],
-//     b: { name: string; value: string }[]
-//   ): boolean => {
-//     if (a.length !== b.length) return false
-//     const sortFn = (x: { name: string; value: string }) =>
-//       `${x.name}:${x.value}`.toLowerCase()
-//     const sortedA = [...a].sort((x, y) => sortFn(x).localeCompare(sortFn(y)))
-//     const sortedB = [...b].sort((x, y) => sortFn(x).localeCompare(sortFn(y)))
-//     return JSON.stringify(sortedA) === JSON.stringify(sortedB)
-//   }
-
-//   // ➕ Ajouter un article (en prenant en compte les caractéristiques)
-//   const addItem = (item: Omit<CartItem, "quantity">, quantity: number = 1) => {
-//     setCartItems((currentItems) => {
-//       const existingItem = currentItems.find(
-//         (cartItem) =>
-//           cartItem.id === item.id &&
-//           areCharacteristicsEqual(
-//             cartItem.characteristic || [],
-//             item.characteristic || []
-//           )
-//       )
-
-//       if (existingItem) {
-//         return currentItems.map((cartItem) =>
-//           cartItem.id === existingItem.id &&
-//           areCharacteristicsEqual(
-//             cartItem.characteristic || [],
-//             item.characteristic || []
-//           )
-//             ? { ...cartItem, quantity: cartItem.quantity + quantity }
-//             : cartItem
-//         )
-//       }
-
-//       return [...currentItems, { ...item, quantity }]
-//     })
-//   }
-
-//   // 🔄 Mettre à jour la quantité d’un article
-//   const updateQuantity = (item: CartItem, quantity: number) => {
-//     if (quantity <= 0) {
-//       removeItem(item)
-//       return
-//     }
-
-//     setCartItems((currentItems) =>
-//       currentItems.map((cartItem) =>
-//         cartItem.id === item.id &&
-//         areCharacteristicsEqual(
-//           cartItem.characteristic || [],
-//           item.characteristic || []
-//         )
-//           ? { ...cartItem, quantity }
-//           : cartItem
-//       )
-//     )
-//   }
-//   // ❌ Supprimer un article spécifique (avec caractéristiques)
-//   const removeItem = (item: CartItem) => {
-//     setCartItems((currentItems) =>
-//       currentItems.filter(
-//         (cartItem) =>
-//           !(
-//             cartItem.id === item.id &&
-//             areCharacteristicsEqual(
-//               cartItem.characteristic || [],
-//               item.characteristic || []
-//             )
-//           )
-//       )
-//     )
-//   }
-
-//   // 🧹 Vider le panier
-//   const clearCart = () => {
-//     setCartItems([])
-//     setCoupon(null)
-//   }
-
-//   // 🧾 Gérer le coupon
-//   const applyCoupon = (code: string) => {
-//     setCoupon(code)
-//   }
-
-//   const removeCoupon = () => {
-//     setCoupon(null)
-//   }
-
-//   // 🚪 Gestion ouverture/fermeture du panier
-//   const toggleCart = () => setIsCartOpen(!isCartOpen)
-//   const openCart = () => setIsCartOpen(true)
-//   const closeCart = () => setIsCartOpen(false)
-
-//   // 💰 Calcul du prix en tenant compte des réductions
-//   const calculateItemTotal = (item: CartItem): number => {
-//     let total = item.price * item.quantity
-
-//     if (item.discount) {
-//       // 🟡 Cas 1 : réduction en pourcentage
-//       if (item.discount.type === "PERCENTAGE") {
-//         const percent = item.discount.value ?? 0
-//         total -= (total * percent) / 100
-//       }
-
-//       // 🟢 Cas 2 : "Buy A get B free" (ex: buy2get1)
-//       else if (item.discount.type === "BUY_X_GET_Y") {
-//         const buyQuantity = item.discount.buyQuantity
-//         const getQuantity = item.discount.getQuantity
-//         if (getQuantity && buyQuantity) {
-//           const group = buyQuantity + getQuantity
-//           const freeCount = Math.floor(item.quantity / group) * getQuantity
-//           const paidCount = item.quantity - freeCount
-//           total = paidCount * item.price
-//         }
-//       }
-//     }
-
-//     return total
-//   }
-
-//   // 🧮 Calcul du total avant coupon
-//   const subtotal = cartItems.reduce(
-//     (sum, item) => sum + calculateItemTotal(item),
-//     0
-//   )
-
-//   // 🎟️ Appliquer le coupon global
-//   const calculateCouponDiscount = (total: number): number => {
-//     if (!coupon) return total
-
-//     // Exemple : coupon = "10%" ou "100DH"
-//     if (coupon.endsWith("%")) {
-//       const percent = parseFloat(coupon.replace("%", ""))
-//       return total - (total * percent) / 100
-//     } else if (coupon.toLowerCase().endsWith("dh")) {
-//       const value = parseFloat(coupon.replace("dh", ""))
-//       return Math.max(0, total - value)
-//     }
-//     return total
-//   }
-
-//   const totalPrice = calculateCouponDiscount(subtotal)
-
-//   // 🚚 Livraison gratuite
-//   const remainingForFreeShipping = Math.max(
-//     0,
-//     FREE_SHIPPING_THRESHOLD - totalPrice
-//   )
-
-//   const progressPercentage = Math.min(
-//     100,
-//     (totalPrice / FREE_SHIPPING_THRESHOLD) * 100
-//   )
-
-//   const hasFreeShipping = totalPrice >= FREE_SHIPPING_THRESHOLD
-
-//   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
-
-//   return {
-//     // State
-//     cartItems,
-//     isCartOpen,
-//     FREE_SHIPPING_THRESHOLD,
-//     coupon,
-
-//     // Actions
-//     addItem,
-//     updateQuantity,
-//     removeItem,
-//     clearCart,
-//     toggleCart,
-//     openCart,
-//     closeCart,
-//     applyCoupon,
-//     removeCoupon,
-
-//     // Computed values
-//     totalItems,
-//     totalPrice,
-//     subtotal,
-//     remainingForFreeShipping,
-//     progressPercentage,
-//     hasFreeShipping
-//   }
-// }
-
 "use client"
 
 import { CartItem } from "@/types/type"
@@ -291,9 +66,31 @@ export const useCart = () => {
   // ➕ Ajouter un article (en prenant en compte les caractéristiques)
   const addItem = (item: Omit<CartItem, "quantity">, quantity: number = 1) => {
     setCartItems((currentItems) => {
+      // Si c'est un pack, on ajoute seulement le pack (pas les produits individuels)
+      if (item.type === "pack") {
+        // Vérifier si le pack existe déjà
+        const existingPack = currentItems.find(
+          (cartItem) => cartItem.id === item.id && cartItem.type === "pack"
+        )
+
+        if (existingPack) {
+          // Mettre à jour la quantité du pack existant
+          return currentItems.map((cartItem) =>
+            cartItem.id === item.id && cartItem.type === "pack"
+              ? { ...cartItem, quantity: cartItem.quantity + quantity }
+              : cartItem
+          )
+        } else {
+          // Ajouter le nouveau pack
+          return [...currentItems, { ...item, quantity }]
+        }
+      }
+
+      // Pour les produits normaux
       const existingItem = currentItems.find(
         (cartItem) =>
           cartItem.id === item.id &&
+          cartItem.type !== "pack" &&
           areCharacteristicsEqual(
             cartItem.characteristic || [],
             item.characteristic || []
@@ -303,6 +100,7 @@ export const useCart = () => {
       if (existingItem) {
         return currentItems.map((cartItem) =>
           cartItem.id === existingItem.id &&
+          cartItem.type !== "pack" &&
           areCharacteristicsEqual(
             cartItem.characteristic || [],
             item.characteristic || []
@@ -312,7 +110,7 @@ export const useCart = () => {
         )
       }
 
-      return [...currentItems, { ...item, quantity }]
+      return [...currentItems, { ...item, quantity, type: item.type || "product" }]
     })
   }
 
@@ -386,10 +184,23 @@ export const useCart = () => {
       )
 
       if (
+        discount.minimumPurchase &&
         discount.minimumPurchase > 0 &&
-        currentSubtotal > discount.minimumPurchase
+        currentSubtotal < discount.minimumPurchase
       ) {
-        const message = `Montant minimum requis: ${discount.value} MAD`
+        const message = `Montant minimum requis: ${discount.minimumPurchase} MAD`
+        setCouponError(message)
+        return { success: false, message }
+      }
+
+      // Vérifier la limite d'utilisation
+      if (
+        discount.usageLimit &&
+        discount.usageLimit > 0 &&
+        discount.usageCount &&
+        discount.usageCount >= discount.usageLimit
+      ) {
+        const message = "Ce coupon a atteint sa limite d'utilisation"
         setCouponError(message)
         return { success: false, message }
       }
@@ -416,6 +227,11 @@ export const useCart = () => {
 
   // 💰 Calcul du prix en tenant compte des réductions
   const calculateItemTotal = (item: CartItem): number => {
+    // Pour les packs, utiliser discountPrice si disponible
+    if (item.type === "pack" && item.discountPrice) {
+      return item.discountPrice * item.quantity
+    }
+
     let total = item.price * item.quantity
 
     if (item.discount) {

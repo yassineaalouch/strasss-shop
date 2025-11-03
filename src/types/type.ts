@@ -1,6 +1,7 @@
 import { ReactNode } from "react"
 import { Product } from "./product"
 import { Discount } from "./discount"
+import { ShopFilters } from "./shopFilter"
 
 export type ProductForm = Omit<Product, "id" | "rating" | "reviews">
 
@@ -42,6 +43,16 @@ export interface SortOption {
 
 export interface ShopContentProps {
   products: Product[]
+  pagination: {
+    page: number
+    limit: number
+    totalProducts: number
+    totalPages: number
+    hasNextPage: boolean
+    hasPrevPage: boolean
+  }
+  initialFilters: ShopFilters
+  initialSortBy: string
 }
 
 export interface ProductCardProps {
@@ -94,7 +105,7 @@ export interface FAQ {
     ar: string
   }
 }
-interface ContactInfo {
+export interface ContactInfo {
   icon: React.ReactNode
   title: string
   content: string[]
@@ -163,6 +174,15 @@ export interface CartItem {
     getQuantity?: number // ex: 1
   } | null
   characteristic?: { name: string; value: string }[] | null
+  type?: "product" | "pack" // Type d'item: produit ou pack
+  packItems?: Array<{
+    id: string
+    name: string
+    quantity: number
+    price: number
+    image: string
+  }> // Produits inclus dans le pack (seulement pour type="pack")
+  discountPrice?: number // Prix avec réduction pour les packs
 }
 
 export interface SideCartProps {
@@ -183,8 +203,8 @@ export interface SideCartProps {
 
 export interface CheckoutFormData {
   customerName: string
-  city: string
-  phoneNumber: string
+  customerAddress: string
+  customerPhone: string
 }
 
 export interface CheckoutFormProps {
@@ -193,16 +213,6 @@ export interface CheckoutFormProps {
   total: number
 }
 
-// export interface CartSummaryProps {
-//   items: CartItem[]
-//   updateQuantity: (item: CartItem, quantity: number) => void
-//   removeItem: (item: CartItem) => void
-//   subtotal: number
-//   shipping: number
-//   coupon?: string | null
-//   total: number
-// }
-// Dans vos types
 export interface CartSummaryProps {
   items: CartItem[]
   updateQuantity: (item: CartItem, quantity: number) => void
@@ -218,8 +228,8 @@ export interface CartSummaryProps {
 }
 export interface FormErrors {
   customerName?: string
-  city?: string
-  phoneNumber?: string
+  customerAddress?: string
+  customerPhone?: string
 }
 
 export interface BaseEntity {

@@ -1,15 +1,50 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation, MapPin } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { useToast } from "@/components/ui/Toast";
+
+interface SiteInfo {
+  location: {
+    fr: string
+    ar: string
+  }
+}
 
 const LocationSection: React.FC = () => {
+  const locale = useLocale()
+  const { showToast } = useToast()
+  const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null)
+
+  useEffect(() => {
+    fetchSiteInfo()
+  }, [])
+
+  const fetchSiteInfo = async () => {
+    try {
+      const response = await fetch("/api/site-info")
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération")
+      }
+      const data = await response.json()
+      if (data.success) {
+        setSiteInfo(data.siteInfo)
+      } else {
+        showToast(data.message || "Erreur lors du chargement", "error")
+      }
+    } catch (error) {
+      showToast("Erreur lors du chargement des informations de localisation", "error")
+    }
+  }
+
   const handleOpenMap = () => {
-    // Ouvrir Google Maps avec les coordonnées de Casablanca
-    const address = "Zone Industrielle Sidi Bernoussi, Rue des Entrepreneurs, Lot 45, 20150 Casablanca, Maroc";
+    const address = siteInfo?.location?.[locale as "fr" | "ar"] || "Zone Industrielle Sidi Bernoussi, Rue des Entrepreneurs, Lot 45, 20150 Casablanca, Maroc";
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
     window.open(googleMapsUrl, '_blank');
   };
+
+  const locationText = siteInfo?.location?.[locale as "fr" | "ar"] || "Zone Industrielle Sidi Bernoussi, Rue des Entrepreneurs, Lot 45, 20150 Casablanca, Maroc"
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -24,10 +59,8 @@ const LocationSection: React.FC = () => {
           <p className="text-gray-600">
             <strong>Strass Shop</strong>
           </p>
-          <p className="text-gray-600">
-            Zone Industrielle Sidi Bernoussi<br />
-            Rue des Entrepreneurs, Lot 45<br />
-            20150 Casablanca, Maroc
+          <p className="text-gray-600 whitespace-pre-line">
+            {locationText}
           </p>
           <div className="pt-4">
             <button 

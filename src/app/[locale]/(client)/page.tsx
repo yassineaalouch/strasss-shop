@@ -5,13 +5,34 @@ import ProductCard from "@/components/shop/ProductCard"
 import WhyChooseUs from "@/components/WhyCoseUs"
 import { getTranslations, getLocale } from "next-intl/server"
 import Image from "next/image"
+import Link from "next/link"
 import { Product } from "@/types/product"
+
+async function getHomePageCategories() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const response = await fetch(`${baseUrl}/api/homepage-categories`, {
+      cache: "no-store"
+    })
+    if (response.ok) {
+      const data = await response.json()
+      return data.success ? data.categories : []
+    }
+  } catch (error) {
+    // Erreur silencieuse - retourner un tableau vide
+  }
+  return []
+}
 
 const CategoriesSection = async () => {
   const t = await getTranslations("HomePage")
   const locale = (await getLocale()) as "fr" | "ar"
 
-  const categories: CategoriesHomPageSection[] = [
+  // Récupérer les catégories depuis la base de données
+  const dbCategories = await getHomePageCategories()
+
+  // Fallback si aucune catégorie en DB
+  const fallbackCategories: CategoriesHomPageSection[] = [
     {
       id: "1",
       name: {
@@ -20,7 +41,8 @@ const CategoriesSection = async () => {
       },
       image:
         "https://www.tissus-price.com/img/cms/IMG%20BLOG/tissu-burlington-pas-cher.jpg",
-      productCount: 120
+      productCount: 120,
+      url: "/shop"
     },
     {
       id: "2",
@@ -30,7 +52,8 @@ const CategoriesSection = async () => {
       },
       image:
         "https://www.lerobert.com/sites/default/files/scald_image/dico-en-ligne-le-robert-de-fil-en-aiguille-marcelle-ratafia.jpg",
-      productCount: 75
+      productCount: 75,
+      url: "/shop"
     },
     {
       id: "3",
@@ -40,7 +63,8 @@ const CategoriesSection = async () => {
       },
       image:
         "https://img.leboncoin.fr/api/v1/lbcpb1/images/1b/9a/d2/1b9ad2c9d7b8c8841a1f0e84104f648308aa6d60.jpg?rule=ad-large",
-      productCount: 50
+      productCount: 50,
+      url: "/shop"
     },
     {
       id: "4",
@@ -50,12 +74,30 @@ const CategoriesSection = async () => {
       },
       image:
         "https://www.coutureenfant.fr/wp-content/uploads/2017/05/materiel-de-couture.jpg",
-      productCount: 90
+      productCount: 90,
+      url: "/shop"
     }
   ]
 
+  // Convertir les catégories DB en format attendu ou utiliser fallback
+  const categories: CategoriesHomPageSection[] =
+    dbCategories.length > 0
+      ? dbCategories
+          .filter((cat: any) => cat.isActive)
+          .sort((a: any, b: any) => a.order - b.order)
+          .map((cat: any) => ({
+            id: cat._id,
+            name: cat.name,
+            image: cat.image,
+            productCount: cat.productCount,
+            url: cat.url || "/shop",
+            order: cat.order,
+            isActive: cat.isActive
+          }))
+      : fallbackCategories
+
   return (
-    <section className="py-16">
+    <section className="py-16  ">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
@@ -67,7 +109,11 @@ const CategoriesSection = async () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category) => (
-            <div key={category.id} className="group cursor-pointer">
+            <Link
+              key={category.id}
+              href={category.url || "/shop"}
+              className="group cursor-pointer"
+            >
               <div className="relative overflow-hidden rounded-lg shadow-md h-64">
                 <Image
                   src={category.image}
@@ -88,7 +134,7 @@ const CategoriesSection = async () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
@@ -96,10 +142,47 @@ const CategoriesSection = async () => {
   )
 }
 
+async function getPromoBanner() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const response = await fetch(`${baseUrl}/api/promo-banner`, {
+      cache: "no-store"
+    })
+    if (response.ok) {
+      const data = await response.json()
+      return data.success && data.banner && data.banner.isActive ? data.banner : null
+    }
+  } catch (error) {
+    // Erreur silencieuse - retourner null
+  }
+  return null
+}
+
+async function getFeaturedProducts() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const response = await fetch(`${baseUrl}/api/featured-products`, {
+      cache: "no-store"
+    })
+    if (response.ok) {
+      const data = await response.json()
+      return data.success && data.products ? data.products : []
+    }
+  } catch (error) {
+    // Erreur silencieuse - retourner un tableau vide
+  }
+  return []
+}
+
 // Composant Produits Populaires
 const FeaturedProducts: React.FC = async () => {
   const t = await getTranslations("HomePage")
-  const products: Product[] = [
+  
+  // Récupérer les produits en vedette depuis la base de données
+  const dbProducts = await getFeaturedProducts()
+
+  // Fallback si aucun produit en DB
+  const fallbackProducts: Product[] = [
     {
       _id: "1",
       name: {
@@ -338,6 +421,9 @@ const FeaturedProducts: React.FC = async () => {
     }
   ]
 
+  // Utiliser les produits de la DB ou le fallback
+  const products: Product[] = dbProducts.length > 0 ? dbProducts : fallbackProducts
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -360,12 +446,42 @@ const FeaturedProducts: React.FC = async () => {
   )
 }
 
+// Composant Bannière Publicitaire
+const PromoBannerSection = async () => {
+  const banner = await getPromoBanner()
+
+  if (!banner) {
+    return null
+  }
+
+  return (
+    <section className="py-8 bg-white">
+      <div className="container mx-auto px-4">
+        <Link href={banner.link} className="block group">
+          <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+            <Image
+              src={banner.image}
+              alt="Promotion"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+          </div>
+        </Link>
+      </div>
+    </section>
+  )
+}
+
 // Composant Principal
 const HomePage: React.FC = async () => {
   return (
     <div className="min-h-screen bg-white">
       <HeroSection />
       <CategoriesSection />
+      <PromoBannerSection />
       <FeaturedProducts />
       <WhyChooseUs />
     </div>

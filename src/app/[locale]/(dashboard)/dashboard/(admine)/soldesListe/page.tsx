@@ -31,6 +31,7 @@ import {
   toggleDiscount
 } from "@/app/api/discounts"
 import { Discount, DiscountFormData } from "@/types/discount"
+import { useToast } from "@/components/ui/Toast"
 // Types
 export type DiscountType = "PERCENTAGE" | "BUY_X_GET_Y" | "COUPON"
 
@@ -46,6 +47,7 @@ export interface SortState {
 }
 
 const AdminDiscountsManager: React.FC = () => {
+  const { showToast } = useToast()
   const [discounts, setDiscounts] = useState<Discount[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null)
@@ -56,7 +58,7 @@ const AdminDiscountsManager: React.FC = () => {
       const data = await getDiscounts()
       setDiscounts(data)
     } catch (err) {
-      console.error("Erreur lors du chargement des promotions", err)
+      // Erreur gérée par getDiscounts
     }
   }
   React.useEffect(() => {
@@ -269,8 +271,7 @@ const AdminDiscountsManager: React.FC = () => {
       }
       resetForm()
     } catch (err) {
-      console.error(err)
-      alert("Erreur lors de la sauvegarde")
+      showToast("Erreur lors de la sauvegarde", "error")
     }
   }
 
@@ -298,9 +299,9 @@ const AdminDiscountsManager: React.FC = () => {
     try {
       await deleteDiscount(id)
       setDiscounts((prev) => prev.filter((d) => d._id !== id))
+      showToast("Promotion supprimée avec succès", "success")
     } catch (err) {
-      console.error(err)
-      alert("Erreur lors de la suppression")
+      showToast("Erreur lors de la suppression", "error")
     }
   }
 
@@ -311,9 +312,9 @@ const AdminDiscountsManager: React.FC = () => {
     try {
       await toggleDiscount(id, !discount.isActive)
       await fetchDiscounts()
+      showToast("Statut mis à jour avec succès", "success")
     } catch (err) {
-      console.error(err)
-      alert("Erreur lors de la mise à jour du statut")
+      showToast("Erreur lors de la mise à jour du statut", "error")
     }
   }
 

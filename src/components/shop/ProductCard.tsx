@@ -6,7 +6,6 @@ import { useCartContext } from "@/app/context/CartContext"
 import {
   X,
   ShoppingCart,
-  Star,
   Check,
   Sparkles,
   Package,
@@ -40,11 +39,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
     if (product.Characteristic && product.Characteristic.length > 0) {
       setShowModal(true)
     } else {
+      // Include discount if it exists and is not a COUPON type
+      const discount = product.discount && product.discount.type !== "COUPON"
+        ? {
+            type: product.discount.type as "PERCENTAGE" | "BUY_X_GET_Y",
+            value: product.discount.value,
+            buyQuantity: product.discount.buyQuantity,
+            getQuantity: product.discount.getQuantity
+          }
+        : null
+
       addItem({
         id: product._id,
-        name: locale === "ar" ? product.name.ar : product.name.fr,
+        name: product.name[locale],
         price: product.price,
-        image: product.images?.[0] ?? "/No_Image_Available.jpg"
+        image: product.images?.[0] ?? "/No_Image_Available.jpg",
+        type: "product",
+        discount: discount
       })
 
       // Animation de succès
@@ -81,12 +92,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
       })
     )
 
+    // Include discount if it exists and is not a COUPON type
+    const discount = product.discount && product.discount.type !== "COUPON"
+      ? {
+          type: product.discount.type as "PERCENTAGE" | "BUY_X_GET_Y",
+          value: product.discount.value,
+          buyQuantity: product.discount.buyQuantity,
+          getQuantity: product.discount.getQuantity
+        }
+      : null
+
     addItem({
       id: product._id,
-      name: locale === "ar" ? product.name.ar : product.name.fr,
+      name: product.name[locale],
       price: product.price,
       image: product.images?.[0] ?? "/No_Image_Available.jpg",
-      characteristic: formattedCharacteristics
+      characteristic: formattedCharacteristics,
+      type: "product",
+      discount: discount
     })
 
     setShowModal(false)
@@ -99,7 +122,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setShowModal(false)
     setSelectedValues({})
   }
+  // Calcul du pourcentage de réduction
+  const calculateDiscountPercentage = () => {
+    if (product.originalPrice && product.price) {
+      return Math.round(
+        ((product.originalPrice - product.price) / product.originalPrice) * 100
+      )
+    }
+    return 0
+  }
 
+  const discountPercentage = calculateDiscountPercentage()
   // ========= MODE LISTE =========
   if (viewMode === "list") {
     return (
@@ -159,7 +192,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
                       className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 text-xs font-bold rounded-full shadow-lg flex items-center gap-1"
                     >
                       <Zap size={12} />
-                      {t("badges.sale")}
+                      {discountPercentage
+                        ? `${t("badges.sale")}" "${discountPercentage}%`
+                        : t("badges.sale")}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -174,7 +209,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <Link href={`/shop/${product._id}`}>
                   <Image
                     src={product.images?.[0] ?? "/No_Image_Available.jpg"}
-                    alt={locale === "ar" ? product.name.ar : product.name.fr}
+                    alt={product.name[locale]}
                     fill
                     sizes="(max-width: 1024px) 100vw, 300px"
                     className="object-cover"
@@ -191,29 +226,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
                 <div className="flex-1">
                   {/* Titre */}
-                  <h3 className="font-bold text-xl lg:text-2xl text-gray-800 mb-3 group-hover:text-orange-600 transition-colors duration-200 line-clamp-2">
-                    {locale === "ar" ? product.name.ar : product.name.fr}
+                  <h3 className="font-bold text-xl lg:text-2xl text-gray-800 mb-3 group-hover:text-secondColor transition-colors duration-200 line-clamp-1">
+                    {product.name[locale]}
                   </h3>
 
                   {/* Rating et stats */}
                   <div className="flex flex-wrap items-center gap-4 mb-3">
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={16}
-                          className={`${
-                            i < 4
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                      <span className="text-sm font-medium text-gray-600 ml-1">
-                        (4.5)
-                      </span>
-                    </div>
-
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <motion.span
                         whileHover={{ scale: 1.05 }}
@@ -230,57 +248,147 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   </div>
                 </div>
 
-                {/* Prix section (desktop) */}
+                {/* Prix section (desktop) with enhanced discount visibility */}
                 <div className="hidden lg:flex flex-col items-end">
-                  {product.originalPrice && (
-                    <span className="text-base text-gray-400 line-through mb-1">
-                      {product.originalPrice} DH
-                    </span>
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <>
+                      <span className="text-lg text-gray-400 line-through mb-1 font-medium">
+                        {product.originalPrice} DH
+                      </span>
+                      <motion.span
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md mb-2"
+                      >
+                        -{discountPercentage}%
+                      </motion.span>
+                    </>
                   )}
                   <div className="flex items-baseline gap-2">
                     <motion.span
                       key={`price-list-${product._id}`}
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="text-3xl lg:text-4xl font-black bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent"
+                      className="text-3xl lg:text-4xl font-black bg-firstColor bg-clip-text text-transparent"
                     >
                       {product.price}
                     </motion.span>
                     <span className="text-lg font-bold text-gray-600">DH</span>
                   </div>
-                  {product.isOnSale && product.originalPrice && (
+                  {product.discount && product.discount.type !== "COUPON" && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-1 mt-2 bg-green-50 px-2 py-1 rounded-full"
+                      className="flex items-center gap-1 mt-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-200"
                     >
                       <TrendingUp size={14} className="text-green-600" />
                       <span className="text-xs text-green-700 font-bold">
-                        Économisez{" "}
-                        {Math.round(
-                          ((product.originalPrice - product.price) /
-                            product.originalPrice) *
-                            100
+                        {product.discount.type === "PERCENTAGE" && (
+                          <>🔥 Réduction {product.discount.value}%</>
                         )}
-                        %
+                        {product.discount.type === "BUY_X_GET_Y" && (
+                          <>
+                            🎁 Achetez {product.discount.buyQuantity}, obtenez {product.discount.getQuantity} gratuit
+                          </>
+                        )}
                       </span>
                     </motion.div>
                   )}
                 </div>
               </div>
-
+              {/* characteristiques
+              <div className="text-gray-600 mb-4 line-clamp-2 lg:line-clamp-3 leading-relaxed text-sm lg:text-base">
+                <div className="">
+                  {product.Characteristic?.map((char, index) => (
+                    <div
+                      key={`char-${char._id || index}-${product._id}`}
+                      className="bg-gray-50 rounded-xl p-4"
+                    >
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <div className="w-1 h-4 bg-firstColor rounded-full" />
+                        {"name" in char.name
+                          ? char.name.name[locale]
+                          : String(char.name)}
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {char.values.map((val, i) => {
+                          const label = val[locale]
+                          return (
+                            <div
+                              key={`value-${i}-${char._id || index}`}
+                              className="relative px-4 py-2 rounded-lg font-medium transition-all duration-200 
+                                   bg-white text-gray-700 border-2 border-gray-200"
+                            >
+                              {label}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div> */}
+              {/* Caractéristiques simplifiées
+              {product.Characteristic && product.Characteristic?.length > 0 && (
+                <div className="text-gray-600 mb-4 text-sm">
+                  {product.Characteristic.map((char, index) => (
+                    <div
+                      key={`char-${char._id || index}-${product._id}`}
+                      className="mb-3 last:mb-0"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium text-gray-800 text-xs">
+                          {"name" in char.name
+                            ? char.name.name[locale]
+                            : String(char.name)}
+                          :
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {char.values.map((val, i) => {
+                          const label = val[locale]
+                          return (
+                            <span
+                              key={`value-${i}-${char._id || index}`}
+                              className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs border border-gray-200"
+                            >
+                              {label}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )} */}
+              {/* Version ultra-minimaliste */}
+              {product.Characteristic && product.Characteristic?.length > 0 && (
+                <div className="text-gray-600 mb-3 text-xs space-y-2">
+                  {product.Characteristic.slice(0, 2).map((char, index) => (
+                    <div key={`char-${char._id || index}-${product._id}`}>
+                      <span className="font-medium text-gray-800 mr-1">
+                        {"name" in char.name
+                          ? char.name.name[locale]
+                          : String(char.name)}
+                        :
+                      </span>
+                      <span className="text-gray-600">
+                        {char.values.map((val) => val[locale]).join(", ")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {/* Description */}
               <p className="text-gray-600 mb-4 line-clamp-2 lg:line-clamp-3 leading-relaxed text-sm lg:text-base">
-                {locale === "ar"
-                  ? product.description?.ar
-                  : product.description?.fr}
+                {product.description[locale]}
               </p>
 
               {/* Features/Tags */}
               <div className="flex flex-wrap gap-2 mb-auto pb-4">
                 <motion.span
                   whileHover={{ scale: 1.05 }}
-                  className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-orange-200"
+                  className="inline-flex items-center gap-1.5 bg-orange-50 text-secondColor px-3 py-1.5 rounded-full text-xs font-semibold border border-orange-200"
                 >
                   <Zap size={14} />
                   Livraison Express
@@ -319,7 +427,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                       </span>
                     )}
                     <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-orange-600">
+                      <span className="text-2xl font-black text-secondColor">
                         {product.price}
                       </span>
                       <span className="text-sm font-bold text-gray-600">
@@ -338,7 +446,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   >
                     <Eye
                       size={20}
-                      className="text-gray-600 group-hover/btn:text-orange-600"
+                      className="text-gray-600 group-hover/btn:text-secondColor"
                     />
                   </motion.button>
 
@@ -349,7 +457,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     disabled={!product.inStock}
                     className={`flex-1 lg:flex-initial px-8 py-3 rounded-xl font-bold transition-all duration-300 min-w-[180px] ${
                       product.inStock
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl"
+                        ? "bg-firstColor text-white hover:bg-secondColor shadow-lg hover:shadow-xl"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
                     }`}
                   >
@@ -432,7 +540,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             >
               <Image
                 src={product.images?.[0] ?? "/No_Image_Available.jpg"}
-                alt={locale === "ar" ? product.name.ar : product.name.fr}
+                alt={product.name[locale]}
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -464,7 +572,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     transition={{ delay: 0.1 }}
                     className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 text-xs font-semibold rounded-full shadow-lg animate-pulse"
                   >
-                    {t("badges.sale")}
+                    {discountPercentage
+                      ? `${t("badges.sale")}" "${discountPercentage}%`
+                      : t("badges.sale")}
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -477,49 +587,76 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Content Container pour mode grille */}
         <div className="p-5">
-          {/* Rating Stars */}
-          <div className="flex items-center gap-1 mb-2">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                size={14}
-                className={`${
-                  i < 4 ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                }`}
-              />
-            ))}
-            <span className="text-xs text-gray-500 ml-1">(4.0)</span>
-          </div>
-
           {/* Titre du produit */}
-          <h3 className="font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors duration-200">
-            {locale === "ar" ? product.name.ar : product.name.fr}
+          <h3 className="font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-firstColor transition-colors duration-200">
+            {product.name[locale]}
           </h3>
-
+          {/* Version ultra-minimaliste */}
+          {/* {product.Characteristic && product.Characteristic?.length > 0 && (
+            <div className="text-gray-600 mb-3 text-xs space-y-2">
+              {product.Characteristic.slice(0, 2).map((char, index) => (
+                <div key={`char-${char._id || index}-${product._id}`}>
+                  <span className="font-medium text-gray-800 mr-1">
+                    {"name" in char.name
+                      ? char.name.name[locale]
+                      : String(char.name)}
+                    :
+                  </span>
+                  <span className="text-gray-600">
+                    {char.values.map((val) => val[locale]).join(", ")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )} */}
           {/* Description */}
-          <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">
-            {locale === "ar"
-              ? product.description?.ar
-              : product.description?.fr}
+          <p className="text-sm text-gray-500 mb-4 line-clamp-1 leading-relaxed">
+            {product.description[locale]}
           </p>
 
-          {/* Prix avec animation */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Prix avec animation et réduction bien visible */}
+          <div className="space-y-2 mb-4">
+            {product.originalPrice && product.originalPrice > product.price && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-400 line-through font-medium">
+                  {product.originalPrice} DH
+                </span>
+                <motion.span
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md"
+                >
+                  -{discountPercentage}%
+                </motion.span>
+              </div>
+            )}
             <div className="flex items-baseline gap-2">
               <motion.span
                 key={`price-grid-${product._id}`}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="text-2xl font-black bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent"
+                className="text-2xl font-black bg-firstColor bg-clip-text text-transparent"
               >
                 {product.price}
               </motion.span>
               <span className="text-sm font-semibold text-gray-600">DH</span>
             </div>
-            {product.originalPrice && (
-              <span className="text-sm text-gray-400 line-through">
-                {product.originalPrice} DH
-              </span>
+            {product.discount && product.discount.type !== "COUPON" && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full border border-green-200 w-fit"
+              >
+                <TrendingUp size={12} className="text-green-600" />
+                <span className="text-[10px] text-green-700 font-bold">
+                  {product.discount.type === "PERCENTAGE" && (
+                    <>🔥 -{product.discount.value}%</>
+                  )}
+                  {product.discount.type === "BUY_X_GET_Y" && (
+                    <>🎁 {product.discount.buyQuantity}+{product.discount.getQuantity} gratuit</>
+                  )}
+                </span>
+              </motion.div>
             )}
           </div>
 
@@ -531,7 +668,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             disabled={!product.inStock}
             className={`relative w-full py-3 rounded-xl font-semibold transition-all duration-300 overflow-hidden ${
               product.inStock
-                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl"
+                ? "bg-firstColor text-white hover:bg-secondColor shadow-lg hover:shadow-xl"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
@@ -604,7 +741,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             >
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden">
                 {/* Modal Header */}
-                <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6">
+                <div className="relative bg-firstColor text-white p-6">
                   <motion.button
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
@@ -638,7 +775,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         className="bg-gray-50 rounded-xl p-4"
                       >
                         <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                          <div className="w-1 h-4 bg-orange-500 rounded-full" />
+                          <div className="w-1 h-4 bg-firstColor rounded-full" />
                           {"name" in char.name
                             ? char.name.name[locale]
                             : String(char.name)}
@@ -663,7 +800,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                                 }
                                 className={`relative px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                                   isSelected
-                                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
+                                    ? "bg-firstColor text-white shadow-lg"
                                     : "bg-white text-gray-700 border-2 border-gray-200 hover:border-orange-300"
                                 }`}
                               >
@@ -701,7 +838,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={handleConfirm}
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 shadow-lg transition-all duration-200"
+                      className="flex-1 px-4 py-3 bg-firstColor text-white rounded-xl font-semibold hover:bg-secondColor shadow-lg transition-all duration-200"
                     >
                       <span className="flex items-center justify-center gap-2">
                         <ShoppingCart size={18} />

@@ -281,7 +281,7 @@ export default function CartSummary({
   const discountAmount = subtotal - total
 
   return (
-    <div className="bg-white rounded-lg sm:rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 sticky top-8 w-full max-w-full">
+    <div className="bg-white rounded-lg sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 sticky top-8 w-full max-w-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center min-w-0 flex-1">
@@ -300,73 +300,185 @@ export default function CartSummary({
         </div>
       </div>
 
-      {/* Articles du panier */}
-      <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6 max-h-80 sm:max-h-96 overflow-y-auto">
-        {items.map((item) => (
-          <motion.div
-            key={item.id}
-            layout
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            className="flex items-center space-x-3 p-3 sm:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-          >
-            {/* Image du produit */}
-            <div className="w-20 h-20 bg-gray-100 rounded-lg mr-4 flex items-center justify-center overflow-hidden">
-              <Image
-                src={item.image}
-                alt={item.name}
-                width={80}
-                height={80}
-                className="object-cover w-full h-full"
-              />
-            </div>
-            {/* Informations produit */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-800 text-xs sm:text-sm leading-tight line-clamp-2">
-                {item.name}
-              </h3>
-              <p className="text-xs text-gray-500 mt-1 truncate">
-                {item.category}
-              </p>
-              <p className="font-bold text-secondColor text-sm sm:text-base mt-1">
-                {item.price.toFixed(2)} MAD
-              </p>
-            </div>
+      {/* Articles du panier - Séparer produits et packs */}
+      <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-5 max-h-64 sm:max-h-96 overflow-y-auto">
+        {/* Section Produits */}
+        {items.filter((item) => item.type !== "pack").length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <ShoppingCart size={16} />
+              Produits ({items.filter((item) => item.type !== "pack").length})
+            </h3>
+            <div className="space-y-2">
+              {items
+                .filter((item) => item.type !== "pack")
+                .map((item) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -80 }}
+                    className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                  >
+                    {/* Image du produit */}
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gray-100 rounded-lg mr-2 sm:mr-4 flex items-center justify-center overflow-hidden">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        width={60}
+                        height={60}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
 
-            {/* Contrôles quantité */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="flex items-center bg-gray-100 rounded-lg">
-                <button
-                  onClick={() => updateQuantity(item, item.quantity - 1)}
-                  className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-l-lg transition-colors"
-                  type="button"
-                >
-                  <Minus size={12} className="text-gray-600" />
-                </button>
-                <span className="px-2 sm:px-3 py-1.5 sm:py-2 font-semibold text-gray-800 text-sm min-w-[2rem] sm:min-w-[3rem] text-center">
-                  {item.quantity}
-                </span>
-                <button
-                  onClick={() => updateQuantity(item, item.quantity + 1)}
-                  className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-r-lg transition-colors"
-                  type="button"
-                >
-                  <Plus size={12} className="text-gray-600" />
-                </button>
-              </div>
+                    {/* Informations produit */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-800 text-[11px] sm:text-sm leading-tight line-clamp-2">
+                        {item.name}
+                      </h3>
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 truncate">
+                        {item.category}
+                      </p>
+                      <p className="font-bold text-secondColor text-xs sm:text-base mt-0.5">
+                        {item.price.toFixed(2)} MAD
+                      </p>
+                    </div>
 
-              <button
-                onClick={() => removeItem(item)}
-                className="text-red-500 hover:text-red-700 transition-colors p-1"
-                title={t("actions.removeItem")}
-                type="button"
-              >
-                <Trash2 size={18} />
-              </button>
+                    {/* Contrôles quantité */}
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                      <div className="flex items-center bg-gray-100 rounded-md">
+                        <button
+                          onClick={() => updateQuantity(item, item.quantity - 1)}
+                          className="p-1 sm:p-2 hover:bg-gray-200 rounded-l-md transition-colors"
+                          type="button"
+                        >
+                          <Minus size={10} className="text-gray-600" />
+                        </button>
+                        <span className="px-2 sm:px-3 py-1 sm:py-1.5 font-semibold text-gray-800 text-xs sm:text-sm min-w-[1.5rem] sm:min-w-[2.5rem] text-center">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item, item.quantity + 1)}
+                          className="p-1 sm:p-2 hover:bg-gray-200 rounded-r-md transition-colors"
+                          type="button"
+                        >
+                          <Plus size={10} className="text-gray-600" />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => removeItem(item)}
+                        className="text-red-500 hover:text-red-700 transition-colors p-0.5 sm:p-1"
+                        title={t("actions.removeItem")}
+                        type="button"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
             </div>
-          </motion.div>
-        ))}
+          </div>
+        )}
+
+        {/* Section Packs */}
+        {items.filter((item) => item.type === "pack").length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Gift size={16} />
+              Packs ({items.filter((item) => item.type === "pack").length})
+            </h3>
+            <div className="space-y-2">
+              {items
+                .filter((item) => item.type === "pack")
+                .map((item) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -80 }}
+                    className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-4 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg hover:shadow-md transition-shadow"
+                  >
+                    {/* Image du pack */}
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gray-100 rounded-lg mr-2 sm:mr-4 flex items-center justify-center overflow-hidden relative">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        width={60}
+                        height={60}
+                        className="object-cover w-full h-full"
+                      />
+                      <div className="absolute top-0 right-0 bg-purple-500 text-white text-[8px] sm:text-xs px-1 rounded-bl">
+                        PACK
+                      </div>
+                    </div>
+
+                    {/* Informations pack */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-800 text-[11px] sm:text-sm leading-tight line-clamp-2">
+                        {item.name}
+                      </h3>
+                      {item.packItems && (
+                        <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">
+                          {item.packItems.length} produit{item.packItems.length > 1 ? "s" : ""} inclus
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {item.discountPrice ? (
+                          <>
+                            <p className="font-bold text-green-600 text-xs sm:text-base">
+                              {item.discountPrice.toFixed(2)} MAD
+                            </p>
+                            <p className="text-[10px] sm:text-xs text-gray-400 line-through">
+                              {item.price.toFixed(2)} MAD
+                            </p>
+                          </>
+                        ) : (
+                          <p className="font-bold text-secondColor text-xs sm:text-base">
+                            {item.price.toFixed(2)} MAD
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Contrôles quantité */}
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                      <div className="flex items-center bg-gray-100 rounded-md">
+                        <button
+                          onClick={() => updateQuantity(item, item.quantity - 1)}
+                          className="p-1 sm:p-2 hover:bg-gray-200 rounded-l-md transition-colors"
+                          type="button"
+                        >
+                          <Minus size={10} className="text-gray-600" />
+                        </button>
+                        <span className="px-2 sm:px-3 py-1 sm:py-1.5 font-semibold text-gray-800 text-xs sm:text-sm min-w-[1.5rem] sm:min-w-[2.5rem] text-center">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item, item.quantity + 1)}
+                          className="p-1 sm:p-2 hover:bg-gray-200 rounded-r-md transition-colors"
+                          type="button"
+                        >
+                          <Plus size={10} className="text-gray-600" />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => removeItem(item)}
+                        className="text-red-500 hover:text-red-700 transition-colors p-0.5 sm:p-1"
+                        title={t("actions.removeItem")}
+                        type="button"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Code promo */}
