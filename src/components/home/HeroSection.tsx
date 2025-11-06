@@ -7,9 +7,7 @@ import HeroSlider from "./HeroSlider"
 async function getHeroContent() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/hero-content`, {
-      cache: "no-store"
-    })
+    const response = await fetch(`${baseUrl}/api/hero-content`)
 
     if (!response.ok) {
       throw new Error("Erreur lors de la récupération des données")

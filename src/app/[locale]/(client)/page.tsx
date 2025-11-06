@@ -11,9 +11,7 @@ import { Product } from "@/types/product"
 async function getHomePageCategories() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/homepage-categories`, {
-      cache: "no-store"
-    })
+    const response = await fetch(`${baseUrl}/api/homepage-categories`)
     if (response.ok) {
       const data = await response.json()
       return data.success ? data.categories : []
@@ -78,7 +76,7 @@ const CategoriesSection = async () => {
       url: "/shop"
     }
   ]
-
+ 
   // Convertir les catégories DB en format attendu ou utiliser fallback
   const categories: CategoriesHomPageSection[] =
     dbCategories.length > 0
@@ -153,9 +151,7 @@ const CategoriesSection = async () => {
 async function getPromoBanner() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/promo-banner`, {
-      cache: "no-store"
-    })
+    const response = await fetch(`${baseUrl}/api/promo-banner`)
     if (response.ok) {
       const data = await response.json()
       return data.success && data.banner && data.banner.isActive ? data.banner : null
@@ -169,9 +165,7 @@ async function getPromoBanner() {
 async function getFeaturedProducts() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/featured-products`, {
-      cache: "no-store"
-    })
+    const response = await fetch(`${baseUrl}/api/featured-products`)
     if (response.ok) {
       const data = await response.json()
       return data.success && data.products ? data.products : []
