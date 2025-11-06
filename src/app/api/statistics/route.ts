@@ -307,7 +307,7 @@ export async function GET(request: NextRequest) {
           quantitiesByDate[dateKey] = {}
         }
 
-        order.items.forEach((item) => {
+        order.items.forEach((item:any) => {
           if (productIds.includes(item.id)) {
             if (!quantitiesByDate[dateKey][item.id]) {
               quantitiesByDate[dateKey][item.id] = 0
