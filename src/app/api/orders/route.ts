@@ -162,7 +162,10 @@ export async function GET(request: NextRequest) {
       status?: string
       createdAt?: { $gte?: Date; $lte?: Date }
       total?: { $gte?: number; $lte?: number }
-      $or?: Array<{ orderNumber?: { $regex: string; $options: string } } | { customerName?: { $regex: string; $options: string } }>
+      $or?: Array<
+        | { orderNumber?: { $regex: string; $options: string } }
+        | { customerName?: { $regex: string; $options: string } }
+      >
     } = {}
 
     // Filtre par statut
@@ -215,9 +218,7 @@ export async function GET(request: NextRequest) {
     // Si filtre par type d'item, filtrer en JavaScript (car MongoDB ne peut pas facilement filtrer sur les arrays imbriqués)
     let filteredOrders = orders
     if (itemType && itemType !== "") {
-      filteredOrders = orders.filter((order: {
-        items: Array<{ type?: string }>
-      }) => {
+      filteredOrders = orders.filter((order: any) => {
         if (itemType === "products") {
           return order.items.some((item) => item.type === "product")
         } else if (itemType === "packs") {
