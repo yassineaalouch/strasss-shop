@@ -39,13 +39,7 @@ async function fetchPacks() {
     const response = await fetch(
       `${
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-      }/api/product-packs`,
-      {
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
+      }/api/product-packs`
     )
 
     if (!response.ok) {
