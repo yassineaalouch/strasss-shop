@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Search, SlidersHorizontal, X } from "lucide-react"
 
 export function PacksFilters() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const t = useTranslations("PacksPage.filters")
 
   const [search, setSearch] = useState(searchParams.get("search") || "")
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "newest")
@@ -49,9 +51,7 @@ export function PacksFilters() {
     updateFilters({ sort: value })
   }
 
-  const handlePriceFilter = () => {
-    updateFilters({ minPrice, maxPrice })
-  }
+
 
   const clearFilters = () => {
     setSearch("")
@@ -68,10 +68,10 @@ export function PacksFilters() {
       {/* Mobile Filter Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-orange-200 bg-white px-4 py-3 font-medium text-orange-600 transition-colors hover:bg-orange-50 lg:hidden"
+        className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-firstColor/30 bg-white px-4 py-3 font-medium text-firstColor transition-colors hover:bg-firstColor/10 lg:hidden"
       >
         <SlidersHorizontal className="h-5 w-5" />
-        Filtres {hasActiveFilters && "•"}
+        {t("title")} {hasActiveFilters && "•"}
       </button>
 
       {/* Filters Panel - Modern design */}
@@ -83,34 +83,34 @@ export function PacksFilters() {
         {/* Header - Modern design */}
         <div className="flex items-center justify-between border-b-2 border-gray-200 pb-4">
           <h2 className="flex items-center gap-3 text-xl font-bold text-gray-900">
-            <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md">
+            <div className="p-2 bg-gradient-to-br from-firstColor to-secondColor rounded-lg shadow-md">
               <SlidersHorizontal className="h-5 w-5 text-white" />
             </div>
-            Filtres
+            {t("title")}
           </h2>
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="text-xs px-3 py-1.5 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg font-medium transition-all duration-200 border border-orange-200"
+              className="text-xs px-3 py-1.5 bg-firstColor/10 text-firstColor hover:bg-firstColor/20 rounded-lg font-medium transition-all duration-200 border border-firstColor/30"
             >
-              Réinitialiser
+              {t("reset")}
             </button>
           )}
         </div>
 
         {/* Search - Modern design */}
         <div className="p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
-          <label className="mb-3 block text-sm font-bold text-gray-800 flex items-center gap-2">
-            <div className="w-1 h-4 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
-            Rechercher
+          <label className="mb-3  text-sm font-bold text-gray-800 flex items-center gap-2">
+            <div className="w-1 h-4 bg-gradient-to-b from-firstColor to-secondColor rounded-full"></div>
+            {t("search.label")}
           </label>
           <form onSubmit={handleSearchSubmit} className="relative">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Nom du pack..."
-              className="w-full rounded-lg border-2 border-gray-200 py-2.5 pl-10 pr-10 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+              placeholder={t("search.placeholder")}
+              className="w-full rounded-lg border-2 border-gray-200 py-2.5 pl-10 pr-10 focus:border-firstColor focus:outline-none focus:ring-2 focus:ring-firstColor/20 transition-all"
             />
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             {search && (
@@ -130,27 +130,27 @@ export function PacksFilters() {
 
         {/* Sort By - Modern design */}
         <div className="p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
-          <label className="mb-3 block text-sm font-bold text-gray-800 flex items-center gap-2">
-            <div className="w-1 h-4 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
-            Trier par
+          <label className="mb-3 text-sm font-bold text-gray-800 flex items-center gap-2">
+            <div className="w-1 h-4 bg-gradient-to-b from-firstColor to-secondColor rounded-full"></div>
+            {t("sort.label")}
           </label>
           <select
             value={sortBy}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="w-full rounded-lg border-2 border-gray-200 bg-white py-2.5 px-4 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all font-medium"
+            className="w-full rounded-lg border-2 border-gray-200 bg-white py-2.5 px-4 focus:border-firstColor focus:outline-none focus:ring-2 focus:ring-firstColor/20 transition-all font-medium"
           >
-            <option value="newest">Plus récents</option>
-            <option value="price-asc">Prix croissant</option>
-            <option value="price-desc">Prix décroissant</option>
-            <option value="discount">Meilleure réduction</option>
+            <option value="newest">{t("sort.newest")}</option>
+            <option value="price-asc">{t("sort.priceAsc")}</option>
+            <option value="price-desc">{t("sort.priceDesc")}</option>
+            <option value="discount">{t("sort.discount")}</option>
           </select>
         </div>
 
         {/* Price Range - Auto-apply - Modern design */}
         <div className="p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
           <label className="mb-3 block text-sm font-bold text-gray-800 flex items-center gap-2">
-            <div className="w-1 h-4 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
-            Fourchette de prix (MAD)
+            <div className="w-1 h-4 bg-gradient-to-b from-firstColor to-secondColor rounded-full"></div>
+            {t("priceRange.label")}
           </label>
           <div className="space-y-3">
             <div>
@@ -164,9 +164,9 @@ export function PacksFilters() {
                     updateFilters({ minPrice: e.target.value, maxPrice })
                   }
                 }}
-                placeholder="Min"
+                placeholder={t("priceRange.min")}
                 min="0"
-                className="w-full rounded-lg border-2 border-gray-200 py-2.5 px-4 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+                className="w-full rounded-lg border-2 border-gray-200 py-2.5 px-4 focus:border-firstColor focus:outline-none focus:ring-2 focus:ring-firstColor/20 transition-all"
               />
             </div>
             <div>
@@ -180,9 +180,9 @@ export function PacksFilters() {
                     updateFilters({ minPrice, maxPrice: e.target.value })
                   }
                 }}
-                placeholder="Max"
+                placeholder={t("priceRange.max")}
                 min="0"
-                className="w-full rounded-lg border-2 border-gray-200 py-2.5 px-4 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+                className="w-full rounded-lg border-2 border-gray-200 py-2.5 px-4 focus:border-firstColor focus:outline-none focus:ring-2 focus:ring-firstColor/20 transition-all"
               />
             </div>
           </div>
@@ -190,25 +190,32 @@ export function PacksFilters() {
 
         {/* Active Filters Summary */}
         {hasActiveFilters && (
-          <div className="rounded-lg bg-orange-50 p-4 border border-orange-100">
-            <p className="mb-2 text-sm font-semibold text-orange-900">
-              Filtres actifs :
+          <div className="rounded-lg bg-firstColor/10 p-4 border border-firstColor/30">
+            <p className="mb-2 text-sm font-semibold text-firstColor">
+              {t("activeFilters.title")}
             </p>
-            <div className="space-y-1 text-sm text-orange-700">
-              {search && <p>• Recherche : &apos;{search}&apos;</p>}
+            <div className="space-y-1 text-sm text-firstColor/80">
+              {search && (
+                <p>• {t("activeFilters.search", { query: search })}</p>
+              )}
               {sortBy !== "newest" && (
                 <p>
-                  • Tri :{" "}
-                  {sortBy === "price-asc"
-                    ? "Prix croissant"
-                    : sortBy === "price-desc"
-                    ? "Prix décroissant"
-                    : "Meilleure réduction"}
+                  • {t("activeFilters.sort", {
+                    sortOption:
+                      sortBy === "price-asc"
+                        ? t("sort.priceAsc")
+                        : sortBy === "price-desc"
+                        ? t("sort.priceDesc")
+                        : t("sort.discount")
+                  })}
                 </p>
               )}
               {(minPrice || maxPrice) && (
                 <p>
-                  • Prix : {minPrice || "0"} - {maxPrice || "∞"} MAD
+                  • {t("activeFilters.price", {
+                    min: minPrice || "0",
+                    max: maxPrice || "∞"
+                  })}
                 </p>
               )}
             </div>

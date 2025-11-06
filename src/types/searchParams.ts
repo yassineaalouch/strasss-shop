@@ -13,8 +13,8 @@ export interface SearchParams {
 }
 
 export interface FilterQuery {
-  category?: { $in: string[] } | string | { [key: string]: any }
-  discount?: string | { [key: string]: any }
+  category?: { $in: string[] } | string | { [key: string]: unknown }
+  discount?: string | { [key: string]: unknown }
   price?: { $gte?: number; $lte?: number }
   quantity?: { $gte?: number; $lte?: number; $gt?: number }
   inStock?: boolean
@@ -31,7 +31,7 @@ export interface FilterQuery {
       }[]
     }
   }
-  [key: string]: any // Allow additional properties
+  [key: string]: unknown
 }
 
 type SortOrder = 1 | -1

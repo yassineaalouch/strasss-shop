@@ -110,7 +110,14 @@ export async function PUT(
       )
     }
 
-    const updateData: any = {}
+    const updateData: {
+      name?: { fr: string; ar: string }
+      image?: string
+      productCount?: number
+      url?: string
+      order?: number
+      isActive?: boolean
+    } = {}
     if (body.name) {
       updateData.name = {
         fr: body.name.fr.trim(),

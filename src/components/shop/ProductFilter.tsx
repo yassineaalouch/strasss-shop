@@ -89,14 +89,6 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
   } transition-transform duration-300 ease-in-out lg:block`
 
-  // 🔍 Si des filtres actifs
-  const hasActiveFilters =
-    filters.category.length > 0 ||
-    filters.characteristics.length > 0 ||
-    filters.inStock ||
-    filters.onSale ||
-    filters.isNewCategory
-
   return (
     <>
       {/* Overlay mobile */}
@@ -112,7 +104,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           {/* Header - Modern design */}
           <div className="flex items-center justify-between mb-6 sm:mb-8 pb-4 border-b-2 border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md">
+              <div className="p-2 bg-gradient-to-br from-firstColor to-secondColor rounded-lg shadow-md">
                 <Filter className="text-white" size={20} />
               </div>
               {t("title")}
@@ -120,7 +112,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
             <div className="flex items-center space-x-2">
               <button
                 onClick={clearAllFilters}
-                className="text-xs px-3 py-1.5 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg font-medium transition-all duration-200 border border-orange-200"
+                className="text-xs px-3 py-1.5 bg-orange-50 text-secondaryColor hover:bg-orange-100 rounded-lg font-medium transition-all duration-200 border border-orange-200"
               >
                 {t("reset")}
               </button>
@@ -136,7 +128,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           {/* Prix - Modern design */}
           <div className="mb-6 p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
             <h3 className="font-bold text-gray-800 mb-4 text-sm sm:text-base flex items-center gap-2">
-              <div className="w-1 h-4 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
+              <div className="w-1 h-4 bg-gradient-to-b from-firstColor to-secondColor rounded-full"></div>
               {t("sections.price.title")}
             </h3>
             <div className="flex items-center space-x-3">
@@ -153,7 +145,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                     ]
                   })
                 }
-                className="w-1/2 px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+                className="w-1/2 px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-firstColor focus:outline-none focus:ring-2 focus:ring-firstColor/20 transition-all"
               />
               <span className="text-gray-400 font-medium">-</span>
               <input
@@ -169,7 +161,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                     ]
                   })
                 }
-                className="w-1/2 px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+                className="w-1/2 px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:border-firstColor focus:outline-none focus:ring-2 focus:ring-firstColor/20 transition-all"
               />
             </div>
           </div>
@@ -178,7 +170,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           {categories.length > 0 && (
             <div className="mb-6 p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
               <h3 className="font-bold text-gray-800 mb-4 text-sm sm:text-base flex items-center gap-2">
-                <div className="w-1 h-4 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
+                <div className="w-1 h-4 bg-gradient-to-b from-firstColor to-secondColor rounded-full"></div>
                 {t("sections.categories.title")}
               </h3>
               <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -192,7 +184,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                         type="checkbox"
                         checked={filters.category.includes(category)}
                         onChange={() => handleCategoryChange(category)}
-                        className="w-4 h-4 text-orange-600 focus:ring-orange-500 rounded border-gray-300"
+                        className="w-4 h-4 text-firstColor focus:ring-firstColor rounded border-gray-300"
                       />
                       <span className="text-sm text-gray-700 flex-1 font-medium">
                         {category}

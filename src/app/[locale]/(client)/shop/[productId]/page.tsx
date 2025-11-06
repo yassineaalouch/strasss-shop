@@ -607,6 +607,7 @@ const ProductPage: React.FC = () => {
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [selectedCharacteristics, setSelectedCharacteristics] = useState<Record<string, string>>({})
 
   // Check if product is in cart and get cart quantity
   const cartItem = product
@@ -671,6 +672,20 @@ const ProductPage: React.FC = () => {
     }
   }
 
+  // Handle characteristic selection
+  const handleCharacteristicSelect = (charName: string, value: string) => {
+    setSelectedCharacteristics((prev) => {
+      // Toggle selection: if same value is clicked, deselect it
+      if (prev[charName] === value) {
+        const newState = { ...prev }
+        delete newState[charName]
+        return newState
+      }
+      // Otherwise, update the selection
+      return { ...prev, [charName]: value }
+    })
+  }
+
   // Ajouter au panier
   const handleAddToCart = () => {
     if (!product) return
@@ -687,7 +702,15 @@ const ProductPage: React.FC = () => {
           }
         : null
 
-      // Add product to cart with discount info
+      // Format characteristics if any are selected
+      const formattedCharacteristics = Object.keys(selectedCharacteristics).length > 0
+        ? Object.entries(selectedCharacteristics).map(([name, value]) => ({
+            name,
+            value
+          }))
+        : undefined
+
+      // Add product to cart with discount info and characteristics
       addItem(
         {
           id: product._id,
@@ -695,11 +718,14 @@ const ProductPage: React.FC = () => {
           price: product.price,
           image: product.images?.[0] ?? "/No_Image_Available.jpg",
           type: "product",
-          discount: discount
+          discount: discount,
+          characteristic: formattedCharacteristics
         },
         quantity
       )
 
+      // Reset characteristics selection after adding to cart
+      setSelectedCharacteristics({})
       setIsAddingToCart(false)
     } catch (err) {
       setIsAddingToCart(false)
@@ -1039,13 +1065,13 @@ const ProductPage: React.FC = () => {
                   <span className="text-2xl text-gray-400 line-through font-medium">
                     {product.originalPrice} MAD
                   </span>
-                  <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
+                  <span className="bg-gradient-to-r from-red-500 to-firstColor text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
                     -{discountPercentage}%
                   </span>
                 </div>
               )}
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-orange-600">
+                <span className="text-4xl font-black text-firstColor">
                   {product.price}
                 </span>
                 <span className="text-xl font-bold text-gray-600">MAD</span>
@@ -1079,38 +1105,57 @@ const ProductPage: React.FC = () => {
             {/* 🧩 Caractéristiques du produit */}
             {product.Characteristic && product.Characteristic.length > 0 && (
               <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">
+                <h3 className="text-lg font-semibold mb-2">
                   {locale === "fr" ? "Caractéristiques" : "المواصفات"}
                 </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {locale === "fr" 
+                    ? "Sélectionnez une valeur pour chaque caractéristique (optionnel)" 
+                    : "اختر قيمة لكل خاصية (اختياري)"}
+                </p>
 
-                <div className="space-y-3">
-                  {product.Characteristic.map((char, index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col sm:flex-row sm:items-center"
-                    >
-                      {/* Nom de la caractéristique */}
-                      <span className="font-medium text-gray-700 sm:w-48 mb-1 sm:mb-0">
-                        {
-                          "name" in char.name // `char.name` est de type `ICharacteristic`
-                            ? char.name?.name?.[locale] ?? "Caractéristique"
-                            : "Caractéristique" // `char.name` est de type `ObjectId`
-                        }{" "}
-                      </span>
+                <div className="space-y-4">
+                  {product.Characteristic.map((char, index) => {
+                    const charName = "name" in char.name
+                      ? char.name?.name?.[locale] ?? "Caractéristique"
+                      : "Caractéristique"
+                    const selectedValue = selectedCharacteristics[charName]
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="flex flex-col gap-2"
+                      >
+                        {/* Nom de la caractéristique */}
+                        <span className="font-medium text-gray-700 text-sm">
+                          {charName}
+                        </span>
 
-                      {/* Valeurs de la caractéristique */}
-                      <div className="flex flex-wrap gap-2">
-                        {char.values.map((value) => (
-                          <span
-                            key={value._id}
-                            className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
-                          >
-                            {value?.[locale] ?? "---"}
-                          </span>
-                        ))}
+                        {/* Valeurs de la caractéristique - sélectionnables */}
+                        <div className="flex flex-wrap gap-2">
+                          {char.values.map((value) => {
+                            const valueLabel = value?.[locale] ?? "---"
+                            const isSelected = selectedValue === valueLabel
+                            
+                            return (
+                              <button
+                                key={value._id}
+                                type="button"
+                                onClick={() => handleCharacteristicSelect(charName, valueLabel)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                  isSelected
+                                    ? "bg-firstColor text-white shadow-md scale-105"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105"
+                                }`}
+                              >
+                                {valueLabel}
+                              </button>
+                            )
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -1129,7 +1174,7 @@ const ProductPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center border-2 border-orange-500 rounded-lg bg-orange-50">
+                    <div className="flex items-center border-2 border-firstColor rounded-lg bg-firstColor/10">
                       <button
                         onClick={() => {
                           if (cartQuantity > 1) {
@@ -1138,11 +1183,11 @@ const ProductPage: React.FC = () => {
                             removeItem(cartItem!)
                           }
                         }}
-                        className="px-4 py-3 hover:bg-orange-100 font-bold text-orange-600 transition-colors"
+                        className="px-4 py-3 hover:bg-firstColor/20 font-bold text-firstColor transition-colors"
                       >
                         -
                       </button>
-                      <span className="px-6 py-3 min-w-16 text-center font-bold text-lg text-orange-700">
+                      <span className="px-6 py-3 min-w-16 text-center font-bold text-lg text-firstColor">
                         {cartQuantity}
                       </span>
                       <button
@@ -1152,7 +1197,7 @@ const ProductPage: React.FC = () => {
                           }
                         }}
                         disabled={cartQuantity >= product.quantity}
-                        className="px-4 py-3 hover:bg-orange-100 font-bold text-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-3 hover:bg-firstColor/20 font-bold text-firstColor transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         +
                       </button>
@@ -1205,7 +1250,7 @@ const ProductPage: React.FC = () => {
                       disabled={!product.inStock || isAddingToCart}
                       className={`flex-1 flex items-center justify-center py-3 px-6 rounded-lg font-medium ${
                         product.inStock
-                          ? "bg-orange-500 text-white hover:bg-orange-600"
+                          ? "bg-firstColor text-white hover:bg-secondColor"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >

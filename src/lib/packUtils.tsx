@@ -14,7 +14,11 @@ interface Product {
   price: number
   originalPrice?: number
   images: string[]
-  category?: any
+  category?: {
+    _id?: string
+    name?: { fr?: string; ar?: string }
+    [key: string]: unknown
+  }
   inStock: boolean
   quantity: number
 }

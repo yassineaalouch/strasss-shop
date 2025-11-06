@@ -64,7 +64,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
       <button
         onClick={() => navigateToPage(currentPage - 1)}
         disabled={currentPage === 1}
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-all hover:bg-orange-50 hover:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-gray-300"
+        className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-all hover:bg-firstColor/10 hover:border-firstColor/50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-gray-300"
         aria-label="Page précédente"
       >
         <ChevronLeft className="h-5 w-5" />
@@ -86,8 +86,8 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
               onClick={() => navigateToPage(page as number)}
               className={`flex h-10 w-10 items-center justify-center rounded-lg font-medium transition-all ${
                 currentPage === page
-                  ? "bg-orange-600 text-white shadow-lg"
-                  : "border border-gray-300 bg-white text-gray-700 hover:bg-orange-50 hover:border-orange-300"
+                  ? "bg-firstColor text-white shadow-lg"
+                  : "border border-gray-300 bg-white text-gray-700 hover:bg-firstColor/10 hover:border-firstColor/50"
               }`}
               aria-label={`Page ${page}`}
               aria-current={currentPage === page ? "page" : undefined}
@@ -102,7 +102,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
       <button
         onClick={() => navigateToPage(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-all hover:bg-orange-50 hover:border-orange-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-gray-300"
+        className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-all hover:bg-firstColor/10 hover:border-firstColor/50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-gray-300"
         aria-label="Page suivante"
       >
         <ChevronRight className="h-5 w-5" />

@@ -3,7 +3,6 @@ import { Metadata } from "next"
 import { PackDetails } from "@/components/packs/PackDetails"
 import { RelatedPacks } from "@/components/packs/RelatedPacks"
 import { enrichPackWithProducts } from "@/lib/packUtils"
-import Link from "next/link"
 
 interface PackDetailsPageProps {
   params: Promise<{ id: string }>
@@ -74,7 +73,7 @@ export default async function PackDetailsPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-firstColor/10 via-white to-secondColor/10">
       {/* Pack Details */}
       <section className="container mx-auto px-4 py-12">
         <PackDetails pack={pack} />

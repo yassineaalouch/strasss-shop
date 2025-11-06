@@ -1,5 +1,4 @@
 // types/auth.ts
-import { ReactNode } from "react"
 
 export interface LoginFormData {
   username: string
@@ -34,4 +33,3 @@ export interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg"
   className?: string
 }
-

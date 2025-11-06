@@ -692,7 +692,30 @@
     },
     "buttons": {
       "addToCart": "Ajouter au panier",
-      "unavailable": "Indisponible"
+      "unavailable": "Indisponible",
+      "confirm": "Confirmer",
+      "cancel": "Annuler"
+    },
+    "stats": {
+      "views": "{count} vues",
+      "timeAgo": "Il y a {hours}h"
+    },
+    "features": {
+      "expressDelivery": "Livraison Express",
+      "warranty": "Garantie 2 ans",
+      "inStock": "En stock",
+      "outOfStock": "Rupture de stock"
+    },
+    "discounts": {
+      "percentage": "🔥 Réduction {value}%",
+      "buyXGetY": "🎁 Achetez {buyQuantity}, obtenez {getQuantity} gratuit",
+      "percentageShort": "🔥 -{value}%",
+      "buyXGetYShort": "🎁 {buyQuantity}+{getQuantity} gratuit"
+    },
+    "modal": {
+      "title": "Personnalisez votre choix",
+      "subtitle": "Sélectionnez vos préférences",
+      "selectValueError": "Sélectionnez une valeur pour chaque propriété"
     }
   },
   "SideCart": {
@@ -722,6 +745,77 @@
     "buttons": {
       "validateOrder": "Valider la commande",
       "continueShopping": "Continuer mes achats"
+    }
+  },
+  "PacksPage": {
+    "hero": {
+      "title": "Nos Packs Exclusifs",
+      "subtitle": "Économisez jusqu'à 30% en achetant nos packs de produits soigneusement sélectionnés"
+    },
+    "grid": {
+      "results": "{count} pack trouvé",
+      "resultsPlural": "{count} packs trouvés"
+    },
+    "card": {
+      "productsIncluded": "{count} produit inclus",
+      "productsIncludedPlural": "{count} produits inclus",
+      "viewDetails": "Voir détails",
+      "addToCart": "Ajouter au panier",
+      "errorLoadingProducts": "Impossible de charger les détails des produits du pack",
+      "errorAddingToCart": "Erreur lors de l'ajout du pack au panier"
+    },
+    "filters": {
+      "title": "Filtres",
+      "reset": "Réinitialiser",
+      "search": {
+        "label": "Rechercher",
+        "placeholder": "Nom du pack..."
+      },
+      "sort": {
+        "label": "Trier par",
+        "newest": "Plus récents",
+        "priceAsc": "Prix croissant",
+        "priceDesc": "Prix décroissant",
+        "discount": "Meilleure réduction"
+      },
+      "priceRange": {
+        "label": "Fourchette de prix (MAD)",
+        "min": "Min",
+        "max": "Max"
+      },
+      "activeFilters": {
+        "title": "Filtres actifs :",
+        "search": "Recherche : '{query}'",
+        "sort": "Tri : {sortOption}",
+        "price": "Prix : {min} - {max} MAD"
+      }
+    },
+    "emptyState": {
+      "title": "Aucun pack trouvé",
+      "withSearch": "Aucun pack ne correspond à votre recherche '{query}'. Essayez avec d'autres mots-clés.",
+      "withoutSearch": "Aucun pack ne correspond à vos critères de recherche. Essayez de modifier vos filtres.",
+      "resetFilters": "Réinitialiser les filtres"
+    },
+    "details": {
+      "productsIncluded": "{count} produit inclus",
+      "productsIncludedPlural": "{count} produits inclus",
+      "normalPrice": "Prix normal",
+      "packPrice": "Prix du pack",
+      "youSave": "Vous économisez {amount} MAD !",
+      "quantityInCart": "Quantité dans le panier",
+      "inCart": "✓ Dans le panier",
+      "remove": "Retirer",
+      "addToCart": "Ajouter au panier",
+      "productsIncludedTitle": "Produits inclus dans ce pack",
+      "totalItems": "Total d'articles",
+      "totalNormalPrice": "Prix total normal",
+      "yourPrice": "Votre prix",
+      "unitPrice": "Prix unitaire:",
+      "subtotal": "Sous-total:",
+      "outOfStock": "Rupture de stock",
+      "viewDetails": "Voir détails",
+      "productId": "Produit ID:",
+      "quantity": "Quantité:"
     }
   },
   "404": {

@@ -3,6 +3,7 @@
 import { EmptyState } from "./EmptyState"
 import { PackCard } from "./PackCard"
 import { Pagination } from "./Pagination"
+import { ResultsInfo } from "./ResultsInfo"
 
 const ITEMS_PER_PAGE = 12
 
@@ -153,12 +154,7 @@ export async function PacksGrid({
   return (
     <div className="space-y-8">
       {/* Results Info */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600">
-          <span className="font-semibold text-gray-900">{totalPacks}</span> pack
-          {totalPacks > 1 ? "s" : ""} trouvé{totalPacks > 1 ? "s" : ""}
-        </p>
-      </div>
+      <ResultsInfo totalPacks={totalPacks} />
 
       {/* Packs Grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

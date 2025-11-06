@@ -113,7 +113,18 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           discountPrice: pack.discountPrice,
           image: pack.images?.[0] ?? "/No_Image_Available.jpg",
           quantity: 1,
-          packItems: pack.items?.map((packItem: any) => ({
+          packItems: pack.items?.map((packItem: {
+            productId: string
+            product?: {
+              name?: { fr?: string }
+              price?: number
+              images?: string[]
+            }
+            quantity: number
+            name?: string
+            price?: number
+            image?: string
+          }) => ({
             id: packItem.productId,
             name: packItem.product?.name?.fr || "Produit",
             quantity: packItem.quantity,
@@ -195,7 +206,24 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               const packData = await packResponse.json()
               if (packData.success && packData.data) {
                 const pack = packData.data
-                item.packItems = pack.items?.map((packItem: any) => {
+                item.packItems = pack.items?.map((packItem: {
+                  product?: {
+                    _id?: string
+                    name?: { fr?: string }
+                    price?: number
+                    images?: string[]
+                  }
+                  productId?: string | {
+                    _id?: string
+                    name?: { fr?: string }
+                    price?: number
+                    images?: string[]
+                  }
+                  name?: string
+                  quantity: number
+                  price?: number
+                  image?: string
+                }) => {
                   // Handle both populated and non-populated pack items
                   const product = packItem.product || packItem.productId
                   return {
@@ -213,7 +241,27 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           }
 
           // Build order item according to OrderItemSchema
-          const orderItem: any = {
+          const orderItem: {
+            id: string
+            name: string
+            type: string
+            price: number
+            quantity: number
+            image: string
+            discountPrice?: number
+            items?: Array<{
+              id: string
+              name: string
+              quantity: number
+              price: number
+              image: string
+            }>
+            discount?: string
+            characteristic?: Array<{
+              name: string
+              value: string
+            }>
+          } = {
             id: item.id,
             name: item.name,
             type: item.type,
@@ -250,7 +298,10 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                   orderItem.discount = product.discount._id || product.discount
                 }
                 if (product.Characteristic && product.Characteristic.length > 0) {
-                  orderItem.characteristic = product.Characteristic.map((char: any) => ({
+                  orderItem.characteristic = product.Characteristic.map((char: {
+                    name?: { fr?: string } | string
+                    values?: Array<{ fr?: string; ar?: string }>
+                  }) => ({
                     name: char.name?.fr || char.name || "",
                     value: char.values?.[0]?.fr || char.values?.[0]?.ar || ""
                   }))

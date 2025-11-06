@@ -1340,7 +1340,35 @@ const AdminOrdersTable: React.FC = () => {
       if (data.success) {
         // Transformer les données de la base de données en format Order
         const transformedOrders = data.orders.map(
-          (order: any): Order => ({
+          (order: {
+            _id: string
+            orderNumber?: string
+            customerName: string
+            customerPhone: string
+            customerAddress: string
+            orderDate?: string | Date
+            createdAt?: string | Date
+            status: string
+            total: number
+            paymentMethod?: string
+            shippingMethod?: string
+            items: Array<{
+              id: string
+              name: string
+              quantity: number
+              price: number
+              discountPrice?: number
+              image?: string
+              type: string
+              items?: Array<{
+                id: string
+                name: string
+                quantity: number
+                price: number
+                image?: string
+              }>
+            }>
+          }): Order => ({
             _id: order._id,
             orderNumber: order.orderNumber,
             customerName: order.customerName,
@@ -1361,7 +1389,15 @@ const AdminOrdersTable: React.FC = () => {
                   discountPrice: item.discountPrice,
                   image: item.image,
                   type: "pack",
-                  items: (item as any).items?.map((packItem: any) => ({
+                  items: (item as {
+                    items?: Array<{
+                      id: string
+                      name: string
+                      quantity: number
+                      price: number
+                      image?: string
+                    }>
+                  }).items?.map((packItem) => ({
                     id: packItem.id,
                     name: packItem.name,
                     quantity: packItem.quantity,

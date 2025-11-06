@@ -10,16 +10,17 @@ export async function GET(request: NextRequest) {
     await connectToDatabase()
 
     const searchParams = request.nextUrl.searchParams
-    
+
     // Parameters for first graph (overall sales)
     const salesDateFrom = searchParams.get("salesDateFrom")
     const salesDateTo = searchParams.get("salesDateTo")
     const salesTimeUnit = searchParams.get("salesTimeUnit") || "day" // hour, day, month, year
-    
+
     // Parameters for second graph (product comparison)
     const compareDateFrom = searchParams.get("compareDateFrom")
     const compareDateTo = searchParams.get("compareDateTo")
-    const productIds = searchParams.get("productIds")?.split(",").filter(Boolean) || []
+    const productIds =
+      searchParams.get("productIds")?.split(",").filter(Boolean) || []
 
     // Get date ranges for overall sales graph
     let salesDateFromFilter: Date | null = null
@@ -50,14 +51,22 @@ export async function GET(request: NextRequest) {
     const nowForToday = new Date()
     const todayStart = new Date(nowForToday)
     todayStart.setHours(0, 0, 0, 0)
-    
-    const thisMonthStart = new Date(nowForToday.getFullYear(), nowForToday.getMonth(), 1)
+
+    const thisMonthStart = new Date(
+      nowForToday.getFullYear(),
+      nowForToday.getMonth(),
+      1
+    )
     const lastMonthStart = new Date(
       nowForToday.getFullYear(),
       nowForToday.getMonth() - 1,
       1
     )
-    const lastMonthEnd = new Date(nowForToday.getFullYear(), nowForToday.getMonth(), 0)
+    const lastMonthEnd = new Date(
+      nowForToday.getFullYear(),
+      nowForToday.getMonth(),
+      0
+    )
 
     // Total Revenue (all time)
     const totalRevenueResult = await Order.aggregate([
@@ -95,8 +104,8 @@ export async function GET(request: NextRequest) {
       lastMonthRevenue > 0
         ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
         : thisMonthRevenue > 0
-          ? 100
-          : 0
+        ? 100
+        : 0
 
     // Total Orders
     const totalOrders = await Order.countDocuments({
@@ -120,8 +129,8 @@ export async function GET(request: NextRequest) {
       lastMonthOrders > 0
         ? ((thisMonthOrders - lastMonthOrders) / lastMonthOrders) * 100
         : thisMonthOrders > 0
-          ? 100
-          : 0
+        ? 100
+        : 0
 
     // Unique Customers (distinct customer names)
     const uniqueCustomers = await Order.distinct("customerName")
@@ -166,13 +175,14 @@ export async function GET(request: NextRequest) {
     const recentOrders = await Order.find()
       .sort({ createdAt: -1 })
       .limit(10)
-      .select(
-        "orderNumber customerName total status createdAt paymentMethod"
-      )
+      .select("orderNumber customerName total status createdAt paymentMethod")
       .lean()
 
     // Build match filter for overall sales graph
-    const salesOrdersMatchFilter: any = {
+    const salesOrdersMatchFilter: {
+      status: { $ne: string }
+      createdAt?: { $gte?: Date; $lte?: Date }
+    } = {
       status: { $ne: "cancelled" }
     }
     if (salesDateFromFilter || salesDateToFilter) {
@@ -186,12 +196,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Sales over time (grouped by time unit)
-    let salesOverTime: Array<{ date: string; revenue: number; orders: number }> = []
-    
+    let salesOverTime: Array<{
+      date: string
+      revenue: number
+      orders: number
+    }> = []
+
     // Use date filters if provided, otherwise use defaults
-    const effectiveSalesFrom = salesDateFromFilter || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const effectiveSalesFrom =
+      salesDateFromFilter || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     const effectiveSalesTo = salesDateToFilter || new Date()
-    
+
     if (effectiveSalesFrom && effectiveSalesTo) {
       // Determine date format based on time unit
       let dateFormat = "%Y-%m-%d" // default: day
@@ -204,7 +219,10 @@ export async function GET(request: NextRequest) {
       }
 
       // Build proper filter with effective dates
-      const effectiveSalesFilter: any = {
+      const effectiveSalesFilter: {
+        status: { $ne: string }
+        createdAt: { $gte: Date; $lte: Date }
+      } = {
         status: { $ne: "cancelled" },
         createdAt: {
           $gte: effectiveSalesFrom,
@@ -237,9 +255,12 @@ export async function GET(request: NextRequest) {
       date: string
       [key: string]: string | number // Dynamic product keys
     }> = []
-    
+
     // Build match filter for product comparison
-    const compareOrdersMatchFilter: any = {
+    const compareOrdersMatchFilter: {
+      status: { $ne: string }
+      createdAt?: { $gte?: Date; $lte?: Date }
+    } = {
       status: { $ne: "cancelled" }
     }
     if (compareDateFromFilter || compareDateToFilter) {
@@ -253,12 +274,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Use date filters if provided, otherwise use defaults
-    const effectiveCompareFrom = compareDateFromFilter || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const effectiveCompareFrom =
+      compareDateFromFilter || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     const effectiveCompareTo = compareDateToFilter || new Date()
 
     if (productIds.length > 0) {
       // Build proper filter with effective dates
-      const effectiveCompareFilter: any = {
+      const effectiveCompareFilter: {
+        status: { $ne: string }
+        createdAt: { $gte: Date; $lte: Date }
+      } = {
         status: { $ne: "cancelled" },
         createdAt: {
           $gte: effectiveCompareFrom,
@@ -272,16 +297,17 @@ export async function GET(request: NextRequest) {
         .lean()
 
       // Group by date and calculate QUANTITY (units) per product (not revenue)
-      const dateFormat = "%Y-%m-%d"
-      const quantitiesByDate: { [key: string]: { [productId: string]: number } } = {}
+      const quantitiesByDate: {
+        [key: string]: { [productId: string]: number }
+      } = {}
 
-      orders.forEach((order: any) => {
+        orders.forEach((order:any) => {
         const dateKey = new Date(order.createdAt).toISOString().split("T")[0]
         if (!quantitiesByDate[dateKey]) {
           quantitiesByDate[dateKey] = {}
         }
 
-        order.items.forEach((item: any) => {
+        order.items.forEach((item) => {
           if (productIds.includes(item.id)) {
             if (!quantitiesByDate[dateKey][item.id]) {
               quantitiesByDate[dateKey][item.id] = 0
@@ -295,7 +321,7 @@ export async function GET(request: NextRequest) {
       // Convert to array format
       const dates = Object.keys(quantitiesByDate).sort()
       productComparison = dates.map((date) => {
-        const result: any = { date }
+        const result: { date: string; [key: string]: string | number } = { date }
         productIds.forEach((productId) => {
           result[productId] = quantitiesByDate[date][productId] || 0
         })
@@ -318,7 +344,9 @@ export async function GET(request: NextRequest) {
           name: { $first: "$items.name" },
           image: { $first: "$items.image" },
           totalQuantity: { $sum: "$items.quantity" },
-          totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+          totalRevenue: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] }
+          }
         }
       },
       { $sort: { totalQuantity: -1 } },
@@ -330,7 +358,7 @@ export async function GET(request: NextRequest) {
       .select("_id name images")
       .limit(200)
       .lean()
-    
+
     const allPacks = await ProductPack.find()
       .select("_id name images")
       .limit(200)
@@ -361,7 +389,7 @@ export async function GET(request: NextRequest) {
             total: totalProducts,
             inStock: productsInStock,
             outOfStock: outOfStockProducts,
-            list: allProducts.map((p: any) => ({
+            list: allProducts.map((p:any) => ({
               id: p._id.toString(),
               name: p.name?.fr || p.name?.ar || "Produit",
               image: p.images?.[0] || "/No_Image_Available.jpg",
@@ -370,7 +398,11 @@ export async function GET(request: NextRequest) {
           },
           packs: {
             total: totalPacks,
-            list: allPacks.map((p: any) => ({
+            list: allPacks.map((p: {
+              _id: { toString(): string }
+              name?: { fr?: string; ar?: string }
+              images?: string[]
+            }) => ({
               id: p._id.toString(),
               name: p.name?.fr || p.name?.ar || "Pack",
               image: p.images?.[0] || "/No_Image_Available.jpg",
@@ -394,11 +426,9 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         message: "Erreur serveur lors de la récupération des statistiques",
-        error:
-          error instanceof Error ? error.message : "Erreur inconnue"
+        error: error instanceof Error ? error.message : "Erreur inconnue"
       },
       { status: 500 }
     )
   }
 }
-

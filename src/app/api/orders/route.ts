@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import Order from "@/models/Order"
 import { sendOrderEmail } from "@/lib/nodemailer"
-import mongoose from "mongoose"
 import { OrderRequestBody } from "@/types/order"
 
 // Types pour les données de commande
@@ -59,7 +58,20 @@ export async function POST(request: NextRequest) {
       )
     }
     // Build order data - handle optional fields from admin form
-    const orderData: any = {
+    const orderData: {
+      customerName: string
+      customerAddress: string
+      customerPhone: string
+      items: typeof items
+      subtotal: number
+      shipping: number
+      total: number
+      status: string
+      coupon: string | null
+      paymentMethod?: string
+      shippingMethod?: string
+      notes?: string
+    } = {
       customerName: customerName.trim(),
       customerAddress: customerAddress.trim(),
       customerPhone: customerPhone.trim(),
@@ -72,7 +84,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Add optional fields if present in request body
-    const bodyData = body as any
+    const bodyData = body as OrderRequestBody & {
+      paymentMethod?: string
+      shippingMethod?: string
+      notes?: string
+    }
     if (bodyData.paymentMethod) {
       orderData.paymentMethod = bodyData.paymentMethod
     }
@@ -142,7 +158,12 @@ export async function GET(request: NextRequest) {
     const itemType = searchParams.get("itemType")
 
     // Construire la requête de filtrage
-    const query: any = {}
+    const query: {
+      status?: string
+      createdAt?: { $gte?: Date; $lte?: Date }
+      total?: { $gte?: number; $lte?: number }
+      $or?: Array<{ orderNumber?: { $regex: string; $options: string } } | { customerName?: { $regex: string; $options: string } }>
+    } = {}
 
     // Filtre par statut
     if (status) {
@@ -194,14 +215,18 @@ export async function GET(request: NextRequest) {
     // Si filtre par type d'item, filtrer en JavaScript (car MongoDB ne peut pas facilement filtrer sur les arrays imbriqués)
     let filteredOrders = orders
     if (itemType && itemType !== "") {
-      filteredOrders = orders.filter((order: any) => {
+      filteredOrders = orders.filter((order: {
+        items: Array<{ type?: string }>
+      }) => {
         if (itemType === "products") {
-          return order.items.some((item: any) => item.type === "product")
+          return order.items.some((item) => item.type === "product")
         } else if (itemType === "packs") {
-          return order.items.some((item: any) => item.type === "pack")
+          return order.items.some((item) => item.type === "pack")
         } else if (itemType === "mixed") {
-          const hasProducts = order.items.some((item: any) => item.type === "product")
-          const hasPacks = order.items.some((item: any) => item.type === "pack")
+          const hasProducts = order.items.some(
+            (item) => item.type === "product"
+          )
+          const hasPacks = order.items.some((item) => item.type === "pack")
           return hasProducts && hasPacks
         }
         return true

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import axios from "axios"
 import {
   Package,
@@ -13,7 +13,9 @@ import {
   Minus,
   Calculator,
   Loader2,
-  Upload
+  Upload,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import Image from "next/image"
 import { Product } from "@/types/product"
@@ -26,6 +28,7 @@ const AdminPackCreator: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false)
   const [editingPack, setEditingPack] = useState<ProductPack | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
   const [selectedProducts, setSelectedProducts] = useState<SelectedPackItem[]>(
     []
   )
@@ -37,6 +40,12 @@ const AdminPackCreator: React.FC = () => {
   const [packs, setPacks] = useState<ProductPack[]>([])
   const [availableProducts, setAvailableProducts] = useState<Product[]>([])
   const [isLoadingProducts, setIsLoadingProducts] = useState(false)
+  
+  // Pagination state for products
+  const [productsPage, setProductsPage] = useState(1)
+  const [productsTotalPages, setProductsTotalPages] = useState(1)
+  const [productsTotal, setProductsTotal] = useState(0)
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // États pour la gestion des images S3
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -52,26 +61,74 @@ const AdminPackCreator: React.FC = () => {
     images: []
   })
 
-  // Charger les packs et produits au montage du composant
+  // Charger les packs au montage du composant
   useEffect(() => {
     fetchPacks()
-    fetchProducts()
   }, [])
 
-  // Fonction pour récupérer tous les produits depuis l'API
+  // Charger les produits avec pagination et recherche
+  useEffect(() => {
+    fetchProducts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, productsPage])
+
+  // Debounce search term - wait 0.3s after user stops typing
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+      setProductsPage(1) // Reset to first page when search changes
+    }, 300)
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [searchTerm])
+
+  // Fonction pour récupérer les produits depuis l'API avec pagination et recherche
   const fetchProducts = async () => {
     try {
       setIsLoadingProducts(true)
-      const response = await axios.get("/api/products")
+      const params = new URLSearchParams()
+      
+      // Add search parameter if there's a search term
+      if (debouncedSearchTerm.trim()) {
+        params.append("search", debouncedSearchTerm.trim())
+      }
+      
+      // Filter only in-stock products
+      params.append("status", "inStock")
+      
+      // Add pagination
+      params.append("page", productsPage.toString())
+      params.append("limit", "12")
+      
+      // Add language for sorting
+      params.append("language", currentLanguage)
+      params.append("sortField", "name")
+      params.append("sortDirection", "asc")
+      
+      const response = await axios.get(`/api/products?${params.toString()}`)
       if (response.data.success) {
         setAvailableProducts(response.data.products || [])
+        if (response.data.pagination) {
+          setProductsTotalPages(response.data.pagination.totalPages || 1)
+          setProductsTotal(response.data.pagination.totalProducts || 0)
+        }
       } else {
         showToast(
           response.data.message || "Erreur lors du chargement des produits",
           "error"
         )
+        setAvailableProducts([])
       }
     } catch (err) {
+      console.error("Error fetching products:", err)
       showToast("Erreur lors du chargement des produits", "error")
       setError("Impossible de charger les produits")
       setAvailableProducts([])
@@ -367,8 +424,21 @@ const AdminPackCreator: React.FC = () => {
   }
 
   // Fonction pour obtenir un produit par son ID
-  const getProductById = (productId: string): Product | undefined => {
-    return availableProducts.find((p) => p._id === productId)
+  const getProductById = async (productId: string): Promise<Product | undefined> => {
+    // First check if product is in current page
+    const product = availableProducts.find((p) => p._id === productId)
+    if (product) return product
+    
+    // If not found, fetch it from API
+    try {
+      const response = await axios.get(`/api/products/${productId}`)
+      if (response.data.success && response.data.product) {
+        return response.data.product
+      }
+    } catch (error) {
+      console.error("Error fetching product by ID:", error)
+    }
+    return undefined
   }
 
   // Fonction pour supprimer un pack
@@ -408,17 +478,15 @@ const AdminPackCreator: React.FC = () => {
     }
   }
 
-  // ✅ Filtrage sécurisé des produits
-  const filteredProducts = availableProducts.filter(
-    (product) =>
-      product.inStock &&
-      (product.name[currentLanguage]
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-        product?.category?.name[currentLanguage]
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()))
-  )
+  // Products are already filtered server-side, so we use availableProducts directly
+  const filteredProducts = availableProducts
+
+  // Handle pagination for products
+  const handleProductsPageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= productsTotalPages) {
+      setProductsPage(newPage)
+    }
+  }
 
   const calculateTotalPrice = () => {
     return selectedProducts.reduce(
@@ -480,6 +548,9 @@ const AdminPackCreator: React.FC = () => {
     setImagePreviews([])
     setInitialImages([])
     setImagesToDelete([]) // Réinitialiser aussi les images à supprimer
+    setSearchTerm("")
+    setDebouncedSearchTerm("")
+    setProductsPage(1)
   }
 
   const handleEditPack = async (pack: ProductPack) => {
@@ -498,7 +569,7 @@ const AdminPackCreator: React.FC = () => {
     // Charger les produits complets pour chaque item du pack
     const itemsWithProducts: SelectedPackItem[] = []
     for (const item of pack.items) {
-      const product = getProductById(item.productId)
+      const product = await getProductById(item.productId)
       if (product) {
         itemsWithProducts.push({
           productId: item.productId,
@@ -512,17 +583,13 @@ const AdminPackCreator: React.FC = () => {
     setIsCreating(true)
   }
 
-  // Affichage du chargement
-  if (isLoading || isLoadingProducts) {
+  // Affichage du chargement initial (only for packs, not products)
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600">
-            {isLoadingProducts
-              ? "Chargement des produits..."
-              : "Chargement des packs..."}
-          </p>
+          <p className="text-gray-600">Chargement des packs...</p>
         </div>
       </div>
     )
@@ -985,19 +1052,26 @@ const AdminPackCreator: React.FC = () => {
                   </div>
 
                   {/* Liste des produits disponibles */}
-                  <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
-                    {filteredProducts.length === 0 ? (
+                  <div className="border border-gray-200 rounded-lg">
+                    {isLoadingProducts ? (
+                      <div className="p-6 text-center text-gray-500">
+                        <Loader2 className="mx-auto mb-2 animate-spin" size={24} />
+                        <p>Chargement des produits...</p>
+                      </div>
+                    ) : filteredProducts.length === 0 ? (
                       <div className="p-6 text-center text-gray-500">
                         <Package className="mx-auto mb-2" size={24} />
                         <p>Aucun produit disponible</p>
                         <p className="text-xs mt-1">
-                          {availableProducts.length === 0
+                          {productsTotal === 0
                             ? "Veuillez créer des produits d'abord"
                             : "Aucun produit ne correspond à votre recherche"}
                         </p>
                       </div>
                     ) : (
-                      filteredProducts.map((product) => (
+                      <>
+                        <div className="max-h-64 overflow-y-auto">
+                          {filteredProducts.map((product) => (
                         <div
                           key={`product-${product._id}`}
                           className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
@@ -1070,7 +1144,36 @@ const AdminPackCreator: React.FC = () => {
                             Ajouter
                           </button>
                         </div>
-                      ))
+                          ))}
+                        </div>
+                        
+                        {/* Pagination Controls */}
+                        {productsTotalPages > 1 && (
+                          <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-gray-50">
+                            <div className="text-xs text-gray-600">
+                              Page {productsPage} sur {productsTotalPages}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleProductsPageChange(productsPage - 1)}
+                                disabled={productsPage === 1 || isLoadingProducts}
+                                className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                title="Page précédente"
+                              >
+                                <ChevronLeft size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleProductsPageChange(productsPage + 1)}
+                                disabled={productsPage >= productsTotalPages || isLoadingProducts}
+                                className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                title="Page suivante"
+                              >
+                                <ChevronRight size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

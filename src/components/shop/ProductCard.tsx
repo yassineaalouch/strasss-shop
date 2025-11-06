@@ -9,7 +9,6 @@ import {
   Check,
   Sparkles,
   Package,
-  Heart,
   TrendingUp,
   Clock,
   Eye,
@@ -77,11 +76,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           ]
       )
     ) {
-      alert(
-        locale === "fr"
-          ? "selectionner pour chaque properiete une valeur"
-          : "اختر قيمة لكل خاصية"
-      )
+      alert(t("modal.selectValueError"))
       return
     }
 
@@ -158,12 +153,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   animate={{ scale: isLiked ? [1, 1.3, 1] : 1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Heart
-                    size={20}
-                    className={`transition-colors duration-200 ${
-                      isLiked ? "fill-red-500 text-red-500" : "text-gray-400"
-                    }`}
-                  />
+                
                 </motion.div>
               </motion.button>
 
@@ -238,11 +228,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         className="flex items-center gap-1 cursor-pointer hover:text-gray-700"
                       >
                         <Eye size={16} />
-                        <span>234 vues</span>
+                        <span>{t("stats.views", { count: 234 })}</span>
                       </motion.span>
                       <span className="flex items-center gap-1">
                         <Clock size={16} />
-                        <span>Il y a 2h</span>
+                        <span>{t("stats.timeAgo", { hours: 2 })}</span>
                       </span>
                     </div>
                   </div>
@@ -284,12 +274,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
                       <TrendingUp size={14} className="text-green-600" />
                       <span className="text-xs text-green-700 font-bold">
                         {product.discount.type === "PERCENTAGE" && (
-                          <>🔥 Réduction {product.discount.value}%</>
+                          <>{t("discounts.percentage", { value: product.discount.value || 0 })}</>
                         )}
                         {product.discount.type === "BUY_X_GET_Y" && (
-                          <>
-                            🎁 Achetez {product.discount.buyQuantity}, obtenez {product.discount.getQuantity} gratuit
-                          </>
+                          <>{t("discounts.buyXGetY", { buyQuantity: product.discount.buyQuantity || 0, getQuantity: product.discount.getQuantity || 0 })}</>
                         )}
                       </span>
                     </motion.div>
@@ -391,14 +379,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   className="inline-flex items-center gap-1.5 bg-orange-50 text-secondColor px-3 py-1.5 rounded-full text-xs font-semibold border border-orange-200"
                 >
                   <Zap size={14} />
-                  Livraison Express
+                  {t("features.expressDelivery")}
                 </motion.span>
                 <motion.span
                   whileHover={{ scale: 1.05 }}
                   className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-blue-200"
                 >
                   <Shield size={14} />
-                  Garantie 2 ans
+                  {t("features.warranty")}
                 </motion.span>
                 {product.inStock ? (
                   <motion.span
@@ -406,12 +394,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-green-200"
                   >
                     <Package size={14} />
-                    En stock
+                    {t("features.inStock")}
                   </motion.span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 bg-red-50 text-red-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-red-200">
                     <X size={14} />
-                    Rupture de stock
+                    {t("features.outOfStock")}
                   </span>
                 )}
               </div>
@@ -511,25 +499,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {/* Image Container pour mode grille */}
         <Link href={`/shop/${product._id}`}>
           <div className="relative h-64 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
-            {/* Bouton Favoris */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsLiked(!isLiked)}
-              className="absolute top-3 right-3 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all duration-200"
-            >
-              <motion.div
-                animate={{ scale: isLiked ? [1, 1.3, 1] : 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Heart
-                  size={20}
-                  className={`transition-colors duration-200 ${
-                    isLiked ? "fill-red-500 text-red-500" : "text-gray-400"
-                  }`}
-                />
-              </motion.div>
-            </motion.button>
 
             {/* Image avec effet de chargement */}
             <motion.div
@@ -650,10 +619,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <TrendingUp size={12} className="text-green-600" />
                 <span className="text-[10px] text-green-700 font-bold">
                   {product.discount.type === "PERCENTAGE" && (
-                    <>🔥 -{product.discount.value}%</>
+                    <>{t("discounts.percentageShort", { value: product.discount.value || 0 })}</>
                   )}
                   {product.discount.type === "BUY_X_GET_Y" && (
-                    <>🎁 {product.discount.buyQuantity}+{product.discount.getQuantity} gratuit</>
+                    <>{t("discounts.buyXGetYShort", { buyQuantity: product.discount.buyQuantity || 0, getQuantity: product.discount.getQuantity || 0 })}</>
                   )}
                 </span>
               </motion.div>
@@ -752,14 +721,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   </motion.button>
 
                   <h2 className="text-xl font-bold pr-10">
-                    {locale === "fr"
-                      ? "Personnalisez votre choix"
-                      : "قم بتخصيص اختيارك"}
+                    {t("modal.title")}
                   </h2>
                   <p className="text-orange-100 text-sm mt-1">
-                    {locale === "fr"
-                      ? "Sélectionnez vos préférences"
-                      : "حدد تفضيلاتك"}{" "}
+                    {t("modal.subtitle")}{" "}
                   </p>
                 </div>
 
@@ -832,7 +797,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                       onClick={handleCancel}
                       className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-200"
                     >
-                      {locale === "fr" ? "Annuler" : "إلغاء"}
+                      {t("buttons.cancel")}
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -842,7 +807,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     >
                       <span className="flex items-center justify-center gap-2">
                         <ShoppingCart size={18} />
-                        {locale === "fr" ? "confermer" : "تأكيد "}
+                        {t("buttons.confirm")}
                       </span>
                     </motion.button>
                   </div>

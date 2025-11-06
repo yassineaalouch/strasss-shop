@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ShoppingCart, Package, Percent, ArrowRight } from "lucide-react"
 import { useState } from "react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useCartContext } from "@/app/context/CartContext"
 import { useToast } from "@/components/ui/Toast"
 
@@ -51,6 +51,7 @@ export function PackCard({ pack }: PackCardProps) {
   const { addItem } = useCartContext()
   const locale = useLocale() as "fr" | "ar"
   const { showToast } = useToast()
+  const t = useTranslations("PacksPage.card")
   const finalPrice = pack.discountPrice || pack.totalPrice
   const hasDiscount = pack.discountPrice && pack.discountPrice < pack.totalPrice
   const discountPercentage = hasDiscount
@@ -94,10 +95,7 @@ export function PackCard({ pack }: PackCardProps) {
       }>
 
       if (packItems.length === 0) {
-        showToast(
-          "Impossible de charger les détails des produits du pack",
-          "error"
-        )
+        showToast(t("errorLoadingProducts"), "error")
         return
       }
 
@@ -111,7 +109,7 @@ export function PackCard({ pack }: PackCardProps) {
         discountPrice: pack.discountPrice
       })
     } catch (error) {
-      showToast("Erreur lors de l'ajout du pack au panier", "error")
+      showToast(t("errorAddingToCart"), "error")
     }
   }
 
@@ -119,14 +117,14 @@ export function PackCard({ pack }: PackCardProps) {
     <article className="group relative overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
       {/* Discount Badge */}
       {hasDiscount && (
-        <div className="absolute left-4 top-4 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
+        <div className="absolute left-4 top-4 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-red-500 to-firstColor px-3 py-1.5 text-xs font-bold text-white shadow-lg">
           <Percent className="h-3.5 w-3.5" />-{discountPercentage}%
         </div>
       )}
 
       {/* Image Container */}
       <Link href={`/packs/${pack._id}`} className="block">
-        <div className="relative h-64 overflow-hidden bg-gradient-to-br from-orange-100 to-amber-100">
+        <div className="relative h-64 overflow-hidden bg-gradient-to-br from-firstColor/20 to-secondColor/20">
           {pack.images && pack.images.length > 0 && !imageError ? (
             <Image
               src={pack.images[0]}
@@ -137,7 +135,7 @@ export function PackCard({ pack }: PackCardProps) {
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <Package className="h-20 w-20 text-orange-300" />
+              <Package className="h-20 w-20 text-firstColor/50" />
             </div>
           )}
           {/* Gradient Overlay */}
@@ -162,10 +160,10 @@ export function PackCard({ pack }: PackCardProps) {
         )}
 
         {/* Items Count */}
-        <div className="mb-4 flex items-center gap-2 rounded-lg bg-orange-50 px-3 py-2 text-sm text-orange-800">
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-firstColor/10 px-3 py-2 text-sm text-firstColor">
           <Package className="h-4 w-4" />
           <span className="font-medium">
-            {itemsCount} produit{itemsCount > 1 ? "s" : ""} inclus
+            {itemsCount} {itemsCount > 1 ? t("productsIncludedPlural", { count: itemsCount }) : t("productsIncluded", { count: itemsCount })}
           </span>
         </div>
 
@@ -185,14 +183,14 @@ export function PackCard({ pack }: PackCardProps) {
         <div className="flex gap-2">
           <Link
             href={`/packs/${pack._id}`}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-firstColor bg-white px-4 py-2.5 font-medium text-firstColor transition-all hover:bg-orange-50"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-firstColor bg-white px-4 py-2.5 font-medium text-firstColor transition-all hover:bg-firstColor/10"
           >
-            Voir détails
+            {t("viewDetails")}
             <ArrowRight className="h-4 w-4" />
           </Link>
           <button
             className="flex items-center justify-center gap-2 rounded-lg bg-firstColor px-4 py-2.5 font-medium text-white transition-all hover:bg-secondColor"
-            aria-label="Ajouter au panier"
+            aria-label={t("addToCart")}
             onClick={handleAddToCart}
           >
             <ShoppingCart className="h-5 w-5" />
@@ -201,7 +199,7 @@ export function PackCard({ pack }: PackCardProps) {
       </div>
 
       {/* Decorative Corner */}
-      <div className="absolute -right-12 -top-12 h-24 w-24 rotate-45 bg-gradient-to-br from-orange-400/20 to-amber-400/20 transition-transform duration-300 group-hover:scale-150" />
+      <div className="absolute -right-12 -top-12 h-24 w-24 rotate-45 bg-gradient-to-br from-firstColor/20 to-secondColor/20 transition-transform duration-300 group-hover:scale-150" />
     </article>
   )
 }

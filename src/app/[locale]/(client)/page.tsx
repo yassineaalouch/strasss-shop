@@ -83,9 +83,17 @@ const CategoriesSection = async () => {
   const categories: CategoriesHomPageSection[] =
     dbCategories.length > 0
       ? dbCategories
-          .filter((cat: any) => cat.isActive)
-          .sort((a: any, b: any) => a.order - b.order)
-          .map((cat: any) => ({
+          .filter((cat: { isActive?: boolean }) => cat.isActive)
+          .sort((a: { order?: number }, b: { order?: number }) => (a.order || 0) - (b.order || 0))
+          .map((cat: {
+            _id: string
+            name: { fr: string; ar: string }
+            image: string
+            productCount: number
+            url?: string
+            order?: number
+            isActive?: boolean
+          }) => ({
             id: cat._id,
             name: cat.name,
             image: cat.image,

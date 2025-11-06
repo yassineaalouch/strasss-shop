@@ -66,7 +66,7 @@ export async function GET(
 
     // Construire la requête de filtrage
     const query: FilterQuery = {}
-    const orConditions: any[] = []
+    const orConditions: Array<{ "name.fr"?: { $regex: string; $options: string } } | { "name.ar"?: { $regex: string; $options: string } } | { inStock?: boolean } | { quantity?: number }> = []
 
     // Filtre par recherche de nom (dashboard)
     if (search) {
@@ -95,10 +95,7 @@ export async function GET(
     if (categoryName) {
       const Category = mongoose.model("Category")
       const categoryDoc = await Category.findOne({
-        $or: [
-          { "name.fr": categoryName },
-          { "name.ar": categoryName }
-        ]
+        $or: [{ "name.fr": categoryName }, { "name.ar": categoryName }]
       })
       if (categoryDoc) {
         query.category = categoryDoc._id
@@ -109,10 +106,7 @@ export async function GET(
     if (discountName) {
       const Discount = mongoose.model("Discount")
       const discountDoc = await Discount.findOne({
-        $or: [
-          { "name.fr": discountName },
-          { "name.ar": discountName }
-        ]
+        $or: [{ "name.fr": discountName }, { "name.ar": discountName }]
       })
       if (discountDoc) {
         query.discount = discountDoc._id
@@ -145,10 +139,7 @@ export async function GET(
           query.inStock = true
           break
         case "outOfStock":
-          orConditions.push(
-            { inStock: false },
-            { quantity: 0 }
-          )
+          orConditions.push({ inStock: false }, { quantity: 0 })
           break
         case "lowStock":
           query.inStock = true
@@ -163,10 +154,11 @@ export async function GET(
     }
 
     // Filtre par quantité (dashboard) - après le statut
-    const quantityConditions: { $gte?: number; $lte?: number; $gt?: number } = {}
+    const quantityConditions: { $gte?: number; $lte?: number; $gt?: number } =
+      {}
     if (minQuantity) quantityConditions.$gte = parseInt(minQuantity)
     if (maxQuantity) quantityConditions.$lte = parseInt(maxQuantity)
-    
+
     // Add status-specific quantity conditions
     if (status === "inStock") {
       quantityConditions.$gt = 0
@@ -174,7 +166,7 @@ export async function GET(
       quantityConditions.$lte = 10
       quantityConditions.$gt = 0
     }
-    
+
     // Only set quantity if we have conditions
     if (Object.keys(quantityConditions).length > 0) {
       query.quantity = quantityConditions
@@ -192,12 +184,14 @@ export async function GET(
 
     // Définir l'ordre de tri
     let sortOptions: SortOptions = {}
-    
+
     // Dashboard sort (using sortField and sortDirection)
     if (sortField) {
       switch (sortField) {
         case "name":
-          sortOptions = { [`name.${language}`]: sortDirection === "desc" ? -1 : 1 }
+          sortOptions = {
+            [`name.${language}`]: sortDirection === "desc" ? -1 : 1
+          }
           break
         case "price":
           sortOptions = { price: sortDirection === "desc" ? -1 : 1 }

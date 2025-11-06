@@ -71,7 +71,15 @@ export default function HomePageContentPage() {
   const [initialHeroImages, setInitialHeroImages] = useState<string[]>([])
 
   // Categories States
-  const [homepageCategories, setHomepageCategories] = useState<any[]>([])
+  const [homepageCategories, setHomepageCategories] = useState<Array<{
+    _id: string
+    name: { fr: string; ar: string }
+    image: string
+    productCount: number
+    url: string
+    order: number
+    isActive: boolean
+  }>>([])
   const [availableCategories, setAvailableCategories] = useState<Category[]>([])
   const [categoryFormData, setCategoryFormData] = useState({
     name: { fr: "", ar: "" },
@@ -104,7 +112,12 @@ export default function HomePageContentPage() {
   })
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null)
   const [bannerImagePreview, setBannerImagePreview] = useState("")
-  const [allPacks, setAllPacks] = useState<any[]>([])
+  const [allPacks, setAllPacks] = useState<Array<{
+    _id: string
+    name: { fr?: string; ar?: string } | string
+    images?: string[]
+    price?: number
+  }>>([])
   const [bannerLinkSearch, setBannerLinkSearch] = useState("")
   const [bannerLinkType, setBannerLinkType] = useState<"product" | "pack" | "custom">("custom")
 

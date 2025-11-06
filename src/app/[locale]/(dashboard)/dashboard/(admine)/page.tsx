@@ -43,7 +43,7 @@ const Tooltip = dynamic(() => import("recharts").then((mod) => mod.Tooltip), {
   ssr: false
 })
 const Legend = dynamic(
-  () => import("recharts").then((mod) => mod.Legend as React.ComponentType<any>),
+  () => import("recharts").then((mod) => mod.Legend as React.ComponentType<Record<string, unknown>>),
   { ssr: false }
 )
 const ResponsiveContainer = dynamic(
@@ -356,7 +356,7 @@ const DashboardPage: React.FC = () => {
               <span className="text-sm font-medium text-gray-700">Unité X:</span>
               <select
                 value={salesTimeUnit}
-                onChange={(e) => setSalesTimeUnit(e.target.value as any)}
+                onChange={(e) => setSalesTimeUnit(e.target.value as "hour" | "day" | "month" | "year")}
                 className="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 bg-white font-medium"
               >
                 <option value="hour">Heure</option>
@@ -385,7 +385,7 @@ const DashboardPage: React.FC = () => {
                 tickFormatter={(value) => formatCurrency(value)}
               />
               <Tooltip
-                formatter={(value: any, name: any) => [
+                formatter={(value: unknown, name: unknown) => [
                   String(name) === "revenue"
                     ? formatCurrency(Number(value))
                     : formatNumber(Number(value)),
@@ -643,7 +643,7 @@ const DashboardPage: React.FC = () => {
               <Legend
                 wrapperStyle={{ paddingTop: "20px" }}
                 iconType="line"
-                formatter={(value: any) => selectedItemNames[String(value)] || String(value)}
+                formatter={(value: unknown) => selectedItemNames[String(value)] || String(value)}
               />
               {selectedItems.map((itemId, index) => (
                 <Line
