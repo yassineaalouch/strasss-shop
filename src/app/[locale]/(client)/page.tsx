@@ -11,7 +11,7 @@ import { Product } from "@/types/product"
 async function getHomePageCategories() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-    const response = await fetch("/api/homepage-categories")
+    const response = await fetch(`${baseUrl}/api/homepage-categories`)
     if (response.ok) {
       const data = await response.json()
       return data.success ? data.categories : []
