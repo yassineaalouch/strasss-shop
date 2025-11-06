@@ -1,6 +1,8 @@
 // app/api/featured-products/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
+import "@/models/Category"
+import "@/models/Discount"
 import FeaturedProducts from "@/models/FeaturedProducts"
 import Product from "@/models/Product"
 import mongoose from "mongoose"
