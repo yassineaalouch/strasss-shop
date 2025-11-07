@@ -3,11 +3,15 @@ import Link from "next/link"
 import { getLocale, getTranslations } from "next-intl/server"
 import HeroSlider from "./HeroSlider"
 
+import { getBaseUrl } from "@/lib/getBaseUrl"
+
 // Fonction pour récupérer les données Hero depuis la base de données
 async function getHeroContent() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/hero-content`)
+    const baseUrl = getBaseUrl()
+    const response = await fetch(`${baseUrl}/api/hero-content`, {
+      cache: "no-store"
+    })
 
     if (!response.ok) {
       throw new Error("Erreur lors de la récupération des données")

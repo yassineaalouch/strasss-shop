@@ -7,11 +7,14 @@ import { getTranslations, getLocale } from "next-intl/server"
 import Image from "next/image"
 import Link from "next/link"
 import { Product } from "@/types/product"
+import { getBaseUrl } from "@/lib/getBaseUrl"
 
 async function getHomePageCategories() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/homepage-categories`)
+    const baseUrl = getBaseUrl()
+    const response = await fetch(`${baseUrl}/api/homepage-categories`, {
+      cache: "no-store"
+    })
     if (response.ok) {
       const data = await response.json()
       return data.success ? data.categories : []
@@ -150,8 +153,10 @@ const CategoriesSection = async () => {
 
 async function getPromoBanner() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/promo-banner`)
+    const baseUrl = getBaseUrl()
+    const response = await fetch(`${baseUrl}/api/promo-banner`, {
+      cache: "no-store"
+    })
     if (response.ok) {
       const data = await response.json()
       return data.success && data.banner && data.banner.isActive ? data.banner : null
@@ -164,8 +169,10 @@ async function getPromoBanner() {
 
 async function getFeaturedProducts() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/featured-products`)
+    const baseUrl = getBaseUrl()
+    const response = await fetch(`${baseUrl}/api/featured-products`, {
+      cache: "no-store"
+    })
     if (response.ok) {
       const data = await response.json()
       return data.success && data.products ? data.products : []

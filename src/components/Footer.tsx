@@ -2,10 +2,11 @@ import { Mail, MapPin, Phone } from "lucide-react"
 import { getTranslations, getLocale } from "next-intl/server"
 import Image from "next/image"
 import Link from "next/link"
+import { getBaseUrl } from "@/lib/getBaseUrl"
 
 async function getSiteInfo() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const baseUrl = getBaseUrl()
     const response = await fetch(`${baseUrl}/api/site-info`, {
       cache: "no-store"
     })
