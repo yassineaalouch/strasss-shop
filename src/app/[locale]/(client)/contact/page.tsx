@@ -6,11 +6,10 @@ import SocialMediaCard from "@/components/contact/SocialMediaCard"
 import FAQSection from "@/components/contact/FAQSection"
 import { Phone, Mail, MapPin, Scissors } from "lucide-react"
 import { ContactInfo } from "@/types/type"
-import { getBaseUrl } from "@/lib/getBaseUrl"
 
 async function getSiteInfo() {
   try {
-    const baseUrl = getBaseUrl()
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
     const response = await fetch(`${baseUrl}/api/site-info`, {
       cache: "no-store"
     })
