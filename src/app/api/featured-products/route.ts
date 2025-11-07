@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import "@/models/Category"
+import "@/models/Characteristic"
 import "@/models/Discount"
 import FeaturedProducts from "@/models/FeaturedProducts"
 import Product from "@/models/Product"
@@ -32,7 +33,8 @@ export async function GET() {
       _id: { $in: featuredProducts.productIds }
     })
       .populate("category")
-      .populate("discount")
+      .populate("discount") 
+      .populate("Characteristic.name")
       .lean()
 
     // Trier selon l'ordre défini
