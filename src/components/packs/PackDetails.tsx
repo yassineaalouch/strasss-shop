@@ -10,29 +10,13 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Info
 } from "lucide-react"
 import { PackAvailabilityAlert } from "./PackAvailabilityAlert"
 import { useLocale, useTranslations } from "next-intl"
 import { useCartContext } from "@/app/context/CartContext"
 import { useToast } from "@/components/ui/Toast"
-interface Product {
-  _id: string
-  name: {
-    fr: string
-    ar: string
-  }
-  description: {
-    fr: string
-    ar: string
-  }
-  price: number
-  originalPrice?: number
-  images: string[]
-  category?: string
-  inStock: boolean
-  quantity: number
-}
+import { Product } from "@/types/product"
+
 
 interface PackItem {
   productId: string

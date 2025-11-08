@@ -1,27 +1,8 @@
 // lib/packUtils.ts
+import { Product } from "@/types/product"
 import axios, { AxiosError } from "axios"
 
-interface Product {
-  _id: string
-  name: {
-    fr: string
-    ar: string
-  }
-  description: {
-    fr: string
-    ar: string
-  }
-  price: number
-  originalPrice?: number
-  images: string[]
-  category?: {
-    _id?: string
-    name?: { fr?: string; ar?: string }
-    [key: string]: unknown
-  }
-  inStock: boolean
-  quantity: number
-}
+
 
 interface PackItem {
   productId: string
