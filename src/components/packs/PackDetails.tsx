@@ -17,11 +17,16 @@ import { useCartContext } from "@/app/context/CartContext"
 import { useToast } from "@/components/ui/Toast"
 import { Product } from "@/types/product"
 
+// Type flexible pour les produits retournés par l'API
+type ProductApiResponse = Omit<Product, "category" | "discount"> & {
+  category?: Product["category"] | null
+  discount?: Product["discount"] | null
+}
 
 interface PackItem {
   productId: string
   quantity: number
-  product?: Product
+  product?: ProductApiResponse
 }
 
 interface Pack {
@@ -389,6 +394,18 @@ export function PackDetails({ pack }: PackDetailsProps) {
   )
 }
 
+// Fonction utilitaire pour valider une description
+function isValidDescription(desc: string | undefined | null): boolean {
+  if (!desc || typeof desc !== "string") return false
+  // Vérifier que ce n'est pas du texte corrompu ou du placeholder
+  const trimmed = desc.trim()
+  if (trimmed.length < 3) return false
+  // Vérifier qu'il n'y a pas trop de caractères répétitifs (signe de corruption)
+  const uniqueChars = new Set(trimmed.split("")).size
+  if (uniqueChars < 5 && trimmed.length > 50) return false
+  return true
+}
+
 // Composant pour afficher chaque produit du pack
 function PackProductCard({ item, index }: { item: PackItem; index: number }) {
   const [imageError, setImageError] = useState(false)
@@ -409,6 +426,10 @@ function PackProductCard({ item, index }: { item: PackItem; index: number }) {
       </div>
     )
   }
+
+  // Valider la description
+  const description = product.description?.[locale]
+  const hasValidDescription = isValidDescription(description)
 
   return (
     <div className="group relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-4 transition-all hover:border-firstColor/50 hover:shadow-lg">
@@ -451,9 +472,9 @@ function PackProductCard({ item, index }: { item: PackItem; index: number }) {
           </div>
 
           {/* Description */}
-          {product.description && product.description[locale] && (
+          {hasValidDescription && (
             <p className="text-sm text-gray-600 line-clamp-2">
-              {product.description[locale]}
+              {description}
             </p>
           )}
 

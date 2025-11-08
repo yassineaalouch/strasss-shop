@@ -2,12 +2,16 @@
 import { Product } from "@/types/product"
 import axios, { AxiosError } from "axios"
 
-
+// Type flexible pour les produits retournés par l'API
+type ProductApiResponse = Omit<Product, "category" | "discount"> & {
+  category?: Product["category"] | null
+  discount?: Product["discount"] | null
+}
 
 interface PackItem {
   productId: string
   quantity: number
-  product?: Product
+  product?: ProductApiResponse
 }
 
 interface Pack {
@@ -29,11 +33,11 @@ interface Pack {
 /**
  * Récupère les détails d'un produit par son ID avec Axios
  */
-async function fetchProductDetails(productId: string): Promise<Product | null> {
+async function fetchProductDetails(productId: string): Promise<ProductApiResponse | null> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 
-    const { data } = await axios.get<{ success: boolean; product: Product }>(
+    const { data } = await axios.get<{ success: boolean; product: ProductApiResponse }>(
       `${apiUrl}/api/products/${productId}`,
       {
         headers: {
@@ -112,7 +116,7 @@ export function isPackAvailable(pack: Pack): boolean {
 /**
  * Obtient la liste des produits en rupture de stock dans le pack
  */
-export function getOutOfStockProducts(pack: Pack): Product[] {
+export function getOutOfStockProducts(pack: Pack): ProductApiResponse[] {
   return pack.items
     .filter((item) => {
       if (!item.product) return false
