@@ -12,11 +12,7 @@ import {
   Plus,
   Trash2,
   Upload,
-  ArrowUp,
-  ArrowDown,
   Edit,
-  Eye,
-  EyeOff,
   Mail,
   Phone,
   MapPin,
@@ -32,7 +28,12 @@ import { Product } from "@/types/product"
 import { Category } from "@/types/category"
 import { SiteInfo } from "@/types/site-info"
 
-type TabType = "hero" | "categories" | "featured-products" | "promo-banner" | "site-info"
+type TabType =
+  | "hero"
+  | "categories"
+  | "featured-products"
+  | "promo-banner"
+  | "site-info"
 
 interface HeroContent {
   title: { ar: string; fr: string }
@@ -71,15 +72,17 @@ export default function HomePageContentPage() {
   const [initialHeroImages, setInitialHeroImages] = useState<string[]>([])
 
   // Categories States
-  const [homepageCategories, setHomepageCategories] = useState<Array<{
-    _id: string
-    name: { fr: string; ar: string }
-    image: string
-    productCount: number
-    url: string
-    order: number
-    isActive: boolean
-  }>>([])
+  const [homepageCategories, setHomepageCategories] = useState<
+    Array<{
+      _id: string
+      name: { fr: string; ar: string }
+      image: string
+      productCount: number
+      url: string
+      order: number
+      isActive: boolean
+    }>
+  >([])
   const [availableCategories, setAvailableCategories] = useState<Category[]>([])
   const [categoryFormData, setCategoryFormData] = useState({
     name: { fr: "", ar: "" },
@@ -92,7 +95,9 @@ export default function HomePageContentPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState("")
   const [categorySearch, setCategorySearch] = useState("")
   const [showCategoryForm, setShowCategoryForm] = useState(false)
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  )
   const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null)
   const [categoryImagePreview, setCategoryImagePreview] = useState("")
 
@@ -104,22 +109,36 @@ export default function HomePageContentPage() {
 
   // Promo Banner States
   const [promoBanner, setPromoBanner] = useState({
-    image: "",
+    imageDesktop: "",
+    imageMobile: "",
+    title: { fr: "", ar: "" },
+    description: { fr: "", ar: "" },
     link: "",
-    linkType: "custom" as "product" | "pack" | "custom",
+    linkType: "custom" as "product" | "pack" | "custom" | "category",
     linkId: "",
-    isActive: true
+    isActive: true,
+    startDate: null as string | null,
+    endDate: null as string | null,
+    priority: 0
   })
-  const [bannerImageFile, setBannerImageFile] = useState<File | null>(null)
-  const [bannerImagePreview, setBannerImagePreview] = useState("")
-  const [allPacks, setAllPacks] = useState<Array<{
-    _id: string
-    name: { fr?: string; ar?: string } | string
-    images?: string[]
-    price?: number
-  }>>([])
+  const [bannerImageDesktopFile, setBannerImageDesktopFile] =
+    useState<File | null>(null)
+  const [bannerImageMobileFile, setBannerImageMobileFile] =
+    useState<File | null>(null)
+  const [bannerImageDesktopPreview, setBannerImageDesktopPreview] = useState("")
+  const [bannerImageMobilePreview, setBannerImageMobilePreview] = useState("")
+  const [allPacks, setAllPacks] = useState<
+    Array<{
+      _id: string
+      name: { fr?: string; ar?: string } | string
+      images?: string[]
+      price?: number
+    }>
+  >([])
   const [bannerLinkSearch, setBannerLinkSearch] = useState("")
-  const [bannerLinkType, setBannerLinkType] = useState<"product" | "pack" | "custom">("custom")
+  const [bannerLinkType, setBannerLinkType] = useState<
+    "product" | "pack" | "custom" | "category"
+  >("custom")
 
   // Site Info States
   const [siteInfo, setSiteInfo] = useState<SiteInfo>({
@@ -167,7 +186,10 @@ export default function HomePageContentPage() {
         })
         setInitialHeroImages(data.images || [])
       } else {
-        showToast(response.data.message || "Erreur lors du chargement du contenu Hero", "error")
+        showToast(
+          response.data.message || "Erreur lors du chargement du contenu Hero",
+          "error"
+        )
       }
     } catch (error) {
       showToast("Erreur lors du chargement du contenu Hero", "error")
@@ -258,7 +280,10 @@ export default function HomePageContentPage() {
       if (data.success) {
         setHomepageCategories(data.categories || [])
       } else {
-        showToast(data.message || "Erreur lors du chargement des catégories", "error")
+        showToast(
+          data.message || "Erreur lors du chargement des catégories",
+          "error"
+        )
       }
     } catch (error) {
       showToast("Erreur lors du chargement des catégories", "error")
@@ -272,7 +297,11 @@ export default function HomePageContentPage() {
       if (data.success) {
         setAvailableCategories(data.categories || [])
       } else {
-        showToast(data.message || "Erreur lors du chargement des catégories disponibles", "error")
+        showToast(
+          data.message ||
+            "Erreur lors du chargement des catégories disponibles",
+          "error"
+        )
       }
     } catch (error) {
       showToast("Erreur lors du chargement des catégories disponibles", "error")
@@ -289,7 +318,9 @@ export default function HomePageContentPage() {
       }))
       return
     }
-    const selectedCategory = availableCategories.find((cat) => cat._id === categoryId)
+    const selectedCategory = availableCategories.find(
+      (cat) => cat._id === categoryId
+    )
     if (selectedCategory) {
       setSelectedCategoryId(categoryId)
       setCategoryFormData((prev) => ({
@@ -300,7 +331,9 @@ export default function HomePageContentPage() {
         }
       }))
       try {
-        const countResponse = await fetch(`/api/categories/${categoryId}/products-count`)
+        const countResponse = await fetch(
+          `/api/categories/${categoryId}/products-count`
+        )
         const countData = await countResponse.json()
         if (countData.success) {
           setCategoryFormData((prev) => ({
@@ -308,7 +341,10 @@ export default function HomePageContentPage() {
             productCount: countData.count
           }))
         } else {
-          showToast(countData.message || "Erreur lors du comptage des produits", "error")
+          showToast(
+            countData.message || "Erreur lors du comptage des produits",
+            "error"
+          )
         }
       } catch (error) {
         showToast("Erreur lors du comptage des produits", "error")
@@ -316,7 +352,9 @@ export default function HomePageContentPage() {
     }
   }
 
-  const handleCategoryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCategoryImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith("image/")) {
@@ -423,7 +461,10 @@ export default function HomePageContentPage() {
       if (data.success) {
         setAllProducts(data.products || [])
       } else {
-        showToast(data.message || "Erreur lors du chargement des produits", "error")
+        showToast(
+          data.message || "Erreur lors du chargement des produits",
+          "error"
+        )
       }
     } catch (error) {
       showToast("Erreur lors du chargement des produits", "error")
@@ -438,7 +479,10 @@ export default function HomePageContentPage() {
         setFeaturedProductIds(data.productIds || [])
         setFeaturedProducts(data.products || [])
       } else {
-        showToast(data.message || "Erreur lors du chargement des produits en vedette", "error")
+        showToast(
+          data.message || "Erreur lors du chargement des produits en vedette",
+          "error"
+        )
       }
     } catch (error) {
       showToast("Erreur lors du chargement des produits en vedette", "error")
@@ -482,14 +526,19 @@ export default function HomePageContentPage() {
   }
 
   // ============ PROMO BANNER ============
+
   const fetchAllPacks = async () => {
     try {
-      const response = await fetch("/api/product-packs?limit=1000")
+      const response = await fetch("/api/product-packs")
       const data = await response.json()
       if (data.success) {
-        setAllPacks(data.packs || [])
+        console.log("packs: ", data.data)
+        setAllPacks(data.data || [])
       } else {
-        showToast(data.message || "Erreur lors du chargement des packs", "error")
+        showToast(
+          data.message || "Erreur lors du chargement des packs",
+          "error"
+        )
       }
     } catch (error) {
       showToast("Erreur lors du chargement des packs", "error")
@@ -502,23 +551,36 @@ export default function HomePageContentPage() {
       const data = await response.json()
       if (data.success && data.banner) {
         setPromoBanner({
-          image: data.banner.image || "",
+          imageDesktop: data.banner.imageDesktop || "",
+          imageMobile: data.banner.imageMobile || "",
+          title: data.banner.title || { fr: "", ar: "" },
+          description: data.banner.description || { fr: "", ar: "" },
           link: data.banner.link || "",
           linkType: data.banner.linkType || "custom",
           linkId: data.banner.linkId || "",
-          isActive: data.banner.isActive !== undefined ? data.banner.isActive : true
+          isActive:
+            data.banner.isActive !== undefined ? data.banner.isActive : true,
+          startDate: data.banner.startDate || null,
+          endDate: data.banner.endDate || null,
+          priority: data.banner.priority || 0
         })
-        setBannerImagePreview(data.banner.image || "")
+        setBannerImageDesktopPreview(data.banner.imageDesktop || "")
+        setBannerImageMobilePreview(data.banner.imageMobile || "")
         setBannerLinkType(data.banner.linkType || "custom")
       } else {
-        showToast(data.message || "Erreur lors du chargement de la bannière", "error")
+        showToast(
+          data.message || "Erreur lors du chargement de la bannière",
+          "error"
+        )
       }
     } catch (error) {
       showToast("Erreur lors du chargement de la bannière", "error")
     }
   }
 
-  const handleBannerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerImageDesktopUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith("image/")) {
@@ -529,15 +591,32 @@ export default function HomePageContentPage() {
       showToast("La taille de l'image ne doit pas dépasser 5MB", "warning")
       return
     }
-    setBannerImageFile(file)
+    setBannerImageDesktopFile(file)
     const previewUrl = URL.createObjectURL(file)
-    setBannerImagePreview(previewUrl)
+    setBannerImageDesktopPreview(previewUrl)
   }
 
-  const uploadBannerImageToS3 = async (): Promise<string> => {
-    if (!bannerImageFile) throw new Error("Aucune image à télécharger")
+  const handleBannerImageMobileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith("image/")) {
+      showToast("Seules les images sont autorisées", "warning")
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("La taille de l'image ne doit pas dépasser 5MB", "warning")
+      return
+    }
+    setBannerImageMobileFile(file)
+    const previewUrl = URL.createObjectURL(file)
+    setBannerImageMobilePreview(previewUrl)
+  }
+
+  const uploadBannerImageToS3 = async (file: File): Promise<string> => {
     const formData = new FormData()
-    formData.append("files", bannerImageFile)
+    formData.append("files", file)
     const response = await axios.post("/api/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" }
     })
@@ -547,7 +626,9 @@ export default function HomePageContentPage() {
     throw new Error("Erreur lors de l'upload")
   }
 
-  const handleBannerLinkTypeChange = (type: "product" | "pack" | "custom") => {
+  const handleBannerLinkTypeChange = (
+    type: "product" | "pack" | "custom" | "category"
+  ) => {
     setBannerLinkType(type)
     setPromoBanner((prev) => ({
       ...prev,
@@ -576,12 +657,30 @@ export default function HomePageContentPage() {
           linkId: itemId
         }))
       }
+    } else if (bannerLinkType === "category") {
+      const category = availableCategories.find((c) => c._id === itemId)
+      if (category) {
+        setPromoBanner((prev) => ({
+          ...prev,
+          link: `/shop?category=${itemId}`,
+          linkId: itemId
+        }))
+      }
     }
   }
 
   const savePromoBanner = async () => {
-    if (!promoBanner.image && !bannerImageFile) {
-      showToast("Veuillez ajouter une image", "warning")
+    // Validation : au moins une image doit être fournie
+    if (
+      !promoBanner.imageDesktop &&
+      !promoBanner.imageMobile &&
+      !bannerImageDesktopFile &&
+      !bannerImageMobileFile
+    ) {
+      showToast(
+        "Veuillez ajouter au moins une image (desktop ou mobile)",
+        "warning"
+      )
       return
     }
     if (!promoBanner.link) {
@@ -590,23 +689,80 @@ export default function HomePageContentPage() {
     }
     setSaving(true)
     try {
-      let imageUrl = promoBanner.image
-      if (bannerImageFile) {
-        imageUrl = await uploadBannerImageToS3()
+      // Upload des images si nécessaire
+      let imageDesktopUrl = promoBanner.imageDesktop
+      let imageMobileUrl = promoBanner.imageMobile
+
+      try {
+        if (bannerImageDesktopFile) {
+          console.log("Upload image desktop...")
+          imageDesktopUrl = await uploadBannerImageToS3(bannerImageDesktopFile)
+          console.log("Image desktop uploadée:", imageDesktopUrl)
+        }
+        if (bannerImageMobileFile) {
+          console.log("Upload image mobile...")
+          imageMobileUrl = await uploadBannerImageToS3(bannerImageMobileFile)
+          console.log("Image mobile uploadée:", imageMobileUrl)
+        }
+      } catch (uploadError) {
+        console.error("Erreur lors de l'upload des images:", uploadError)
+        showToast(
+          "Erreur lors de l'upload des images. Veuillez réessayer.",
+          "error"
+        )
+        setSaving(false)
+        return
       }
+
+      // Construire l'objet de données à envoyer
+      const bannerData: any = {
+        link: promoBanner.link,
+        linkType: bannerLinkType,
+        imageDesktop: "",
+        imageMobile: "",
+        linkId: promoBanner.linkId || null,
+        isActive: promoBanner.isActive,
+        priority: promoBanner.priority || 0,
+        startDate: promoBanner.startDate || null,
+        endDate: promoBanner.endDate || null
+      }
+
+      // Ajouter les images - toujours inclure si elles existent (nouvelle ou existante)
+      if (imageDesktopUrl && imageDesktopUrl.trim() !== "") {
+        bannerData.imageDesktop = imageDesktopUrl.trim()
+      }
+      if (imageMobileUrl && imageMobileUrl.trim() !== "") {
+        bannerData.imageMobile = imageMobileUrl.trim()
+      }
+
+      // Debug: afficher les données envoyées
+      console.log("Données bannière envoyées:", {
+        ...bannerData,
+        imageDesktop: bannerData.imageDesktop ? "présente" : "absente",
+        imageMobile: bannerData.imageMobile ? "présente" : "absente"
+      })
+
+      // Ajouter titre et description si présents
+      if (promoBanner.title && (promoBanner.title.fr || promoBanner.title.ar)) {
+        bannerData.title = promoBanner.title
+      }
+      if (
+        promoBanner.description &&
+        (promoBanner.description.fr || promoBanner.description.ar)
+      ) {
+        bannerData.description = promoBanner.description
+      }
+
       const response = await fetch("/api/promo-banner", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...promoBanner,
-          image: imageUrl,
-          linkType: bannerLinkType
-        })
+        body: JSON.stringify(bannerData)
       })
       const data = await response.json()
       if (data.success) {
         showToast("Bannière mise à jour avec succès", "success")
-        setBannerImageFile(null)
+        setBannerImageDesktopFile(null)
+        setBannerImageMobileFile(null)
         fetchPromoBanner()
       } else {
         showToast(data.message || "Erreur", "error")
@@ -626,7 +782,10 @@ export default function HomePageContentPage() {
       if (data.success && data.siteInfo) {
         setSiteInfo(data.siteInfo)
       } else {
-        showToast(data.message || "Erreur lors du chargement des informations du site", "error")
+        showToast(
+          data.message || "Erreur lors du chargement des informations du site",
+          "error"
+        )
       }
     } catch (error) {
       showToast("Erreur lors du chargement des informations du site", "error")
@@ -634,7 +793,12 @@ export default function HomePageContentPage() {
   }
 
   const saveSiteInfo = async () => {
-    if (!siteInfo.email || !siteInfo.phone || !siteInfo.location.fr || !siteInfo.location.ar) {
+    if (
+      !siteInfo.email ||
+      !siteInfo.phone ||
+      !siteInfo.location.fr ||
+      !siteInfo.location.ar
+    ) {
       showToast("Veuillez remplir tous les champs", "warning")
       return
     }
@@ -820,7 +984,8 @@ export default function HomePageContentPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Titre ({currentLanguage === "fr" ? "Français" : "العربية"}) *
+                    Titre ({currentLanguage === "fr" ? "Français" : "العربية"})
+                    *
                   </label>
                   <input
                     type="text"
@@ -841,7 +1006,8 @@ export default function HomePageContentPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Description ({currentLanguage === "fr" ? "Français" : "العربية"}) *
+                    Description (
+                    {currentLanguage === "fr" ? "Français" : "العربية"}) *
                   </label>
                   <textarea
                     value={heroContent.description[currentLanguage]}
@@ -862,7 +1028,8 @@ export default function HomePageContentPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Texte du bouton ({currentLanguage === "fr" ? "Français" : "العربية"}) *
+                    Texte du bouton (
+                    {currentLanguage === "fr" ? "Français" : "العربية"}) *
                   </label>
                   <input
                     type="text"
@@ -955,7 +1122,9 @@ export default function HomePageContentPage() {
           {activeTab === "categories" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Catégories Page d&apos;Accueil</h2>
+                <h2 className="text-xl font-bold">
+                  Catégories Page d&apos;Accueil
+                </h2>
                 <button
                   onClick={() => {
                     setShowCategoryForm(true)
@@ -999,7 +1168,9 @@ export default function HomePageContentPage() {
                         </div>
                         <div>
                           <div className="font-medium">{cat.name.fr}</div>
-                          <div className="text-sm text-gray-500">{cat.name.ar}</div>
+                          <div className="text-sm text-gray-500">
+                            {cat.name.ar}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1065,7 +1236,9 @@ export default function HomePageContentPage() {
                           />
                           <select
                             value={selectedCategoryId}
-                            onChange={(e) => handleCategorySelect(e.target.value)}
+                            onChange={(e) =>
+                              handleCategorySelect(e.target.value)
+                            }
                             className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
                           >
                             <option value="">-- Sélectionner --</option>
@@ -1105,7 +1278,8 @@ export default function HomePageContentPage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-2">
-                          Nom ({currentLanguage === "fr" ? "Français" : "العربية"}) *
+                          Nom (
+                          {currentLanguage === "fr" ? "Français" : "العربية"}) *
                         </label>
                         <input
                           type="text"
@@ -1262,8 +1436,8 @@ export default function HomePageContentPage() {
               </div>
 
               <div className="text-sm text-gray-600 mb-4">
-                Sélectionnez jusqu&apos;à 10 produits à afficher sur la page d&apos;accueil.
-                Actuellement : {featuredProductIds.length} / 10
+                Sélectionnez jusqu&apos;à 10 produits à afficher sur la page
+                d&apos;accueil. Actuellement : {featuredProductIds.length} / 10
               </div>
 
               {/* Search */}
@@ -1337,7 +1511,9 @@ export default function HomePageContentPage() {
                   </h3>
                   <div className="space-y-2">
                     {featuredProductIds.map((productId, index) => {
-                      const product = allProducts.find((p) => p._id === productId)
+                      const product = allProducts.find(
+                        (p) => p._id === productId
+                      )
                       if (!product) return null
                       return (
                         <div
@@ -1350,15 +1526,21 @@ export default function HomePageContentPage() {
                             </span>
                             <div className="relative w-12 h-12 rounded-lg overflow-hidden">
                               <Image
-                                src={product.images[0] || "/No_Image_Available.jpg"}
+                                src={
+                                  product.images[0] || "/No_Image_Available.jpg"
+                                }
                                 alt={product.name.fr}
                                 fill
                                 className="object-cover"
                               />
                             </div>
                             <div>
-                              <div className="text-sm font-medium">{product.name.fr}</div>
-                              <div className="text-xs text-gray-500">{product.price} MAD</div>
+                              <div className="text-sm font-medium">
+                                {product.name.fr}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {product.price} MAD
+                              </div>
                             </div>
                           </div>
                           <button
@@ -1401,58 +1583,146 @@ export default function HomePageContentPage() {
               </div>
 
               <div className="text-sm text-gray-600 mb-4">
-                Ajoutez une bannière publicitaire qui sera affichée sur la page d&apos;accueil.
-                Les clients pourront cliquer dessus pour être redirigés vers un produit, un pack ou une page personnalisée.
+                Ajoutez une bannière publicitaire qui sera affichée sur la page
+                d&apos;accueil. Vous pouvez ajouter deux versions : une pour les
+                PC/tablettes et une pour les téléphones. Les clients pourront
+                cliquer dessus pour être redirigés vers un produit, un pack, une
+                catégorie ou une page personnalisée.
               </div>
 
-              {/* Banner Preview */}
-              {bannerImagePreview && (
+              {/* Banner Previews */}
+              {(bannerImageDesktopPreview ||
+                bannerImageMobilePreview ||
+                promoBanner.imageDesktop ||
+                promoBanner.imageMobile) && (
                 <div className="bg-gray-50 rounded-xl p-6">
-                  <label className="block text-sm font-medium mb-2">Aperçu de la bannière</label>
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
-                    <Image
-                      src={bannerImagePreview}
-                      alt="Preview"
-                      fill
-                      className="object-cover"
-                    />
+                  <label className="block text-sm font-medium mb-4">
+                    Aperçu des bannières
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Desktop Preview */}
+                    {(bannerImageDesktopPreview ||
+                      promoBanner.imageDesktop) && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">
+                          Version Desktop/Tablette
+                        </label>
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
+                          <Image
+                            src={
+                              bannerImageDesktopPreview ||
+                              promoBanner.imageDesktop
+                            }
+                            alt="Preview Desktop"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {/* Mobile Preview */}
+                    {(bannerImageMobilePreview || promoBanner.imageMobile) && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">
+                          Version Mobile
+                        </label>
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
+                          <Image
+                            src={
+                              bannerImageMobilePreview ||
+                              promoBanner.imageMobile
+                            }
+                            alt="Preview Mobile"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* Image Upload */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Image de la bannière *
-                </label>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleBannerImageUpload}
-                    className="hidden"
-                    disabled={saving}
-                  />
-                  <div className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 transition-colors">
-                    <Upload className="w-5 h-5 text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      Cliquez pour télécharger une image
-                    </span>
-                  </div>
-                </label>
-                {bannerImagePreview && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBannerImageFile(null)
-                      setBannerImagePreview("")
-                      setPromoBanner((prev) => ({ ...prev, image: "" }))
-                    }}
-                    className="mt-2 text-sm text-red-600 hover:text-red-700"
-                  >
-                    Supprimer l&apos;image
-                  </button>
-                )}
+              {/* Image Uploads */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Desktop Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Image Desktop/Tablette (PC et tablettes)
+                  </label>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerImageDesktopUpload}
+                      className="hidden"
+                      disabled={saving}
+                    />
+                    <div className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 transition-colors">
+                      <Upload className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        Cliquez pour télécharger
+                      </span>
+                    </div>
+                  </label>
+                  {(bannerImageDesktopPreview || promoBanner.imageDesktop) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBannerImageDesktopFile(null)
+                        setBannerImageDesktopPreview("")
+                        setPromoBanner((prev) => ({
+                          ...prev,
+                          imageDesktop: ""
+                        }))
+                      }}
+                      className="mt-2 text-sm text-red-600 hover:text-red-700"
+                    >
+                      Supprimer l&apos;image
+                    </button>
+                  )}
+                </div>
+
+                {/* Mobile Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Image Mobile (Téléphones)
+                  </label>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerImageMobileUpload}
+                      className="hidden"
+                      disabled={saving}
+                    />
+                    <div className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 transition-colors">
+                      <Upload className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        Cliquez pour télécharger
+                      </span>
+                    </div>
+                  </label>
+                  {(bannerImageMobilePreview || promoBanner.imageMobile) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBannerImageMobileFile(null)
+                        setBannerImageMobilePreview("")
+                        setPromoBanner((prev) => ({ ...prev, imageMobile: "" }))
+                      }}
+                      className="mt-2 text-sm text-red-600 hover:text-red-700"
+                    >
+                      Supprimer l&apos;image
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
+                💡 <strong>Astuce :</strong> Au moins une image (desktop ou
+                mobile) est requise. Si vous n&apos;ajoutez qu&apos;une seule
+                image, elle sera utilisée pour tous les écrans.
               </div>
 
               {/* Link Type Selection */}
@@ -1460,7 +1730,7 @@ export default function HomePageContentPage() {
                 <label className="block text-sm font-medium mb-2">
                   Type de lien *
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => handleBannerLinkTypeChange("custom")}
@@ -1494,6 +1764,17 @@ export default function HomePageContentPage() {
                   >
                     Pack
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => handleBannerLinkTypeChange("category")}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      bannerLinkType === "category"
+                        ? "bg-orange-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Catégorie
+                  </button>
                 </div>
               </div>
 
@@ -1503,8 +1784,10 @@ export default function HomePageContentPage() {
                   {bannerLinkType === "custom"
                     ? "Lien de destination *"
                     : bannerLinkType === "product"
-                      ? "Sélectionner un produit *"
-                      : "Sélectionner un pack *"}
+                    ? "Sélectionner un produit *"
+                    : bannerLinkType === "pack"
+                    ? "Sélectionner un pack *"
+                    : "Sélectionner une catégorie *"}
                 </label>
 
                 {bannerLinkType === "custom" ? (
@@ -1514,7 +1797,10 @@ export default function HomePageContentPage() {
                       type="text"
                       value={promoBanner.link}
                       onChange={(e) =>
-                        setPromoBanner((prev) => ({ ...prev, link: e.target.value }))
+                        setPromoBanner((prev) => ({
+                          ...prev,
+                          link: e.target.value
+                        }))
                       }
                       placeholder="/shop, /packs, /contact, etc."
                       className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500"
@@ -1526,14 +1812,25 @@ export default function HomePageContentPage() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
-                        placeholder={`Rechercher un ${bannerLinkType === "product" ? "produit" : "pack"}...`}
+                        placeholder={`Rechercher un ${
+                          bannerLinkType === "product"
+                            ? "produit"
+                            : bannerLinkType === "pack"
+                            ? "pack"
+                            : "catégorie"
+                        }...`}
                         value={bannerLinkSearch}
                         onChange={(e) => setBannerLinkSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500"
                       />
                     </div>
                     <div className="max-h-60 overflow-y-auto border-2 border-gray-200 rounded-lg">
-                      {(bannerLinkType === "product" ? allProducts : allPacks)
+                      {(bannerLinkType === "product"
+                        ? allProducts
+                        : bannerLinkType === "pack"
+                        ? allPacks
+                        : availableCategories
+                      )
                         .filter((item) => {
                           const searchLower = bannerLinkSearch.toLowerCase()
                           const name = item.name?.fr || item.name || ""
@@ -1546,7 +1843,9 @@ export default function HomePageContentPage() {
                               key={item._id}
                               onClick={() => handleBannerLinkSelect(item._id)}
                               className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 ${
-                                isSelected ? "bg-orange-50 border-orange-200" : ""
+                                isSelected
+                                  ? "bg-orange-50 border-orange-200"
+                                  : ""
                               }`}
                             >
                               <div className="flex items-center gap-3">
@@ -1554,6 +1853,7 @@ export default function HomePageContentPage() {
                                   <Image
                                     src={
                                       (item.images && item.images[0]) ||
+                                      item.image ||
                                       "/No_Image_Available.jpg"
                                     }
                                     alt={item.name?.fr || item.name || ""}
@@ -1597,7 +1897,10 @@ export default function HomePageContentPage() {
                     type="checkbox"
                     checked={promoBanner.isActive}
                     onChange={(e) =>
-                      setPromoBanner((prev) => ({ ...prev, isActive: e.target.checked }))
+                      setPromoBanner((prev) => ({
+                        ...prev,
+                        isActive: e.target.checked
+                      }))
                     }
                     className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
                   />
@@ -1726,4 +2029,3 @@ export default function HomePageContentPage() {
     </div>
   )
 }
-

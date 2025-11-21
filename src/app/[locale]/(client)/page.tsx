@@ -456,19 +456,42 @@ const PromoBannerSection = async () => {
     return null
   }
 
+  // Déterminer quelle image utiliser (fallback si une seule image est disponible)
+  const desktopImage = banner.imageDesktop || banner.imageMobile
+  const mobileImage = banner.imageMobile || banner.imageDesktop
+
+  // Si aucune image n'est disponible, ne pas afficher la bannière
+  if (!desktopImage && !mobileImage) {
+    return null
+  }
+
   return (
     <section className="py-8 bg-white">
       <div className="container mx-auto px-4">
         <Link href={banner.link} className="block group">
           <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-            <Image
-              src={banner.image}
-              alt="Promotion"
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
-              priority
-            />
+            {/* Image Desktop - visible sur md et plus (>= 768px) */}
+            {desktopImage && (
+              <Image
+                src={desktopImage}
+                alt="Promotion"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500 hidden md:block"
+                sizes="(max-width: 768px) 0px, (max-width: 1200px) 90vw, 1200px"
+                priority
+              />
+            )}
+            {/* Image Mobile - visible uniquement sur mobile (< 768px) */}
+            {mobileImage && (
+              <Image
+                src={mobileImage}
+                alt="Promotion"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500 md:hidden"
+                sizes="100vw"
+                priority
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
           </div>
         </Link>
