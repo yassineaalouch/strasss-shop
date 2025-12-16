@@ -37,7 +37,10 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import createMiddleware from "next-intl/middleware"
 import { routing } from "./i18n/routing"
-import { auth } from "@/auth"
+import { getToken } from "next-auth/jwt"
+
+// Utilise le même secret que NextAuth (AUTH_SECRET ou NEXTAUTH_SECRET)
+const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
 
 // 🌍 Middleware de gestion des langues
 const intlMiddleware = createMiddleware({
@@ -66,12 +69,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // 🔒 3️⃣ Protection des routes dashboard
+  // 🔒 3️⃣ Protection des routes dashboard via le JWT de NextAuth
   if (pathname.includes("/dashboard")) {
-    const session = await auth()
+    const token = await getToken({ req: request as any, secret })
 
-    // Si aucune session → rediriger vers /login
-    if (!session) {
+    // Si aucun token → rediriger vers /login
+    if (!token) {
       const loginUrl = request.nextUrl.clone()
 
       // Déterminer la locale actuelle
