@@ -1,5 +1,6 @@
 // models/Product.ts
 import mongoose from "mongoose"
+import { sendLowStockEmail } from "@/lib/nodemailer"
 
 const ProductSchema = new mongoose.Schema(
   {
@@ -140,11 +141,45 @@ ProductSchema.pre("save", async function (next) {
 })
 
 // Mettre à jour inStock automatiquement selon la quantité
-ProductSchema.pre("save", function (next) {
-  if (this.isModified("quantity")) {
-    this.inStock = this.quantity > 0
+// et envoyer une alerte si le stock devient bas
+ProductSchema.pre("save", async function (next) {
+  try {
+    if (this.isModified("quantity")) {
+      // inStock = true si quantité > 0
+      // @ts-ignore - accès direct aux propriétés du document Mongoose
+      this.inStock = this.quantity > 0
+
+      const LOW_STOCK_THRESHOLD = 15
+
+      // @ts-ignore - accès direct aux propriétés du document Mongoose
+      const currentQuantity: number = this.quantity ?? 0
+
+      // Si le stock passe en dessous du seuil, envoyer un email à l'admin
+      if (currentQuantity > 0 && currentQuantity < LOW_STOCK_THRESHOLD) {
+        try {
+          await sendLowStockEmail({
+            // @ts-ignore
+            id: this._id?.toString?.() ?? "",
+            // @ts-ignore
+            nameFr: this.name?.fr ?? "Produit sans nom",
+            // @ts-ignore
+            nameAr: this.name?.ar,
+            // @ts-ignore
+            image: Array.isArray(this.images) && this.images.length > 0 ? this.images[0] : undefined,
+            quantity: currentQuantity
+          })
+        } catch (emailError) {
+          console.error(
+            "Erreur lors de l'envoi de l'email de stock bas:",
+            emailError
+          )
+        }
+      }
+    }
+    next()
+  } catch (error) {
+    next(error as Error)
   }
-  next()
 })
 
 export default mongoose.models.Product ||

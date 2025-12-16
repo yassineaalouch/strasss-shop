@@ -146,6 +146,14 @@ interface OrderData {
   coupon: { code: string; discountType: string; value: number } | null
 }
 
+interface LowStockProductData {
+  id: string
+  nameFr: string
+  nameAr?: string
+  image?: string
+  quantity: number
+}
+
 // Configuration Nodemailer
 export const transporter: Transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -176,17 +184,6 @@ export const sendOrderEmail = async (orderData: OrderData): Promise<void> => {
     .join("")
 
   // Coupon info
-  // const couponHtml = orderData.coupon
-  //   ? `<p><strong>Coupon :</strong> ${orderData.coupon.name?.ar ?? "--"} / ${
-  //       orderData.coupon.name?.fr ?? "--"
-  //     }
-  //      - <strong>Valeur :</strong> ${orderData.coupon.value} ${
-  //       orderData.coupon.type === "PERCENTAGE" ? "%" : "MAD"
-  //     }
-  //      - <strong>Type :</strong> ${
-  //        orderData.coupon.type === "percentage" ? "Pourcentage" : "Fixe"
-  //      }</p>`
-  //   : "<p><strong>Coupon :</strong> Aucun</p>"
   const couponHtml = orderData.coupon
     ? (() => {
         const { code, value, discountType } = orderData.coupon
@@ -253,6 +250,63 @@ export const sendOrderEmail = async (orderData: OrderData): Promise<void> => {
           </tbody>
         </table>
         <p style="margin-top:20px; font-size:12px; color:#888;">Strass Shop - Merci pour votre confiance !</p>
+      </div>
+    `
+  }
+
+  await transporter.sendMail(mailOptions)
+}
+
+/**
+ * Envoie un email à l'administrateur lorsqu'un produit passe en stock bas
+ * (quantité inférieure au seuil défini, ex: 15).
+ */
+export const sendLowStockEmail = async (
+  product: LowStockProductData
+): Promise<void> => {
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail) {
+    console.warn(
+      "ADMIN_EMAIL n'est pas défini dans les variables d'environnement. Impossible d'envoyer l'email de stock bas."
+    )
+    return
+  }
+
+  const imageUrl = product.image
+
+  const mailOptions = {
+    from: `"Strass Shop" <${process.env.EMAIL_USER}>`,
+    to: adminEmail,
+    subject: `⚠️ Stock bas pour le produit: ${product.nameFr}`,
+    html: `
+      <div style="font-family:Arial, sans-serif; color:#333;">
+        <h2 style="color:#DC2626;">Alerte stock bas</h2>
+        <p>Le stock d'un produit est passé en dessous du seuil défini.</p>
+        <hr style="border:none; border-top:1px solid #eee; margin:10px 0;"/>
+        <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+          <tr>
+            <td style="padding:8px; width:80px;">
+              ${
+                imageUrl
+                  ? `<img src="${imageUrl}" alt="${product.nameFr}" width="70" style="border-radius:6px;" />`
+                  : ""
+              }
+            </td>
+            <td style="padding:8px; vertical-align:top;">
+              <p><strong>Nom (FR) :</strong> ${product.nameFr}</p>
+              ${
+                product.nameAr
+                  ? `<p><strong>Nom (AR) :</strong> ${product.nameAr}</p>`
+                  : ""
+              }
+              <p><strong>ID produit :</strong> ${product.id}</p>
+              <p><strong>Quantité actuelle :</strong> ${product.quantity}</p>
+            </td>
+          </tr>
+        </table>
+        <hr style="border:none; border-top:1px solid #eee; margin:10px 0;"/>
+        <p style="color:#DC2626;"><strong>Action recommandée :</strong> mettre à jour la quantité en stock dans le back-office.</p>
+        <p style="margin-top:16px; font-size:12px; color:#888;">Strass Shop - Notification automatique de gestion de stock.</p>
       </div>
     `
   }
