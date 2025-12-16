@@ -3,6 +3,7 @@ import React, { useState, ChangeEvent } from "react"
 import { Eye, EyeOff, Lock, User, Shield, AlertCircle } from "lucide-react"
 import Image from "next/image"
 import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import {
   LoginFormData,
   LoginFormErrors,
@@ -109,6 +110,7 @@ const InputField: React.FC<InputFieldProps> = ({
 
 // Composant principal
 const AdminLoginPage: React.FC = () => {
+  const router = useRouter()
   const [formData, setFormData] = useState<LoginFormData>({
     username: "",
     password: ""
@@ -221,14 +223,24 @@ const AdminLoginPage: React.FC = () => {
     setIsLoading(true)
 
     try {
-      // 🔐 Appel NextAuth
+      console.log("Attempting login with:", { username: formData.username })
+      
+      // 🔐 Appel NextAuth avec redirect: false pour gérer manuellement
       const result = await signIn("credentials", {
         redirect: false,
         username: formData.username,
         password: formData.password
       })
 
+      console.log("SignIn result (full):", JSON.stringify(result, null, 2))
+      console.log("SignIn result type:", typeof result)
+      console.log("SignIn result.error:", result?.error)
+      console.log("SignIn result.ok:", result?.ok)
+      console.log("SignIn result.url:", result?.url)
+
+      // Dans NextAuth v5, la réponse peut être undefined, un objet avec error, ou un objet avec ok/url
       if (result?.error) {
+        console.error("SignIn error:", result.error)
         const newAttempts = loginAttempts + 1
         setLoginAttempts(newAttempts)
 
@@ -242,14 +254,32 @@ const AdminLoginPage: React.FC = () => {
             general: `Identifiants incorrects (${newAttempts}/${CONFIG.MAX_LOGIN_ATTEMPTS})`
           })
         }
-      } else {
-        // ✅ Connexion réussie → redirection vers le dashboard
+      } else if (result === undefined || result === null) {
+        // Cas où result est undefined - peut arriver dans NextAuth v5
+        console.warn("SignIn returned undefined - trying redirect anyway")
         setLoginAttempts(0)
         setErrors({})
+        await new Promise(resolve => setTimeout(resolve, 500))
+        window.location.href = "/fr/dashboard"
+      } else {
+        // ✅ Connexion réussie (pas d'erreur) → redirection vers le dashboard
+        console.log("Login successful, redirecting...")
+        setLoginAttempts(0)
+        setErrors({})
+        
+        // Attendre un peu pour que le cookie de session soit bien créé
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Forcer la redirection avec window.location pour être sûr que ça fonctionne
+        // même si le middleware n'a pas encore détecté la session
         window.location.href = "/fr/dashboard"
       }
     } catch (error) {
-      setErrors({ general: "Erreur de connexion. Veuillez réessayer." })
+      console.error("Login error:", error)
+      console.error("Login error details:", JSON.stringify(error, null, 2))
+      setErrors({
+        general: "Erreur de connexion. Veuillez réessayer."
+      })
     } finally {
       setIsLoading(false)
     }

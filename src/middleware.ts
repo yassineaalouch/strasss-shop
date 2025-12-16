@@ -71,16 +71,32 @@ export async function middleware(request: NextRequest) {
 
   // 🔒 3️⃣ Protection des routes dashboard via le JWT de NextAuth
   if (pathname.includes("/dashboard")) {
-    const token = await getToken({ req: request as any, secret })
+    try {
+      const token = await getToken({ 
+        req: request as any, 
+        secret,
+        cookieName: process.env.NODE_ENV === "production" 
+          ? "__Secure-next-auth.session-token" 
+          : "next-auth.session-token"
+      })
 
-    // Si aucun token → rediriger vers /login
-    if (!token) {
+      // Si aucun token → rediriger vers /login
+      if (!token) {
+        const loginUrl = request.nextUrl.clone()
+
+        // Déterminer la locale actuelle
+        const localeMatch = pathname.match(/^\/(fr|ar)/)
+        const locale = localeMatch ? localeMatch[1] : "fr"
+
+        loginUrl.pathname = `/${locale}/login`
+        return NextResponse.redirect(loginUrl)
+      }
+    } catch (error) {
+      console.error("Middleware token error:", error)
+      // En cas d'erreur, rediriger vers login pour sécurité
       const loginUrl = request.nextUrl.clone()
-
-      // Déterminer la locale actuelle
       const localeMatch = pathname.match(/^\/(fr|ar)/)
       const locale = localeMatch ? localeMatch[1] : "fr"
-
       loginUrl.pathname = `/${locale}/login`
       return NextResponse.redirect(loginUrl)
     }

@@ -13,45 +13,63 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) return null
+        try {
+          if (!credentials?.username || !credentials?.password) {
+            console.log("Missing credentials")
+            return null
+          }
 
-        await connectToDatabase()
+          await connectToDatabase()
 
-        // 🔍 Vérifie s'il y a un utilisateur admin
-        const admin = await User.findOne({ role: "admin" })
+          // 🔍 Vérifie s'il y a un utilisateur admin
+          const admin = await User.findOne({ role: "admin" })
 
-        // 🟢 Aucun admin => autoriser login direct ET créer le premier admin
-        if (!admin) {
-          const hashedPassword = await bcrypt.hash(
+          // 🟢 Aucun admin => autoriser login direct ET créer le premier admin
+          if (!admin) {
+            const hashedPassword = await bcrypt.hash(
+              credentials.password as string,
+              10
+            )
+            const newAdmin = new User({
+              name: credentials.username as string,
+              password: hashedPassword,
+              role: "admin"
+            })
+            await newAdmin.save()
+            console.log("New admin created:", newAdmin.name)
+            return {
+              id: newAdmin._id.toString(),
+              name: newAdmin.name,
+              role: newAdmin.role
+            }
+          }
+          
+          const isUsernameMatch = admin.name === credentials.username
+          const isPasswordValid = await bcrypt.compare(
             credentials.password as string,
-            10
+            admin.password
           )
-          const newAdmin = new User({
-            name: credentials.username as string,
-            password: hashedPassword,
-            role: "admin"
-          })
-          await newAdmin.save()
-          return {
-            id: newAdmin._id.toString(),
-            name: newAdmin.name,
-            role: newAdmin.role
-          }
-        }
-        const isUsernameMatch = admin.name === credentials.username
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          admin.password
-        )
 
-        if (isUsernameMatch && isPasswordValid) {
-          return {
-            id: admin._id.toString(),
-            name: admin.name,
-            role: admin.role
+          console.log("Login attempt:", {
+            username: credentials.username,
+            isUsernameMatch,
+            isPasswordValid
+          })
+
+          if (isUsernameMatch && isPasswordValid) {
+            return {
+              id: admin._id.toString(),
+              name: admin.name,
+              role: admin.role
+            }
           }
+          
+          console.log("Invalid credentials")
+          return null
+        } catch (error) {
+          console.error("Authorize error:", error)
+          return null
         }
-        return null
       }
     })
   ],
@@ -59,24 +77,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login"
   },
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60 // 30 jours
   },
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production"
+      }
+    }
+  },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
+        token.name = user.name
         token.role = (user as any).role
       }
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
-        ;(session.user as any).id = token.id
-        ;(session.user as any).role = token.role
+        ;(session.user as any).id = token.id as string
+        ;(session.user as any).name = token.name as string
+        ;(session.user as any).role = token.role as string
       }
       return session
     }
-  }
+  },
+  trustHost: true
 })
 
