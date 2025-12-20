@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 import Order from "@/models/Order"
 import Product from "@/models/Product"
 import ProductPack from "@/models/ProductPack"
+import { sendLowStockEmail } from "@/lib/nodemailer"
 
 // Types pour la mise à jour
 type OrderStatus =
@@ -52,6 +53,58 @@ function isValidPaymentMethod(method: string): method is PaymentMethod {
 }
 
 /**
+ * Vérifie si le stock est bas et envoie un email si nécessaire
+ * @param productId - L'ID du produit à vérifier
+ * @param oldQuantity - L'ancienne quantité (pour éviter les emails en double)
+ */
+async function checkAndSendLowStockAlert(
+  productId: string,
+  oldQuantity: number
+): Promise<void> {
+  try {
+    const LOW_STOCK_THRESHOLD = 15
+    const product = await Product.findById(productId)
+    
+    if (!product) {
+      return
+    }
+
+    const currentQuantity = product.quantity ?? 0
+
+    // Envoyer l'email seulement si:
+    // 1. La quantité actuelle est entre 0 et le seuil
+    // 2. L'ancienne quantité était >= au seuil (pour éviter les emails en double)
+    if (
+      currentQuantity > 0 &&
+      currentQuantity < LOW_STOCK_THRESHOLD &&
+      oldQuantity >= LOW_STOCK_THRESHOLD
+    ) {
+      try {
+        await sendLowStockEmail({
+          id: product._id?.toString() ?? "",
+          nameFr: product.name?.fr ?? "Produit sans nom",
+          nameAr: product.name?.ar,
+          image: Array.isArray(product.images) && product.images.length > 0 
+            ? product.images[0] 
+            : undefined,
+          quantity: currentQuantity
+        })
+      } catch (emailError) {
+        console.error(
+          "Erreur lors de l'envoi de l'email de stock bas:",
+          emailError
+        )
+      }
+    }
+  } catch (error) {
+    console.error(
+      `Erreur lors de la vérification du stock bas pour le produit ${productId}:`,
+      error
+    )
+  }
+}
+
+/**
  * Met à jour les quantités des produits et packs selon le statut de la commande
  * @param order - La commande à traiter
  * @param isRestore - Si true, restaure les quantités (annulation), sinon les déduit (confirmation)
@@ -75,6 +128,7 @@ async function updateProductQuantities(
             continue
           }
 
+          const oldQuantity = product.quantity
           const newQuantity = product.quantity + multiplier * item.quantity
 
           // Vérifier que la quantité ne devient pas négative lors de la déduction
@@ -88,6 +142,11 @@ async function updateProductQuantities(
           await Product.findByIdAndUpdate(item.id, {
             $inc: { quantity: multiplier * item.quantity }
           })
+
+          // Vérifier le stock bas après la mise à jour (seulement si on déduit, pas si on restaure)
+          if (!isRestore) {
+            await checkAndSendLowStockAlert(item.id, oldQuantity)
+          }
         } catch (error) {
           console.error(
             `Erreur lors de la mise à jour du produit ${item.id}:`,
@@ -117,6 +176,7 @@ async function updateProductQuantities(
                 continue
               }
 
+              const oldQuantity = product.quantity
               // Calculer la quantité totale à déduire/restaurer
               // quantité_produit_dans_pack × quantité_pack_commandé
               const totalQuantityToUpdate =
@@ -135,6 +195,11 @@ async function updateProductQuantities(
               await Product.findByIdAndUpdate(packItem.productId, {
                 $inc: { quantity: multiplier * totalQuantityToUpdate }
               })
+
+              // Vérifier le stock bas après la mise à jour (seulement si on déduit, pas si on restaure)
+              if (!isRestore) {
+                await checkAndSendLowStockAlert(packItem.productId, oldQuantity)
+              }
             } catch (error) {
               console.error(
                 `Erreur lors de la mise à jour du produit ${packItem.productId} du pack:`,

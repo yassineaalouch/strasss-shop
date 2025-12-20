@@ -6,6 +6,7 @@ import "@/models/Category"
 import "@/models/Characteristic"
 import { ProductRequestBody } from "@/types/product"
 import mongoose from "mongoose"
+import { sendLowStockEmail } from "@/lib/nodemailer"
 
 interface ValidationError extends Error {
   name: "ValidationError"
@@ -170,6 +171,10 @@ export async function PUT(
       )
     }
 
+    // Sauvegarder l'ancienne quantité pour vérifier le stock bas
+    const oldQuantity = existingProduct.quantity ?? 0
+    const newQuantity = quantity || 0
+
     // Mettre à jour le produit
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -205,6 +210,31 @@ export async function PUT(
         { success: false, message: "Erreur lors de la mise à jour" },
         { status: 500 }
       )
+    }
+
+    // Vérifier le stock bas après la mise à jour
+    const LOW_STOCK_THRESHOLD = 15
+    if (
+      newQuantity > 0 &&
+      newQuantity < LOW_STOCK_THRESHOLD &&
+      oldQuantity >= LOW_STOCK_THRESHOLD
+    ) {
+      try {
+        await sendLowStockEmail({
+          id: updatedProduct._id?.toString() ?? "",
+          nameFr: updatedProduct.name?.fr ?? "Produit sans nom",
+          nameAr: updatedProduct.name?.ar,
+          image: Array.isArray(updatedProduct.images) && updatedProduct.images.length > 0
+            ? updatedProduct.images[0]
+            : undefined,
+          quantity: newQuantity
+        })
+      } catch (emailError) {
+        console.error(
+          "Erreur lors de l'envoi de l'email de stock bas:",
+          emailError
+        )
+      }
     }
 
     return NextResponse.json(
