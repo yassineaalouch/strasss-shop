@@ -177,7 +177,7 @@ export function PackDetails({ pack }: PackDetailsProps) {
           <div className="inline-flex items-center gap-2 rounded-full bg-firstColor/10 px-4 py-2 text-firstColor">
             <Package className="h-5 w-5" />
             <span className="font-semibold">
-              {itemsCount} {itemsCount > 1 ? t("productsIncludedPlural", { count: itemsCount }) : t("productsIncluded", { count: itemsCount })}
+               {itemsCount > 1 ? t("productsIncludedPlural", { count: itemsCount }) : t("productsIncluded", { count: itemsCount })}
             </span>
           </div>
 
