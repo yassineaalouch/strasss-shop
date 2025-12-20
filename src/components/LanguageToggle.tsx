@@ -1,30 +1,48 @@
 "use client"
 
 import { useLocale } from "next-intl"
-import { usePathname, Link } from "@/i18n/navigation"
+import { usePathname } from "@/i18n/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function LanguageToggle() {
   const locale = useLocale() // "fr" ou "ar"
-  const pathname = usePathname() || "/" // ex: "/fr/about" ou "/fr"
+  const pathname = usePathname() || "/" // pathname sans locale: "/" ou "/packs"
+  const router = useRouter() // Router de Next.js standard
+  const searchParams = useSearchParams()
+  const [mounted, setMounted] = useState(false)
 
   const otherLocale = locale === "fr" ? "ar" : "fr"
 
-  // Découpe le chemin en segments
-  const segments = pathname.split("/").filter(Boolean) // ["fr", "about"]
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  // Remplace le premier segment (la langue)
-  segments[0] = otherLocale
+  const handleLocaleChange = () => {
+    if (!mounted) return
 
-  // Reconstruit le nouveau chemin
-  const newPath = "/" + segments.join("/")
+    // Obtient le pathname complet avec le locale depuis window.location
+    const fullPathname = window.location.pathname
+    
+    // Remplace le locale dans le pathname
+    // Ex: "/ar" -> "/fr", "/ar/packs" -> "/fr/packs"
+    const newPathname = fullPathname.replace(/^\/(fr|ar)/, `/${otherLocale}`)
+    
+    // Ajoute les query params s'ils existent
+    const queryString = searchParams.toString()
+    const fullPath = queryString ? `${newPathname}?${queryString}` : newPathname
+    
+    // Navigue vers le nouveau chemin sans refresh complet
+    router.push(fullPath)
+  }
 
   return (
-    <Link
-      href={newPath}
+    <button
+      onClick={handleLocaleChange}
       className="px-2 py-1 text-sm rounded border border-gray-300 hover:border-yellow-500 hover:text-yellow-500 transition-colors"
     >
       {otherLocale.toUpperCase()}
-    </Link>
+    </button>
   )
 }
 
