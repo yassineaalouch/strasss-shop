@@ -1,5 +1,5 @@
 "use client"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { Home, ArrowLeft, Scissors, Package } from "lucide-react"
 
 const NotFoundPage: React.FC = () => {

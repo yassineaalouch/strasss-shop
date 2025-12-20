@@ -1,8 +1,7 @@
 "use client"
 
 import { useLocale } from "next-intl"
-import { usePathname } from "next/navigation"
-import Link from "next/link"
+import { usePathname, Link } from "@/i18n/navigation"
 
 export default function LanguageToggle() {
   const locale = useLocale() // "fr" ou "ar"

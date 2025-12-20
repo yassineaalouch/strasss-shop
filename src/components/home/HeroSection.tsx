@@ -1,5 +1,5 @@
 import { ArrowRight, Sparkles, TrendingUp } from "lucide-react"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
 import HeroSlider from "./HeroSlider"
 

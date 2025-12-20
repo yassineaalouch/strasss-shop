@@ -1,6 +1,6 @@
 "use client"
 import LegalLayout from "@/components/conditions-utilisation/LegalLayout"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 
 export default function ConditionsUtilisationPage() {

@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { ProductCardProps } from "@/types/type"
 import { motion, AnimatePresence } from "framer-motion"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,

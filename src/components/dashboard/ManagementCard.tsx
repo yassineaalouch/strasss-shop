@@ -2,7 +2,7 @@
 
 import React from "react"
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { Edit, Trash2, Eye, Package, Percent, ShoppingBag, Tag } from "lucide-react"
 import { ProductPack } from "@/types/pack"
 import { Product } from "@/types/product"

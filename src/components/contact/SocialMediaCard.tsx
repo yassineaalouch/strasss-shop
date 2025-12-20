@@ -10,7 +10,7 @@ import {
   LucideIcon
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 
 interface SocialLink {
   id: string

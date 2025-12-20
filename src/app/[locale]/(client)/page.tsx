@@ -5,7 +5,7 @@ import ProductCard from "@/components/shop/ProductCard"
 import WhyChooseUs from "@/components/WhyCoseUs"
 import { getTranslations, getLocale } from "next-intl/server"
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { Product } from "@/types/product"
 
 async function getHomePageCategories() {

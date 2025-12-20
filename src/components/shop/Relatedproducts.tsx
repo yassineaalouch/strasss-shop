@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { ChevronLeft, ChevronRight, ShoppingCart, Heart } from "lucide-react"
 import { useLocale } from "next-intl"
 import ProductCard from "./ProductCard"

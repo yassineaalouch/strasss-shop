@@ -289,7 +289,7 @@ import {
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { CartItem, SideCartProps } from "@/types/type"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import Image from "next/image"
 import { FREE_SHIPPING_THRESHOLD } from "@/data/data"
 import { motion, AnimatePresence } from "framer-motion"
