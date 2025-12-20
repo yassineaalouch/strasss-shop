@@ -63,10 +63,6 @@ export default function ThankYouPage() {
           </h3>
           <ul className="space-y-2 text-gray-600">
             <li className="flex items-start gap-2">
-              <span className="text-green-600 font-bold">1.</span>
-              <span>{t("step1")}</span>
-            </li>
-            <li className="flex items-start gap-2">
               <span className="text-green-600 font-bold">2.</span>
               <span>{t("step2")}</span>
             </li>

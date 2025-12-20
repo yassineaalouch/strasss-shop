@@ -270,7 +270,7 @@ const ProductSorter: React.FC<ProductSorterProps> = ({
             <span className="text-sm text-gray-600 sm:hidden">
               {t("viewMode.label")}
             </span>
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+            {/* <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => onViewModeChange("grid")}
                 className={`p-2 transition-all duration-200 ${
@@ -295,7 +295,7 @@ const ProductSorter: React.FC<ProductSorterProps> = ({
               >
                 <List size={18} />
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
