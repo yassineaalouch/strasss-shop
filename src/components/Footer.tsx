@@ -41,7 +41,7 @@ export default async function Footer() {
                 />
               </div>
               <span className="text-xl font-bold font-lux">STRASS SHOP</span>
-            </div>
+            </div> 
             <p className="text-gray-400 mb-4">{t("company.description")}</p>
             <div className="flex items-center mb-2">
               <MapPin size={16} className="mr-2" />
