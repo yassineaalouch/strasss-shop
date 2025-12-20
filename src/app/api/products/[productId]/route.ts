@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 import Product from "@/models/Product"
 import "@/models/Category"
 import "@/models/Characteristic"
+import "@/models/Discount";
 import { ProductRequestBody } from "@/types/product"
 import mongoose from "mongoose"
 import { sendLowStockEmail } from "@/lib/nodemailer"
