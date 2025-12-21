@@ -10,7 +10,7 @@ import { Product } from "@/types/product"
 
 async function getHomePageCategories() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
     const response = await fetch(`${baseUrl}/api/homepage-categories`)
     if (response.ok) {
       const data = await response.json()
@@ -28,7 +28,7 @@ const CategoriesSection = async () => {
 
   // Récupérer les catégories depuis la base de données
   const dbCategories = await getHomePageCategories()
-
+console.log("dbCategories", dbCategories)
   // Fallback si aucune catégorie en DB
   const fallbackCategories: CategoriesHomPageSection[] = [
     {

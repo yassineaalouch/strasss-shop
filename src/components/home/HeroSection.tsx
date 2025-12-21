@@ -6,7 +6,7 @@ import HeroSlider from "./HeroSlider"
 // Fonction pour récupérer les données Hero depuis la base de données
 async function getHeroContent() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://localhost:3000"
     const response = await fetch(`${baseUrl}/api/hero-content`)
 
     if (!response.ok) {
