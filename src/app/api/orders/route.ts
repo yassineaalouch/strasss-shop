@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import Order from "@/models/Order"
+import Discount from "@/models/Discount"
 import { sendOrderEmail } from "@/lib/nodemailer"
 import { OrderRequestBody } from "@/types/order"
 
@@ -57,6 +58,71 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Vérifier et gérer le coupon si présent
+    let couponDiscount = null
+    if (coupon && coupon.code) {
+      // Chercher le coupon par code
+      couponDiscount = await Discount.findOne({
+        couponCode: coupon.code.toUpperCase(),
+        type: "COUPON"
+      })
+
+      if (couponDiscount) {
+        const now = new Date()
+        
+        // Vérifier les dates
+        if (couponDiscount.startDate && new Date(couponDiscount.startDate) > now) {
+          return NextResponse.json(
+            { success: false, message: "Ce coupon n'est pas encore valide" },
+            { status: 400 }
+          )
+        }
+        
+        if (couponDiscount.endDate && new Date(couponDiscount.endDate) < now) {
+          return NextResponse.json(
+            { success: false, message: "Ce coupon a expiré" },
+            { status: 400 }
+          )
+        }
+
+        // Vérifier le montant minimum du panier
+        if (couponDiscount.minimumPurchase && couponDiscount.minimumPurchase > 0) {
+          if (subtotal < couponDiscount.minimumPurchase) {
+            return NextResponse.json(
+              { 
+                success: false, 
+                message: `Montant minimum requis pour ce coupon: ${couponDiscount.minimumPurchase} MAD` 
+              },
+              { status: 400 }
+            )
+          }
+        }
+
+        // Vérifier la limite d'utilisation
+        if (couponDiscount.usageLimit && couponDiscount.usageLimit > 0) {
+          if (couponDiscount.usageCount >= couponDiscount.usageLimit) {
+            return NextResponse.json(
+              { success: false, message: "Ce coupon a atteint sa limite d'utilisation" },
+              { status: 400 }
+            )
+          }
+        }
+
+        // Vérifier que le coupon est actif
+        if (!couponDiscount.isActive) {
+          return NextResponse.json(
+            { success: false, message: "Ce coupon n'est pas actif" },
+            { status: 400 }
+          )
+        }
+      } else {
+        return NextResponse.json(
+          { success: false, message: "Coupon invalide" },
+          { status: 400 }
+        )
+      }
+    }
     // Build order data - handle optional fields from admin form
     const orderData: {
       customerName: string
@@ -101,6 +167,21 @@ export async function POST(request: NextRequest) {
 
     // Créer la nouvelle commande
     const newOrder = await Order.create(orderData)
+
+    // Si un coupon a été utilisé, décrémenter usageCount
+    if (couponDiscount) {
+      const newUsageCount = (couponDiscount.usageCount || 0) + 1
+      const updateData: { usageCount: number; isActive?: boolean } = {
+        usageCount: newUsageCount
+      }
+
+      // Si la limite est atteinte, désactiver le coupon
+      if (couponDiscount.usageLimit && newUsageCount >= couponDiscount.usageLimit) {
+        updateData.isActive = false
+      }
+
+      await Discount.findByIdAndUpdate(couponDiscount._id, updateData)
+    }
 
     // await sendOrderEmail(newOrder)
     await sendOrderEmail({ ...newOrder.toObject(), coupon })

@@ -257,6 +257,27 @@ export async function POST(
       }
     }
 
+    // Gestion automatique des dates
+    const now = new Date()
+    const finalStartDate = startDate ? new Date(startDate) : now // Si pas de date de début, utiliser aujourd'hui
+    const finalEndDate = endDate ? new Date(endDate) : null // Si pas de date de fin, null = indéfini
+    
+    // Déterminer automatiquement isActive selon les dates
+    let finalIsActive = isActive !== undefined ? isActive : true
+    
+    // Si la date de début est dans le futur, désactiver automatiquement
+    if (finalStartDate > now) {
+      finalIsActive = false
+    }
+    // Si la date de fin est passée, désactiver automatiquement
+    if (finalEndDate && finalEndDate < now) {
+      finalIsActive = false
+    }
+    
+    // Pour les types autres que COUPON, ignorer usageLimit et minimumPurchase
+    const finalUsageLimit = type === "COUPON" ? (usageLimit || null) : null
+    const finalMinimumPurchase = type === "COUPON" ? (minimumPurchase || null) : null
+
     // Créer la nouvelle promotion
     const newDiscount = await Discount.create({
       name: {
@@ -274,11 +295,11 @@ export async function POST(
             ar: description.ar.trim()
           }
         : undefined,
-      startDate: startDate ? new Date(startDate) : null,
-      endDate: endDate ? new Date(endDate) : null,
-      isActive: isActive !== undefined ? isActive : true,
-      usageLimit: usageLimit || null,
-      minimumPurchase: minimumPurchase || null
+      startDate: finalStartDate,
+      endDate: finalEndDate,
+      isActive: finalIsActive,
+      usageLimit: finalUsageLimit,
+      minimumPurchase: finalMinimumPurchase
     })
 
     return NextResponse.json(

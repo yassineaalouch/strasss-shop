@@ -330,11 +330,11 @@ export default function CheckoutPage() {
         items: orderItems,
         subtotal: subtotal, // Sous-total avant réduction
         discount: discountAmount, // Montant de la réduction
-        coupon: couponData
+        coupon: couponData && couponData.couponCode
           ? {
-              code: couponData?.name.fr,
-              discountType: couponData?.type,
-              value: couponData?.value
+              code: couponData.couponCode,
+              discountType: couponData.type,
+              value: couponData.value
             }
           : null,
         shipping: shipping, // Frais de livraison calculés

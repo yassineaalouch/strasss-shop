@@ -220,6 +220,42 @@ export async function PUT(
       }
     }
 
+    // Gestion automatique des dates
+    const now = new Date()
+    // Si startDate n'est pas fourni et qu'il n'existe pas, utiliser aujourd'hui
+    const finalStartDate = startDate 
+      ? new Date(startDate) 
+      : (existingDiscount.startDate ? new Date(existingDiscount.startDate) : now)
+    // Si endDate n'est pas fourni, garder l'existant ou null (indéfini)
+    const finalEndDate = endDate ? new Date(endDate) : (existingDiscount.endDate ? new Date(existingDiscount.endDate) : null)
+    
+    // Déterminer automatiquement isActive selon les dates
+    let finalIsActive = isActive !== undefined ? isActive : existingDiscount.isActive
+    
+    // Si la date de début est dans le futur, désactiver automatiquement
+    if (finalStartDate > now) {
+      finalIsActive = false
+    }
+    // Si la date de fin est passée, désactiver automatiquement
+    if (finalEndDate && finalEndDate < now) {
+      finalIsActive = false
+    }
+    // Si la date de début est passée ou aujourd'hui et pas de date de fin ou date de fin future, activer
+    if (finalStartDate <= now && (!finalEndDate || finalEndDate >= now)) {
+      // Ne pas forcer l'activation si l'admin l'a désactivé manuellement
+      if (isActive === undefined) {
+        finalIsActive = true
+      }
+    }
+    
+    // Pour les types autres que COUPON, ignorer usageLimit et minimumPurchase
+    const finalUsageLimit = type === "COUPON" 
+      ? (usageLimit !== undefined ? (usageLimit || null) : existingDiscount.usageLimit)
+      : null
+    const finalMinimumPurchase = type === "COUPON"
+      ? (minimumPurchase !== undefined ? (minimumPurchase || null) : existingDiscount.minimumPurchase)
+      : null
+
     const updatedDiscount = await Discount.findByIdAndUpdate(
       discountId,
       {
@@ -232,11 +268,11 @@ export async function PUT(
         description: description
           ? { fr: description.fr.trim(), ar: description.ar.trim() }
           : undefined,
-        startDate: startDate ? new Date(startDate) : undefined,
-        endDate: endDate ? new Date(endDate) : undefined,
-        isActive: isActive ?? existingDiscount.isActive,
-        usageLimit: usageLimit ?? existingDiscount.usageLimit,
-        minimumPurchase: minimumPurchase ?? existingDiscount.minimumPurchase
+        startDate: finalStartDate,
+        endDate: finalEndDate,
+        isActive: finalIsActive,
+        usageLimit: finalUsageLimit,
+        minimumPurchase: finalMinimumPurchase
       },
       { new: true, runValidators: true }
     )

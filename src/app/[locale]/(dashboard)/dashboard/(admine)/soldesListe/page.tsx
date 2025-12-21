@@ -93,8 +93,9 @@ const AdminDiscountsManager: React.FC = () => {
   const getDiscountStatus = (discount: Discount) => {
     const now = new Date()
 
-    if (!discount.isActive) return "inactive"
+    // Vérifier d'abord si la date est expirée (priorité sur isActive)
     if (discount.endDate && new Date(discount.endDate) < now) return "expired"
+    if (!discount.isActive) return "inactive"
     if (discount.startDate && new Date(discount.startDate) > now)
       return "upcoming"
     return "active"
@@ -256,11 +257,18 @@ const AdminDiscountsManager: React.FC = () => {
       return
     }
 
-    const payload = {
+    // Préparer le payload avec gestion automatique des dates et champs conditionnels
+    const payload: DiscountFormData = {
       ...formData,
       value: formData.value ? formData.value : undefined,
       buyQuantity: formData.buyQuantity ? formData.buyQuantity : undefined,
-      getQuantity: formData.getQuantity ? formData.getQuantity : undefined
+      getQuantity: formData.getQuantity ? formData.getQuantity : undefined,
+      // Pour les types autres que COUPON, ignorer usageLimit et minimumPurchase
+      usageLimit: formData.type === "COUPON" ? (formData.usageLimit || undefined) : undefined,
+      minimumPurchase: formData.type === "COUPON" ? (formData.minimumPurchase || undefined) : undefined,
+      // Gestion automatique des dates : si pas de startDate, mettre aujourd'hui, si pas de endDate, null (indéfini)
+      startDate: formData.startDate || new Date().toISOString().split("T")[0],
+      endDate: formData.endDate || ""
     }
 
     try {
@@ -294,8 +302,8 @@ const AdminDiscountsManager: React.FC = () => {
       startDate: discount.startDate ? discount.startDate.split("T")[0] : "",
       endDate: discount.endDate ? discount.endDate.split("T")[0] : "",
       isActive: discount.isActive,
-      usageLimit: 0,
-      minimumPurchase: 0
+      usageLimit: discount.usageLimit || 0,
+      minimumPurchase: discount.minimumPurchase || 0
     })
     setIsCreating(true)
   }
@@ -730,12 +738,17 @@ const AdminDiscountsManager: React.FC = () => {
                         name="discountType"
                         value={type}
                         checked={formData.type === type}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const newType = e.target.value as DiscountType
                           setFormData((prev) => ({
                             ...prev,
-                            type: e.target.value as DiscountType
+                            type: newType,
+                            // Réinitialiser les champs spécifiques aux coupons si on change de type
+                            usageLimit: newType === "COUPON" ? prev.usageLimit : 0,
+                            minimumPurchase: newType === "COUPON" ? prev.minimumPurchase : 0,
+                            couponCode: newType === "COUPON" ? prev.couponCode : ""
                           }))
-                        }
+                        }}
                         className="mr-3"
                       />
                       <div className="flex items-center">
@@ -935,42 +948,56 @@ const AdminDiscountsManager: React.FC = () => {
                   />
                 </div>
               </div>
-              {/* usage counte */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre d&apos;utilisation Limit
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.usageLimit}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        usageLimit: Number(e.target.value)
-                      }))
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nontant minimum du panier
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.minimumPurchase}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        minimumPurchase: Number(e.target.value)
-                      }))
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+              {/* Champs spécifiques aux coupons uniquement */}
+              {formData.type === "COUPON" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre d&apos;utilisation Limit
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.usageLimit || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          usageLimit: e.target.value ? Number(e.target.value) : 0
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Illimité si vide"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Laissez vide pour un usage illimité
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Montant minimum du panier (MAD)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.minimumPurchase || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          minimumPurchase: e.target.value ? Number(e.target.value) : 0
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Aucun minimum si vide"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Montant minimum requis pour utiliser ce coupon
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Statut actif */}
               <div className="flex items-center">

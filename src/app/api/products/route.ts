@@ -244,31 +244,105 @@ export async function GET(
       .skip(skip)
       .limit(limit)
 
+    // Détecter si c'est une requête du dashboard (présence de paramètres spécifiques au dashboard)
+    // OU si le paramètre forDashboard est explicitement défini
+    const forDashboardParam = searchParams.get("forDashboard")
+    const isDashboardRequest = forDashboardParam === "true" || !!(sortField || categoryName || discountName || status || minQuantity || maxQuantity)
+
+    // Fonction helper pour vérifier si un discount est valide (non expiré et actif) pour PERCENTAGE et BUY_X_GET_Y
+    // Cette fonction ne doit être utilisée QUE pour les requêtes côté client (shop), pas pour le dashboard
+    const isDiscountValid = (discount: any): boolean => {
+      if (!discount) return false
+      
+      // Seulement pour PERCENTAGE et BUY_X_GET_Y
+      if (discount.type !== "PERCENTAGE" && discount.type !== "BUY_X_GET_Y") {
+        return true // Les coupons sont gérés différemment
+      }
+
+      const now = new Date()
+      
+      // Vérifier si le discount est actif (décision de l'admin)
+      if (!discount.isActive) return false
+      
+      // Vérifier si la date de fin est passée
+      if (discount.endDate) {
+        const endDate = new Date(discount.endDate)
+        if (endDate < now) return false
+      }
+      
+      // Vérifier si la date de début est dans le futur
+      if (discount.startDate) {
+        const startDate = new Date(discount.startDate)
+        if (startDate > now) return false
+      }
+      
+      return true
+    }
+
     return NextResponse.json(
       {
         success: true,
-        products: products.map((product) => ({
-          _id: product._id.toString(),
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          originalPrice: product.originalPrice,
-          images: product.images,
-          category: product.category,
-          discount: product.discount,
-          Characteristic: product.Characteristic,
-          inStock: product.inStock,
-          quantity: product.quantity,
-          isNewProduct: product.isNewProduct,
-          isOnSale: product.isOnSale,
-          slug: product.slug,
-          createdAt: product.createdAt
-            ? product.createdAt.toISOString()
-            : new Date().toISOString(),
-          updatedAt: product.updatedAt
-            ? product.updatedAt.toISOString()
-            : new Date().toISOString()
-        })),
+        products: products.map((product) => {
+          // Filtrer les discounts expirés/inactifs UNIQUEMENT pour les requêtes côté client (shop)
+          // Pour le dashboard, garder tous les discounts pour permettre la gestion
+          const validDiscount = isDashboardRequest
+            ? product.discount // Dashboard : garder tous les discounts
+            : (product.discount && isDiscountValid(product.discount) ? product.discount : null) // Shop : filtrer strictement
+
+          // Gestion du prix original :
+          // - Si le discount était PERCENTAGE et est maintenant expiré/inactif → supprimer originalPrice
+          // - Si le discount n'est pas PERCENTAGE ou n'existe pas → garder originalPrice s'il existe (entré manuellement par l'admin)
+          let finalOriginalPrice = product.originalPrice
+          if (!isDashboardRequest && product.originalPrice) {
+            // Vérifier si le discount était PERCENTAGE et est maintenant filtré
+            const wasPercentageDiscount = product.discount && product.discount.type === "PERCENTAGE"
+            const isNowFiltered = !validDiscount && wasPercentageDiscount
+            
+            if (isNowFiltered) {
+              // Si le discount PERCENTAGE a été filtré (expiré/inactif), supprimer le prix original
+              // pour ne pas afficher de réduction obsolète
+              finalOriginalPrice = undefined
+            }
+            // Sinon, garder le originalPrice (soit il n'y a pas de discount, soit c'est un autre type, soit il est valide)
+          }
+
+          // Vérifier si le produit a plus de 20 jours pour décocher automatiquement "Nouveau produit"
+          const now = new Date()
+          const productCreatedAt = product.createdAt ? new Date(product.createdAt) : now
+          const daysSinceCreation = Math.floor((now.getTime() - productCreatedAt.getTime()) / (1000 * 60 * 60 * 24))
+          const shouldBeNewProduct = isDashboardRequest 
+            ? (product.isNewProduct && daysSinceCreation <= 20) // Dashboard : décocher si > 20 jours
+            : product.isNewProduct // Shop : garder la valeur pour l'affichage
+
+          // Si c'est le dashboard et que le produit a plus de 20 jours, mettre à jour dans la base de données
+          if (isDashboardRequest && product.isNewProduct && daysSinceCreation > 20) {
+            // Mettre à jour en arrière-plan (ne pas attendre)
+            Product.findByIdAndUpdate(product._id, { isNewProduct: false }).catch(console.error)
+          }
+
+          return {
+            _id: product._id.toString(),
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            originalPrice: finalOriginalPrice,
+            images: product.images,
+            category: product.category,
+            discount: validDiscount,
+            Characteristic: product.Characteristic,
+            inStock: product.inStock,
+            quantity: product.quantity,
+            isNewProduct: shouldBeNewProduct,
+            isOnSale: product.isOnSale,
+            slug: product.slug,
+            createdAt: product.createdAt
+              ? product.createdAt.toISOString()
+              : new Date().toISOString(),
+            updatedAt: product.updatedAt
+              ? product.updatedAt.toISOString()
+              : new Date().toISOString()
+          }
+        }),
         pagination: {
           page,
           limit,

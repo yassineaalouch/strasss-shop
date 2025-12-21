@@ -29,7 +29,7 @@ const AdminEditProduct: React.FC = () => {
   const [loadingCharacteristics, setLoadingCharacteristics] = useState(false)
   const [initialImages, setInitialImages] = useState<string[]>([])
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: { ar: "", fr: "" },
     description: { ar: "", fr: "" },
     price: 0,
@@ -141,7 +141,7 @@ const AdminEditProduct: React.FC = () => {
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get(`/api/products/${productId}`)
+      const response = await axios.get(`/api/products/${productId}?forDashboard=true`)
       console.log("response", response)
       if (response.data.success) {
         const product = response.data.product
@@ -319,7 +319,35 @@ const AdminEditProduct: React.FC = () => {
     field: keyof ProductFormData,
     value: ProductFormValue
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => {
+      const updated: typeof prev = { ...prev, [field]: value }
+      
+      // Calcul automatique du prix original quand un discount PERCENTAGE est sélectionné
+      if (field === "discount" || field === "price") {
+        const discountId = field === "discount" ? (value as string) : prev.discount
+        const currentPrice = field === "price" ? (value as number) : prev.price
+        
+        if (discountId && currentPrice > 0) {
+          const selectedDiscount = discounts.find((d) => d._id === discountId)
+          
+          if (selectedDiscount && selectedDiscount.type === "PERCENTAGE" && selectedDiscount.value) {
+            // Calculer le prix original : originalPrice = price / (1 - discount.value / 100)
+            const discountPercentage = selectedDiscount.value
+            const calculatedOriginalPrice = currentPrice / (1 - discountPercentage / 100)
+            updated.originalPrice = Math.round(calculatedOriginalPrice * 100) / 100 // Arrondir à 2 décimales
+          } else if (field === "discount" && !discountId) {
+            // Si le discount est supprimé, réinitialiser le prix original
+            updated.originalPrice = undefined
+          }
+        } else if (field === "discount" && !discountId) {
+          // Si le discount est supprimé, réinitialiser le prix original
+          updated.originalPrice = undefined
+        }
+      }
+      
+      return updated
+    })
+    
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
@@ -646,6 +674,11 @@ const AdminEditProduct: React.FC = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Prix original (MAD)
+                      {formData.discount && discounts.find((d) => d._id === formData.discount)?.type === "PERCENTAGE" && (
+                        <span className="ml-2 text-xs text-blue-600 font-normal">
+                          (Calculé automatiquement)
+                        </span>
+                      )}
                     </label>
                     <input
                       type="number"
@@ -658,10 +691,22 @@ const AdminEditProduct: React.FC = () => {
                             : undefined
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        formData.discount && discounts.find((d) => d._id === formData.discount)?.type === "PERCENTAGE"
+                          ? "bg-gray-50 cursor-not-allowed"
+                          : ""
+                      }`}
                       min="0"
                       step="0.01"
-                      disabled={isSubmitting}
+                      disabled={
+                        isSubmitting ||
+                        (formData.discount !== "" &&
+                          discounts.find((d) => d._id === formData.discount)?.type === "PERCENTAGE")
+                      }
+                      readOnly={
+                        formData.discount !== "" &&
+                        discounts.find((d) => d._id === formData.discount)?.type === "PERCENTAGE"
+                      }
                     />
                   </div>
                 </div>
