@@ -251,8 +251,10 @@ const AdminDiscountsManager: React.FC = () => {
   }
 
   const handleSaveDiscount = async () => {
-    if (!formData.name.fr || !formData.name.ar)
-      return alert("Veuillez remplir tous les champs obligatoires")
+    if (!formData.name.fr || !formData.name.ar) {
+      showToast("Erreur lors de la sauvegarde : veuillez remplir tous les champs obligatoires", "error")
+      return
+    }
 
     const payload = {
       ...formData,
@@ -265,13 +267,17 @@ const AdminDiscountsManager: React.FC = () => {
       if (editingDiscount) {
         await updateDiscount(editingDiscount._id, payload)
         await fetchDiscounts()
+        showToast("Promotion modifiée avec succès", "success")
       } else {
         await createDiscount(payload)
         await fetchDiscounts()
+        showToast("Promotion créée avec succès", "success")
       }
       resetForm()
-    } catch (err) {
-      showToast("Erreur lors de la sauvegarde", "error")
+    } catch (err: any) {
+      // Extraire le message d'erreur de la réponse
+      const errorMessage = err?.response?.data?.message || err?.message || "Erreur lors de la sauvegarde"
+      showToast(errorMessage, "error")
     }
   }
 

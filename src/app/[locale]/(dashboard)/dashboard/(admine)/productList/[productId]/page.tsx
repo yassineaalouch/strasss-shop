@@ -148,25 +148,24 @@ const AdminEditProduct: React.FC = () => {
         setInitialImages(product.images || [])
         setFormData({
           name: {
-            ar: product.name.ar || "",
-            fr: product.name.fr || ""
+            ar: product.name?.ar || "",
+            fr: product.name?.fr || ""
           },
           description: {
-            ar: product.description.ar || "",
-            fr: product.description.fr || ""
+            ar: product.description?.ar || "",
+            fr: product.description?.fr || ""
           },
           price: product.price || 0,
           originalPrice: product.originalPrice || undefined,
           images: product.images || [],
           isNewProduct: product.isNewProduct || false,
           isOnSale: product.isOnSale || false,
-          category: product.category._id || "",
-          discount: product.discount._id || "",
+          category: product.category?._id || "",
+          discount: product.discount?._id || "",
           Characteristic: product.Characteristic || [],
           inStock: product.inStock ?? true,
           quantity: product.quantity || 0
         })
-console.log("formData", formData)
         // Mapper les caractéristiques du produit vers selectedCharacteristics
         if (product.Characteristic && product.Characteristic.length > 0) {
           const mappedCharacteristics = mapProductCharacteristicsToSelected(
@@ -179,6 +178,7 @@ console.log("formData", formData)
         showToast(response.data.message || "Erreur lors du chargement du produit", "error")
       }
     } catch (error) {
+      console.error("Erreur lors du chargement du produit:", error)
       showToast("Erreur lors du chargement du produit", "error")
     }
   }

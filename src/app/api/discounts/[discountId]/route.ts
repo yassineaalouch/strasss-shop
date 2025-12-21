@@ -122,7 +122,28 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          message: "Les noms en français et en arabe sont requis"
+          message: "Erreur lors de la sauvegarde : les noms en français et en arabe sont requis"
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validation de la longueur du nom (plus de 5 caractères)
+    if (name.fr.trim().length <= 5) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Erreur lors de la sauvegarde : le nom (français) doit être composé de plus de 5 caractères"
+        },
+        { status: 400 }
+      )
+    }
+
+    if (name.ar.trim().length <= 5) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Erreur lors de la sauvegarde : le nom (arabe) doit être composé de plus de 5 caractères"
         },
         { status: 400 }
       )
@@ -131,7 +152,7 @@ export async function PUT(
     const existingDiscount = await Discount.findById(discountId)
     if (!existingDiscount) {
       return NextResponse.json(
-        { success: false, message: "Promotion introuvable" },
+        { success: false, message: "Erreur lors de la sauvegarde : promotion introuvable" },
         { status: 404 }
       )
     }
@@ -139,38 +160,61 @@ export async function PUT(
     // Validation spécifique selon le type
     if (type === "PERCENTAGE" && (!value || value <= 0 || value > 100)) {
       return NextResponse.json(
-        { success: false, message: "Le pourcentage doit être entre 1 et 100" },
+        { success: false, message: "Erreur lors de la sauvegarde : le pourcentage doit être entre 1 et 100" },
         { status: 400 }
       )
     }
-    if (type === "BUY_X_GET_Y" && (!buyQuantity || !getQuantity)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Les quantités sont requises pour ce type de promotion"
-        },
-        { status: 400 }
-      )
+    if (type === "BUY_X_GET_Y") {
+      if (!buyQuantity || buyQuantity <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Erreur lors de la sauvegarde : la quantité à acheter doit être supérieure à 0"
+          },
+          { status: 400 }
+        )
+      }
+      if (!getQuantity || getQuantity <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Erreur lors de la sauvegarde : la quantité offerte doit être supérieure à 0"
+          },
+          { status: 400 }
+        )
+      }
     }
     if (type === "COUPON") {
-      if (!couponCode)
+      if (!couponCode || couponCode.trim().length === 0)
         return NextResponse.json(
-          { success: false, message: "Le code promo est requis" },
+          { success: false, message: "Erreur lors de la sauvegarde : le code promo est requis" },
           { status: 400 }
         )
+      
+      // Validation de la longueur du code promo (plus de 4 caractères)
+      if (couponCode.trim().length <= 4) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Erreur lors de la sauvegarde : le coupon name doit être composé de plus de 4 caractères"
+          },
+          { status: 400 }
+        )
+      }
+
       if (!value || value <= 0)
         return NextResponse.json(
-          { success: false, message: "La valeur du coupon doit être positive" },
+          { success: false, message: "Erreur lors de la sauvegarde : la valeur du coupon doit être positive" },
           { status: 400 }
         )
-      if (couponCode.toUpperCase() !== existingDiscount.couponCode) {
+      if (couponCode.toUpperCase().trim() !== existingDiscount.couponCode) {
         const duplicateCoupon = await Discount.findOne({
-          couponCode: couponCode.toUpperCase(),
+          couponCode: couponCode.toUpperCase().trim(),
           _id: { $ne: discountId }
         })
         if (duplicateCoupon)
           return NextResponse.json(
-            { success: false, message: "Ce code promo existe déjà" },
+            { success: false, message: "Erreur lors de la sauvegarde : ce code promo existe déjà" },
             { status: 400 }
           )
       }

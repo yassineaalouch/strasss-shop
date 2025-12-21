@@ -143,7 +143,28 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "Les noms en français et en arabe sont requis"
+          message: "Erreur lors de la sauvegarde : les noms en français et en arabe sont requis"
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validation de la longueur du nom (plus de 5 caractères)
+    if (name.fr.trim().length <= 5) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Erreur lors de la sauvegarde : le nom (français) doit être composé de plus de 5 caractères"
+        },
+        { status: 400 }
+      )
+    }
+
+    if (name.ar.trim().length <= 5) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Erreur lors de la sauvegarde : le nom (arabe) doit être composé de plus de 5 caractères"
         },
         { status: 400 }
       )
@@ -153,7 +174,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "Le type de promotion est requis"
+          message: "Erreur lors de la sauvegarde : le type de promotion est requis"
         },
         { status: 400 }
       )
@@ -165,36 +186,57 @@ export async function POST(
         return NextResponse.json(
           {
             success: false,
-            message: "Le pourcentage doit être entre 1 et 100"
+            message: "Erreur lors de la sauvegarde : le pourcentage doit être entre 1 et 100"
           },
           { status: 400 }
         )
       }
     } else if (type === "BUY_X_GET_Y") {
-      if (!buyQuantity || !getQuantity) {
+      if (!buyQuantity || buyQuantity <= 0) {
         return NextResponse.json(
           {
             success: false,
-            message: "Les quantités sont requises pour ce type de promotion"
+            message: "Erreur lors de la sauvegarde : la quantité à acheter doit être supérieure à 0"
+          },
+          { status: 400 }
+        )
+      }
+      if (!getQuantity || getQuantity <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Erreur lors de la sauvegarde : la quantité offerte doit être supérieure à 0"
           },
           { status: 400 }
         )
       }
     } else if (type === "COUPON") {
-      if (!couponCode) {
+      if (!couponCode || couponCode.trim().length === 0) {
         return NextResponse.json(
           {
             success: false,
-            message: "Le code promo est requis"
+            message: "Erreur lors de la sauvegarde : le code promo est requis"
           },
           { status: 400 }
         )
       }
+      
+      // Validation de la longueur du code promo (plus de 4 caractères)
+      if (couponCode.trim().length <= 4) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Erreur lors de la sauvegarde : le coupon name doit être composé de plus de 4 caractères"
+          },
+          { status: 400 }
+        )
+      }
+
       if (!value || value <= 0) {
         return NextResponse.json(
           {
             success: false,
-            message: "La valeur du coupon doit être positive"
+            message: "Erreur lors de la sauvegarde : la valeur du coupon doit être positive"
           },
           { status: 400 }
         )
@@ -202,13 +244,13 @@ export async function POST(
 
       // Vérifier l'unicité du code promo
       const existingCoupon = await Discount.findOne({
-        couponCode: couponCode.toUpperCase()
+        couponCode: couponCode.toUpperCase().trim()
       })
       if (existingCoupon) {
         return NextResponse.json(
           {
             success: false,
-            message: "Ce code promo existe déjà"
+            message: "Erreur lors de la sauvegarde : ce code promo existe déjà"
           },
           { status: 400 }
         )
