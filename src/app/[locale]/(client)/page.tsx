@@ -150,7 +150,7 @@ console.log("dbCategories", dbCategories)
 
 async function getPromoBanner() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
     const response = await fetch(`${baseUrl}/api/promo-banner`)
     if (response.ok) {
       const data = await response.json()
@@ -164,7 +164,7 @@ async function getPromoBanner() {
 
 async function getFeaturedProducts() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
     const response = await fetch(`${baseUrl}/api/featured-products`)
     if (response.ok) {
       const data = await response.json()
