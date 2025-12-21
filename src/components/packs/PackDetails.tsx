@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Link } from "@/i18n/navigation"
 import {
@@ -16,6 +16,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useCartContext } from "@/app/context/CartContext"
 import { useToast } from "@/components/ui/Toast"
 import { Product } from "@/types/product"
+import { ShareMenu } from "@/components/ShareMenu"
 
 // Type flexible pour les produits retournés par l'API
 type ProductApiResponse = Omit<Product, "category" | "discount"> & {
@@ -53,6 +54,7 @@ export function PackDetails({ pack }: PackDetailsProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [imageError, setImageError] = useState(false)
+  const [currentUrl, setCurrentUrl] = useState("")
   const locale = useLocale() as "fr" | "ar"
   const { addItem, cartItems, updateQuantity, removeItem } = useCartContext()
   const { showToast } = useToast()
@@ -79,6 +81,13 @@ export function PackDetails({ pack }: PackDetailsProps) {
   )
   const cartQuantity = cartItem?.quantity || 0
   const isInCart = cartQuantity > 0
+
+  // Get current URL for sharing
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCurrentUrl(window.location.href)
+    }
+  }, [])
 
   const nextImage = () => {
     setSelectedImage((prev) => (prev + 1) % images.length)
@@ -167,10 +176,21 @@ export function PackDetails({ pack }: PackDetailsProps) {
         {/* Product Info */}
         <div className="space-y-6">
           {/* Title */}
-          <div>
+          <div className="flex justify-between items-start">
             <h1 className="mb-2 text-3xl font-bold text-gray-900 lg:text-4xl">
               {pack.name[locale]}
             </h1>
+            {/* Share Button */}
+            <div className="flex space-x-2">
+              {currentUrl && (
+                <ShareMenu
+                  url={currentUrl}
+                  title={pack.name[locale]}
+                  description={pack.description?.[locale]}
+                  image={pack.images?.[0]}
+                />
+              )}
+            </div>
           </div>
 
           {/* Items Count Badge */}

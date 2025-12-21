@@ -183,7 +183,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     >
                       <Zap size={12} />
                       {discountPercentage
-                        ? `${t("badges.sale")}" "${discountPercentage}%`
+                        ? `${t("badges.sale")}${discountPercentage}%`
                         : t("badges.sale")}
                     </motion.span>
                   )}
@@ -532,7 +532,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     {t("badges.new")}
                   </motion.span>
                 )}
-                {product.isOnSale && (
+                {(product.isOnSale ||discountPercentage)&& (
                   <motion.span
                     key={`sale-badge-grid-${product._id}`}
                     initial={{ x: -50, opacity: 0 }}
@@ -542,7 +542,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 text-xs font-semibold rounded-full shadow-lg animate-pulse"
                   >
                     {discountPercentage
-                      ? `${t("badges.sale")}" "${discountPercentage}%`
+                      ? `${t("badges.sale")}-${discountPercentage}%`
                       : t("badges.sale")}
                   </motion.span>
                 )}

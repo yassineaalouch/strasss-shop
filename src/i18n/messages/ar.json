@@ -32,7 +32,11 @@
       "packages": "الحزم",
       "contact": "تواصل معنا "
     },
-    "security": "اتصال آمن"
+    "security": "اتصال آمن",
+    "sidebar": {
+      "contact": "اتصال",
+      "language": "اللغة"
+    }
   },
   "Footer": {
     "company": {

@@ -32,7 +32,11 @@
       "packages": "Les paquets",
       "contact": "Contactez-nous"
     },
-    "security": "Connexion sécurisée"
+    "security": "Connexion sécurisée",
+    "sidebar": {
+      "contact": "Contact",
+      "language": "Langue"
+    }
   },
   "Footer": {
     "company": {

@@ -166,11 +166,7 @@ const AdminEditProduct: React.FC = () => {
           inStock: product.inStock ?? true,
           quantity: product.quantity || 0
         })
-
-        console.log("product.Characteristic", product.Characteristic)
-        console.log("product.category", product.category)
-        console.log("product.discount", product.discount)
-
+console.log("formData", formData)
         // Mapper les caractéristiques du produit vers selectedCharacteristics
         if (product.Characteristic && product.Characteristic.length > 0) {
           const mappedCharacteristics = mapProductCharacteristicsToSelected(

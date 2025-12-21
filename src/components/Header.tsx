@@ -7,7 +7,9 @@ import {
   X,
   Home,
   Store,
-  Scissors
+  Scissors,
+  Package,
+  MessageCircle
 } from "lucide-react"
 import { Link } from "@/i18n/navigation"
 import { useState, useEffect } from "react"
@@ -18,6 +20,7 @@ import Image from "next/image"
 import LanguageToggle from "./LanguageToggle"
 import { useCartContext } from "@/app/context/CartContext"
 import { useToast } from "@/components/ui/Toast"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface SiteInfo {
   email: string
@@ -71,30 +74,21 @@ const Header: React.FC = () => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
   const menuItems = [
-    { href: "/", label: t("navigation.home"), icon: Home, delay: "delay-100" },
+    { href: "/", label: t("navigation.home"), icon: Home },
     {
       href: "/shop",
       label: t("navigation.shop"),
-      icon: Store,
-      delay: "delay-200"
-    },
-    {
-      href: "/shop",
-      label: t("navigation.shop"),
-      icon: Scissors,
-      delay: "delay-300"
+      icon: Store
     },
     {
       href: "/packs",
       label: t("navigation.packages"),
-      icon: Scissors,
-      delay: "delay-300"
+      icon: Package
     },
     {
       href: "/contact",
       label: t("navigation.contact"),
-      icon: Scissors,
-      delay: "delay-300"
+      icon: MessageCircle
     }
   ]
   return (
@@ -173,7 +167,7 @@ const Header: React.FC = () => {
               {/* Mobile Menu Button */}
               <button
                 onClick={toggleMenu}
-                className="lg:hidden p-2 text-gray-700 hover:text-firstColor relative z-50 transition-all duration-300"
+                className="lg:hidden p-2 text-gray-700 hover:text-firstColor relative z-[60] transition-all duration-300"
                 aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
               >
                 <div
@@ -229,60 +223,133 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Menu Mobile Simple */}
-      <div
-        className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ease-in-out ${
-          isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
-      >
-        {/* Arrière-plan simple */}
-        <div
-          className="absolute inset-0 backdrop-blur-sm bg-black bg-opacity-50"
-          onClick={toggleMenu}
-        ></div>
+      {/* Sidebar Mobile - Design moderne et compact */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <>
+            {/* Overlay avec animation */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[45]"
+              onClick={toggleMenu}
+            />
 
-        {/* Contenu du menu simple */}
-        <div
-          className={`relative h-full bg-white flex flex-col justify-center items-center transform transition-transform duration-300 ease-in-out ${
-            isMenuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-          {/* Menu items simple */}
-          <nav className="text-center">
-            <ul className="space-y-8">
-              {menuItems.map((item, index) => (
-                <li key={index}>
-                  <Link
-                    href={item.href}
-                    className="flex items-center justify-center space-x-3 text-2xl font-medium text-gray-800 hover:text-firstColor transition-colors duration-200 py-4"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <item.icon size={28} />
-                    <span>{item.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+            {/* Sidebar */}
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="lg:hidden fixed top-0 left-0 h-full w-[90%] sm:w-[85%] max-w-sm bg-gradient-to-b from-white via-gray-50 to-white shadow-2xl z-[50] overflow-hidden"
+            >
+              <div className="flex flex-col h-full">
+                {/* Header du Sidebar */}
+                <div className="relative text-black p-4 shadow-lg">
+                  <div className="absolute inset-0 "></div>
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                        <Image
+                          src="/logo.png"
+                          alt="logo"
+                          height={28}
+                          width={28}
+                          className="object-cover rounded-lg"
+                        />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold">STRASS SHOP</h2>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={toggleMenu}
+                      className="p-2 hover:bg-white/20 rounded-full transition-all duration-200"
+                    >
+                      <X size={22} />
+                    </motion.button>
+                  </div>
+                </div>
 
-          {/* Informations de contact simples */}
-          <div className="mt-16 text-center space-y-4">
-            <div className="flex items-center justify-center text-gray-600">
-              <Phone size={18} className="mr-2" />
-              <span>{siteInfo?.phone || t("contact.phone")}</span>
-            </div>
-            <div className="flex items-center justify-center text-gray-600">
-              <Mail size={18} className="mr-2" />
-              <span>{siteInfo?.email || t("contact.email")}</span>
-            </div>
-          </div>
+                {/* Navigation Items */}
+                <nav className="flex-1 overflow-y-auto py-4 px-3">
+                  <ul className="space-y-2">
+                    {menuItems.map((item, index) => (
+                      <motion.li
+                        key={item.href}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-firstColor hover:text-white transition-all duration-200 group"
+                        >
+                          <div className="p-2 bg-gray-100 group-hover:bg-white/20 rounded-lg transition-colors">
+                            <item.icon size={20} className="text-firstColor group-hover:text-white transition-colors" />
+                          </div>
+                          <span className="font-medium text-base">{item.label}</span>
+                        </Link>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </nav>
 
-          {/* Language Toggle simple */}
-          <div className="mt-8">
-            <LanguageToggle />
-          </div>
-        </div>
-      </div>
+                {/* Section Contact & Info */}
+                <div className="border-t border-gray-200 bg-gray-50 p-4 space-y-3">
+                  {/* Informations de contact */}
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2">
+                      {t("sidebar.contact")}
+                    </h3>
+                    <motion.a
+                      href={`tel:${siteInfo?.phone || ""}`}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center space-x-3 px-3 py-2 bg-white rounded-lg hover:bg-firstColor hover:text-white transition-all duration-200 group"
+                    >
+                      <div className="p-1.5 bg-gray-100 group-hover:bg-white/20 rounded-lg">
+                        <Phone size={16} className="text-firstColor group-hover:text-white transition-colors" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-white transition-colors">
+                        {siteInfo?.phone || t("contact.phone")}
+                      </span>
+                    </motion.a>
+                    <motion.a
+                      href={`mailto:${siteInfo?.email || ""}`}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center space-x-3 px-3 py-2 bg-white rounded-lg hover:bg-firstColor hover:text-white transition-all duration-200 group"
+                    >
+                      <div className="p-1.5 bg-gray-100 group-hover:bg-white/20 rounded-lg">
+                        <Mail size={16} className="text-firstColor group-hover:text-white transition-colors" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-white transition-colors truncate">
+                        {siteInfo?.email || t("contact.email")}
+                      </span>
+                    </motion.a>
+                  </div>
+
+                  {/* Language Toggle */}
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="px-2 mb-2">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        {t("sidebar.language")}
+                      </span>
+                    </div>
+                    <div className="px-1">
+                      <LanguageToggle />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Spacer plus petit pour compenser le header fixe */}
       <div className="h-20 sm:h-24"></div>
