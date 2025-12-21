@@ -1201,14 +1201,6 @@ import {
   Trash2,
   Plus,
   Eye,
-  Globe,
-  ExternalLink,
-  Facebook,
-  Twitter,
-  Instagram,
-  Youtube,
-  Linkedin,
-  Github,
   ArrowUp,
   ArrowDown,
   Edit,
@@ -1240,22 +1232,10 @@ interface HeroContent {
   images: string[]
 }
 
-interface SocialMediaLink {
-  id: string
-  url: string
-  icon: string
-  className: string
-  name: string
-  isActive: boolean
-  order: number
-}
-
 const HeroContentAdmin: React.FC = () => {
   const { showToast } = useToast()
   const [currentLanguage, setCurrentLanguage] = useState<"fr" | "ar">("fr")
-  const [activeTab, setActiveTab] = useState<"content" | "images" | "social">(
-    "content"
-  )
+  const [activeTab, setActiveTab] = useState<"content" | "images">("content")
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -1274,20 +1254,6 @@ const HeroContentAdmin: React.FC = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [initialImages, setInitialImages] = useState<string[]>([])
-
-  // État des réseaux sociaux
-  const [socialLinks, setSocialLinks] = useState<SocialMediaLink[]>([])
-
-  // Icônes disponibles
-  const availableIcons = {
-    Facebook: <Facebook className="w-5 h-5" />,
-    Twitter: <Twitter className="w-5 h-5" />,
-    Instagram: <Instagram className="w-5 h-5" />,
-    Youtube: <Youtube className="w-5 h-5" />,
-    Linkedin: <Linkedin className="w-5 h-5" />,
-    Github: <Github className="w-5 h-5" />,
-    ExternalLink: <ExternalLink className="w-5 h-5" />
-  }
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -1309,7 +1275,6 @@ const HeroContentAdmin: React.FC = () => {
           images: response.data.data.images
         })
         setInitialImages(response.data.data.images || [])
-        setSocialLinks(response.data.data.socialLinks || [])
       } else {
         showToast("Erreur lors du chargement des données", "error")
         setError("Erreur lors du chargement des données")
@@ -1467,53 +1432,6 @@ const HeroContentAdmin: React.FC = () => {
     setHeroContent((prev) => ({ ...prev, images: newImages }))
   }
 
-  // Handlers pour les réseaux sociaux
-  const addSocialLink = () => {
-    const newLink: SocialMediaLink = {
-      id: Date.now().toString(),
-      url: "",
-      icon: "Facebook",
-      className: "text-blue-600 hover:text-blue-800",
-      name: "Nouveau réseau",
-      isActive: false,
-      order: socialLinks.length + 1
-    }
-    setSocialLinks((prev) => [...prev, newLink])
-  }
-
-  const updateSocialLink = (
-    id: string,
-    field: keyof SocialMediaLink,
-    value: string | boolean | number
-  ) => {
-    setSocialLinks((prev) =>
-      prev.map((link) => (link.id === id ? { ...link, [field]: value } : link))
-    )
-  }
-
-  const removeSocialLink = (id: string) => {
-    setSocialLinks((prev) => prev.filter((link) => link.id !== id))
-  }
-
-  const moveSocialLink = (id: string, direction: "up" | "down") => {
-    const currentIndex = socialLinks.findIndex((link) => link.id === id)
-    if (currentIndex === -1) return
-
-    const newLinks = [...socialLinks]
-    if (direction === "up" && currentIndex > 0) {
-      ;[newLinks[currentIndex], newLinks[currentIndex - 1]] = [
-        newLinks[currentIndex - 1],
-        newLinks[currentIndex]
-      ]
-    } else if (direction === "down" && currentIndex < newLinks.length - 1) {
-      ;[newLinks[currentIndex], newLinks[currentIndex + 1]] = [
-        newLinks[currentIndex + 1],
-        newLinks[currentIndex]
-      ]
-    }
-    setSocialLinks(newLinks)
-  }
-
   // Validation avant sauvegarde
   const validateForm = (): { isValid: boolean; message: string } => {
     // Vérifier les titres
@@ -1530,16 +1448,6 @@ const HeroContentAdmin: React.FC = () => {
       return {
         isValid: false,
         message: "Veuillez ajouter au moins une image avant de sauvegarder."
-      }
-    }
-
-    // Vérifier au moins un réseau social
-    const activeSocialLinks = socialLinks.filter((link) => link.isActive)
-    if (activeSocialLinks.length === 0) {
-      return {
-        isValid: false,
-        message:
-          "Veuillez ajouter au moins un réseau social actif avant de sauvegarder."
       }
     }
 
@@ -1589,8 +1497,7 @@ const HeroContentAdmin: React.FC = () => {
         title: heroContent.title,
         description: heroContent.description,
         button: heroContent.button,
-        images: imageUrls,
-        socialLinks: socialLinks
+        images: imageUrls
       })
 
       if (response.data.success) {
@@ -1728,7 +1635,7 @@ const HeroContentAdmin: React.FC = () => {
         </div>
 
         {/* Section de statistiques */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center">
               <div className="p-3 bg-blue-100 rounded-lg">
@@ -1738,20 +1645,6 @@ const HeroContentAdmin: React.FC = () => {
                 <p className="text-sm text-gray-500">Total Images</p>
                 <p className="text-2xl font-bold text-gray-800">
                   {heroContent.images.length + imagePreviews.length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Globe className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-500">Réseaux Actifs</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  {socialLinks.filter((link) => link.isActive).length}
                 </p>
               </div>
             </div>
@@ -1771,11 +1664,6 @@ const HeroContentAdmin: React.FC = () => {
                 id: "images",
                 label: "Images",
                 icon: <ImageIcon className="w-4 h-4" />
-              },
-              {
-                id: "social",
-                label: "Réseaux Sociaux",
-                icon: <Globe className="w-4 h-4" />
               }
             ].map((tab) => (
               <button
@@ -1801,7 +1689,6 @@ const HeroContentAdmin: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-800 mb-6">
               {activeTab === "content" && "Édition du Contenu"}
               {activeTab === "images" && "Gestion des Images"}
-              {activeTab === "social" && "Réseaux Sociaux"}
             </h2>
 
             {/* Onglet Contenu */}
@@ -2101,172 +1988,6 @@ const HeroContentAdmin: React.FC = () => {
                   )}
               </div>
             )}
-
-            {/* Onglet Réseaux Sociaux */}
-            {activeTab === "social" && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-gray-800">
-                    Liens Réseaux Sociaux *
-                  </h3>
-                  <button
-                    onClick={addSocialLink}
-                    className="flex items-center px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  >
-                    <Plus className="mr-2" size={16} />
-                    Ajouter
-                  </button>
-                </div>
-
-                {/* Message d'avertissement si aucun réseau social actif */}
-                {socialLinks.filter((link) => link.isActive).length === 0 && (
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-800 text-sm">
-                      ⚠️ Vous devez avoir au moins un réseau social actif pour
-                      pouvoir sauvegarder.
-                    </p>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  {socialLinks.map((link) => (
-                    <div
-                      key={link.id}
-                      className="p-4 border border-gray-200 rounded-lg space-y-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={link.className}>
-                            {
-                              availableIcons[
-                                link.icon as keyof typeof availableIcons
-                              ]
-                            }
-                          </div>
-                          <span className="font-medium">{link.name}</span>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() =>
-                              updateSocialLink(
-                                link.id,
-                                "isActive",
-                                !link.isActive
-                              )
-                            }
-                            className={`px-3 py-1 text-xs rounded-full ${
-                              link.isActive
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {link.isActive ? "Actif" : "Inactif"}
-                          </button>
-
-                          <button
-                            onClick={() => moveSocialLink(link.id, "up")}
-                            className="p-1 text-gray-400 hover:text-gray-600"
-                          >
-                            <ArrowUp size={16} />
-                          </button>
-                          <button
-                            onClick={() => moveSocialLink(link.id, "down")}
-                            className="p-1 text-gray-400 hover:text-gray-600"
-                          >
-                            <ArrowDown size={16} />
-                          </button>
-                          <button
-                            onClick={() => removeSocialLink(link.id)}
-                            className="p-1 text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Nom
-                          </label>
-                          <input
-                            type="text"
-                            value={link.name}
-                            onChange={(e) =>
-                              updateSocialLink(link.id, "name", e.target.value)
-                            }
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Icône
-                          </label>
-                          <select
-                            value={link.icon}
-                            onChange={(e) =>
-                              updateSocialLink(link.id, "icon", e.target.value)
-                            }
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          >
-                            {Object.keys(availableIcons).map((iconName) => (
-                              <option key={iconName} value={iconName}>
-                                {iconName}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          URL
-                        </label>
-                        <input
-                          type="url"
-                          value={link.url}
-                          onChange={(e) =>
-                            updateSocialLink(link.id, "url", e.target.value)
-                          }
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          placeholder="https://..."
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Classe CSS (couleur)
-                        </label>
-                        <input
-                          type="text"
-                          value={link.className}
-                          onChange={(e) =>
-                            updateSocialLink(
-                              link.id,
-                              "className",
-                              e.target.value
-                            )
-                          }
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          placeholder="text-blue-600 hover:text-blue-800"
-                        />
-                      </div>
-                    </div>
-                  ))}
-
-                  {socialLinks.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <Globe className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p>Aucun réseau social ajouté</p>
-                      <p className="text-sm">
-                        Cliquez sur &quot;Ajouter&quot; pour commencer
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Panneau d'aperçu */}
@@ -2338,41 +2059,6 @@ const HeroContentAdmin: React.FC = () => {
                     )}
                   </div>
                 )}
-
-              {/* Aperçu des réseaux sociaux */}
-              {activeTab === "social" && (
-                <div className="mt-8">
-                  <h3 className="text-lg font-medium text-gray-800 mb-4">
-                    Réseaux Sociaux
-                  </h3>
-                  {socialLinks.filter((link) => link.isActive).length > 0 ? (
-                    <div className="flex flex-wrap gap-4 justify-center">
-                      {socialLinks
-                        .filter((link) => link.isActive)
-                        .map((link) => (
-                          <a
-                            key={link.id}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`p-3 rounded-lg border transition-colors ${link.className}`}
-                            title={link.name}
-                          >
-                            {
-                              availableIcons[
-                                link.icon as keyof typeof availableIcons
-                              ]
-                            }
-                          </a>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-gray-500">
-                      <p className="text-sm">Aucun réseau social actif</p>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Informations supplémentaires */}
@@ -2384,14 +2070,6 @@ const HeroContentAdmin: React.FC = () => {
                 <p>
                   • Total images:{" "}
                   {heroContent.images.length + imagePreviews.length}
-                </p>
-                <p>
-                  • Réseaux sociaux actifs:{" "}
-                  {socialLinks.filter((link) => link.isActive).length}
-                </p>
-                <p>
-                  • Réseaux sociaux inactifs:{" "}
-                  {socialLinks.filter((link) => !link.isActive).length}
                 </p>
                 <p>• Langues disponibles: Français, العربية</p>
               </div>
@@ -2417,10 +2095,6 @@ const HeroContentAdmin: React.FC = () => {
                 <li>• Utilisez des images de haute qualité (min. 800x800px)</li>
                 <li>
                   • Gardez les titres courts et percutants (max. 60 caractères)
-                </li>
-                <li>
-                  • Vérifiez que tous les liens sociaux sont valides avant de
-                  sauvegarder
                 </li>
                 <li>• N&apos;oubliez pas de remplir les deux langues</li>
                 <li>

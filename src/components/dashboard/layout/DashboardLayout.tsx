@@ -21,7 +21,8 @@ import {
   Boxes,
   Layers,
   LayoutDashboard,
-  Palette
+  Palette,
+  MessageCircleQuestion
 } from "lucide-react"
 import Image from "next/image"
 import { Link } from "@/i18n/navigation"
@@ -103,6 +104,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       icon: <LayoutDashboard className="w-5 h-5" />,
       href: "/dashboard/homepage-content",
       isActive: currentPath.includes("/dashboard/homepage-content")
+    },
+    {
+      id: "qa",
+      label: "Question Réponse",
+      icon: <MessageCircleQuestion className="w-5 h-5" />,
+      href: "/dashboard/qa",
+      isActive: currentPath.includes("/dashboard/qa")
     },
     {
       id: "marketing",

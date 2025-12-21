@@ -6,6 +6,9 @@ import {
   Instagram,
   Twitter,
   Youtube,
+  Linkedin,
+  Github,
+  ExternalLink,
   Heart,
   LucideIcon
 } from "lucide-react"
@@ -26,7 +29,10 @@ const iconMap: Record<string, LucideIcon> = {
   Facebook,
   Twitter,
   Instagram,
-  Youtube
+  Youtube,
+  Linkedin,
+  Github,
+  ExternalLink
 }
 
 const SocialMediaCard: React.FC = () => {

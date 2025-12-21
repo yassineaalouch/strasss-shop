@@ -19,7 +19,16 @@ import {
   Search,
   Image as ImageIcon,
   Megaphone,
-  ExternalLink
+  ExternalLink,
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube,
+  Linkedin,
+  Github,
+  Globe,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react"
 import { useToast } from "@/components/ui/Toast"
 import Image from "next/image"
@@ -1112,6 +1121,275 @@ export default function HomePageContentPage() {
                         </button>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* Réseaux Sociaux */}
+                <div className="border-t border-gray-200 pt-6 mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-sm font-medium">
+                      Réseaux Sociaux
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Couleur par défaut selon l'icône
+                        const getDefaultColor = (icon: string) => {
+                          const colors: Record<string, string> = {
+                            Facebook: "text-blue-600 hover:text-blue-800",
+                            Twitter: "text-sky-500 hover:text-sky-700",
+                            Instagram: "text-pink-600 hover:text-pink-800",
+                            Youtube: "text-red-600 hover:text-red-800",
+                            Linkedin: "text-blue-700 hover:text-blue-900",
+                            Github: "text-gray-800 hover:text-gray-900",
+                            ExternalLink: "text-gray-600 hover:text-gray-800"
+                          }
+                          return colors[icon] || "text-gray-600 hover:text-gray-800"
+                        }
+                        
+                        const newLink = {
+                          id: Date.now().toString(),
+                          url: "",
+                          icon: "Facebook",
+                          className: getDefaultColor("Facebook"),
+                          name: "Nouveau réseau",
+                          isActive: false,
+                          order: heroContent.socialLinks.length + 1
+                        }
+                        setHeroContent({
+                          ...heroContent,
+                          socialLinks: [...heroContent.socialLinks, newLink]
+                        })
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Ajouter
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {heroContent.socialLinks
+                      .sort((a, b) => a.order - b.order)
+                      .map((link, index) => {
+                        const iconMap: Record<string, React.ReactNode> = {
+                          Facebook: <Facebook className="w-5 h-5" />,
+                          Twitter: <Twitter className="w-5 h-5" />,
+                          Instagram: <Instagram className="w-5 h-5" />,
+                          Youtube: <Youtube className="w-5 h-5" />,
+                          Linkedin: <Linkedin className="w-5 h-5" />,
+                          Github: <Github className="w-5 h-5" />,
+                          ExternalLink: <ExternalLink className="w-5 h-5" />
+                        }
+
+                        return (
+                          <div
+                            key={link.id}
+                            className="p-4 border-2 border-gray-200 rounded-lg space-y-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={link.className}>
+                                  {iconMap[link.icon] || (
+                                    <Globe className="w-5 h-5" />
+                                  )}
+                                </div>
+                                <span className="font-medium">{link.name}</span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedLinks = [...heroContent.socialLinks]
+                                    const linkIndex = updatedLinks.findIndex(
+                                      (l) => l.id === link.id
+                                    )
+                                    if (linkIndex > 0) {
+                                      ;[updatedLinks[linkIndex], updatedLinks[linkIndex - 1]] = [
+                                        updatedLinks[linkIndex - 1],
+                                        updatedLinks[linkIndex]
+                                      ]
+                                      updatedLinks[linkIndex].order = linkIndex
+                                      updatedLinks[linkIndex - 1].order = linkIndex - 1
+                                      setHeroContent({
+                                        ...heroContent,
+                                        socialLinks: updatedLinks
+                                      })
+                                    }
+                                  }}
+                                  disabled={index === 0}
+                                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                                >
+                                  <ArrowUp className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedLinks = [...heroContent.socialLinks]
+                                    const linkIndex = updatedLinks.findIndex(
+                                      (l) => l.id === link.id
+                                    )
+                                    if (
+                                      linkIndex < updatedLinks.length - 1
+                                    ) {
+                                      ;[updatedLinks[linkIndex], updatedLinks[linkIndex + 1]] = [
+                                        updatedLinks[linkIndex + 1],
+                                        updatedLinks[linkIndex]
+                                      ]
+                                      updatedLinks[linkIndex].order = linkIndex
+                                      updatedLinks[linkIndex + 1].order = linkIndex + 1
+                                      setHeroContent({
+                                        ...heroContent,
+                                        socialLinks: updatedLinks
+                                      })
+                                    }
+                                  }}
+                                  disabled={index === heroContent.socialLinks.length - 1}
+                                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                                >
+                                  <ArrowDown className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedLinks = heroContent.socialLinks.filter(
+                                      (l) => l.id !== link.id
+                                    )
+                                    setHeroContent({
+                                      ...heroContent,
+                                      socialLinks: updatedLinks
+                                    })
+                                  }}
+                                  className="p-1 text-red-500 hover:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedLinks = heroContent.socialLinks.map((l) =>
+                                      l.id === link.id
+                                        ? { ...l, isActive: !l.isActive }
+                                        : l
+                                    )
+                                    setHeroContent({
+                                      ...heroContent,
+                                      socialLinks: updatedLinks
+                                    })
+                                  }}
+                                  className={`px-3 py-1 text-xs rounded-full ${
+                                    link.isActive
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}
+                                >
+                                  {link.isActive ? "Actif" : "Inactif"}
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Nom
+                                </label>
+                                <input
+                                  type="text"
+                                  value={link.name}
+                                  onChange={(e) => {
+                                    const updatedLinks = heroContent.socialLinks.map((l) =>
+                                      l.id === link.id ? { ...l, name: e.target.value } : l
+                                    )
+                                    setHeroContent({
+                                      ...heroContent,
+                                      socialLinks: updatedLinks
+                                    })
+                                  }}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Icône
+                                </label>
+                                <select
+                                  value={link.icon}
+                                  onChange={(e) => {
+                                    // Couleur par défaut selon l'icône choisie
+                                    const getDefaultColor = (icon: string) => {
+                                      const colors: Record<string, string> = {
+                                        Facebook: "text-blue-600 hover:text-blue-800",
+                                        Twitter: "text-sky-500 hover:text-sky-700",
+                                        Instagram: "text-pink-600 hover:text-pink-800",
+                                        Youtube: "text-red-600 hover:text-red-800",
+                                        Linkedin: "text-blue-700 hover:text-blue-900",
+                                        Github: "text-gray-800 hover:text-gray-900",
+                                        ExternalLink: "text-gray-600 hover:text-gray-800"
+                                      }
+                                      return colors[icon] || "text-gray-600 hover:text-gray-800"
+                                    }
+                                    
+                                    const updatedLinks = heroContent.socialLinks.map((l) =>
+                                      l.id === link.id
+                                        ? {
+                                            ...l,
+                                            icon: e.target.value,
+                                            className: getDefaultColor(e.target.value)
+                                          }
+                                        : l
+                                    )
+                                    setHeroContent({
+                                      ...heroContent,
+                                      socialLinks: updatedLinks
+                                    })
+                                  }}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                >
+                                  <option value="Facebook">Facebook</option>
+                                  <option value="Twitter">Twitter</option>
+                                  <option value="Instagram">Instagram</option>
+                                  <option value="Youtube">Youtube</option>
+                                  <option value="Linkedin">Linkedin</option>
+                                  <option value="Github">Github</option>
+                                  <option value="ExternalLink">ExternalLink</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                URL
+                              </label>
+                              <input
+                                type="url"
+                                value={link.url}
+                                onChange={(e) => {
+                                  const updatedLinks = heroContent.socialLinks.map((l) =>
+                                    l.id === link.id ? { ...l, url: e.target.value } : l
+                                  )
+                                  setHeroContent({
+                                    ...heroContent,
+                                    socialLinks: updatedLinks
+                                  })
+                                }}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                placeholder="https://..."
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                    {heroContent.socialLinks.length === 0 && (
+                      <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                        <Globe className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Aucun réseau social ajouté</p>
+                        <p className="text-xs mt-1">
+                          Cliquez sur &quot;Ajouter&quot; pour commencer
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
