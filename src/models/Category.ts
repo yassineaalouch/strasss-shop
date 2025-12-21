@@ -116,18 +116,74 @@ CategorySchema.pre(
   }
 )
 
+// --- Fonction helper pour générer un slug valide ---
+function generateSlug(text: string, fallback: string): string {
+  if (!text || typeof text !== "string") return fallback
+  
+  let slug = text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9ء-ي]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+  
+  // Si le slug est vide après traitement, utiliser le fallback
+  if (!slug || slug.trim() === "") {
+    slug = fallback
+  }
+  
+  return slug
+}
+
 // --- Middleware: générer un slug avant sauvegarde ---
+// Note: Le slug est maintenant généré dans l'API pour garantir l'unicité
+// Ce middleware ne s'exécute QUE si le slug n'est pas déjà défini par l'API
 CategorySchema.pre("save", function (this: CategoryDocument, next) {
-  if (this.isModified("name")) {
+  // Si le slug est déjà défini et non vide (fourni par l'API), ne PAS le régénérer
+  if (this.slug && 
+      this.slug.fr && 
+      this.slug.ar && 
+      this.slug.fr.trim() !== "" && 
+      this.slug.ar.trim() !== "" &&
+      this.slug.fr !== "undefined" &&
+      this.slug.ar !== "undefined") {
+    return next()
+  }
+  
+  // Sinon, générer un slug basique (pour compatibilité avec les anciennes catégories ou mises à jour directes)
+  if (this.isModified("name") || !this.slug || !this.slug.fr || !this.slug.ar) {
+    // Générer un identifiant unique pour le fallback
+    const fallbackId = this._id 
+      ? this._id.toString().slice(-8) 
+      : `t${Date.now().toString().slice(-8)}-${Math.random().toString(36).substring(2, 6)}`
+    
+    // Générer le slug français
+    let slugFr = this.name.fr
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+    
+    // Si le slug français est vide, utiliser un fallback unique
+    if (!slugFr || slugFr.trim() === "") {
+      slugFr = `cat-fr-${fallbackId}`
+    }
+    
+    // Générer le slug arabe - améliorer la regex pour mieux gérer l'arabe
+    let slugAr = this.name.ar
+      .toLowerCase()
+      .trim()
+      // Garder les caractères arabes, latins et numériques
+      .replace(/[^\u0600-\u06FFa-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+    
+    // Si le slug arabe est vide, utiliser un fallback unique
+    if (!slugAr || slugAr.trim() === "") {
+      slugAr = `cat-ar-${fallbackId}`
+    }
+    
     this.slug = {
-      fr: this.name.fr
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, ""),
-      ar: this.name.ar
-        .toLowerCase()
-        .replace(/[^ء-ي0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "")
+      fr: slugFr,
+      ar: slugAr
     }
   }
   next()
