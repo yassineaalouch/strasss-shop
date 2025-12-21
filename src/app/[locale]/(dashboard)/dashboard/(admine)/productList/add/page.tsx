@@ -15,6 +15,7 @@ import {
   SelectedCharacteristic
 } from "@/types/characteristic"
 import { useToast } from "@/components/ui/Toast"
+import { isColorCharacteristic, normalizeHexColor, isValidHexColor } from "@/utils/colorCharacteristic"
 
 const AdminAddProduct: React.FC = () => {
   const router = useRouter()
@@ -843,35 +844,53 @@ const AdminAddProduct: React.FC = () => {
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                             {characteristics
                               .find((c) => c._id === char.characteristicId)
-                              ?.values.map((value) => (
-                                <div
-                                  key={value._id}
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    id={`value-${index}-${value._id}`}
-                                    checked={char.selectedValues.some(
-                                      (v) => v._id === value._id
-                                    )}
-                                    onChange={(e) =>
-                                      handleValueChange(
-                                        index,
-                                        value._id!,
-                                        e.target.checked
-                                      )
-                                    }
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    disabled={isSubmitting}
-                                  />
-                                  <label
-                                    htmlFor={`value-${index}-${value._id}`}
-                                    className="ml-2 text-sm text-gray-700"
+                              ?.values.map((value) => {
+                                const currentChar = characteristics.find((c) => c._id === char.characteristicId)
+                                const isColor = currentChar && (isColorCharacteristic(currentChar.name.fr) || isColorCharacteristic(currentChar.name.ar))
+                                const isHexColor = isColor && isValidHexColor(value.name.fr)
+                                
+                                return (
+                                  <div
+                                    key={value._id}
+                                    className="flex items-center gap-2"
                                   >
-                                    {value.name.fr} / {value.name.ar}
-                                  </label>
-                                </div>
-                              ))}
+                                    <input
+                                      type="checkbox"
+                                      id={`value-${index}-${value._id}`}
+                                      checked={char.selectedValues.some(
+                                        (v) => v._id === value._id
+                                      )}
+                                      onChange={(e) =>
+                                        handleValueChange(
+                                          index,
+                                          value._id!,
+                                          e.target.checked
+                                        )
+                                      }
+                                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                      disabled={isSubmitting}
+                                    />
+                                    <label
+                                      htmlFor={`value-${index}-${value._id}`}
+                                      className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer flex-1"
+                                    >
+                                      {isHexColor ? (
+                                        <>
+                                          <div
+                                            className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
+                                            style={{ backgroundColor: normalizeHexColor(value.name.fr) }}
+                                          />
+                                          <span className="font-mono text-xs">
+                                            {normalizeHexColor(value.name.fr)}
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <span>{value.name.fr} / {value.name.ar}</span>
+                                      )}
+                                    </label>
+                                  </div>
+                                )
+                              })}
                           </div>
                           {char.selectedValues.length === 0 && (
                             <p className="text-yellow-600 text-sm mt-2">

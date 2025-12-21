@@ -9,6 +9,7 @@ import { ProductFilterProps } from "@/types/shopFilter"
 import { ICharacteristic } from "@/types/characteristic"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { useToast } from "@/components/ui/Toast"
+import { isColorCharacteristic, normalizeHexColor, isValidHexColor } from "@/utils/colorCharacteristic"
 
 const ProductFilter: React.FC<ProductFilterProps> = ({
   filters,
@@ -240,11 +241,13 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                           const label = val.name[locale]
                           const isChecked =
                             filters.characteristics.includes(label)
+                          const isColor = isColorCharacteristic(char.name.fr) || isColorCharacteristic(char.name.ar)
+                          const isHexColor = isColor && isValidHexColor(label)
 
                           return (
                             <label
                               key={j}
-                              className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition"
+                              className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition"
                             >
                               <input
                                 type="checkbox"
@@ -254,9 +257,22 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                                 }
                                 className="text-yellow-500 focus:ring-yellow-500 rounded"
                               />
-                              <span className="text-sm text-gray-700">
-                                {label}
-                              </span>
+                              {isHexColor ? (
+                                // Afficher la couleur visuellement
+                                <div className="flex items-center gap-2 flex-1">
+                                  <div
+                                    className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
+                                    style={{ backgroundColor: normalizeHexColor(label) }}
+                                  />
+                                  <span className="text-sm text-gray-700 font-mono">
+                                    {normalizeHexColor(label)}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-gray-700">
+                                  {label}
+                                </span>
+                              )}
                             </label>
                           )
                         })}

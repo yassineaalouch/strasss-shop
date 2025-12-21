@@ -6,6 +6,7 @@ import { Trash2, Edit3, Save, X, Plus, Search, Filter } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ICharacteristic } from "@/types/characteristic"
 import { useToast } from "@/components/ui/Toast"
+import { isColorCharacteristic, normalizeHexColor } from "@/utils/colorCharacteristic"
 
 export default function CharacteristicsPage() {
   const { showToast } = useToast()
@@ -20,6 +21,7 @@ export default function CharacteristicsPage() {
   const [loading, setLoading] = useState(false)
   const [isAddingNew, setIsAddingNew] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [isColorChar, setIsColorChar] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -29,6 +31,11 @@ export default function CharacteristicsPage() {
     const res = await axios.get("/api/characteristics")
     setCharacteristics(res.data)
   }
+
+  // Vérifier si une caractéristique de couleur existe déjà
+  const hasColorCharacteristic = characteristics.some(
+    (char) => isColorCharacteristic(char.name.fr) || isColorCharacteristic(char.name.ar)
+  )
 
   // Filtrage des caractéristiques
   const filteredCharacteristics = characteristics.filter((char) => {
@@ -57,6 +64,14 @@ export default function CharacteristicsPage() {
       alert("Veuillez remplir les noms en français et arabe")
       return
     }
+
+    // Vérifier si l'utilisateur essaie d'ajouter une caractéristique de couleur alors qu'une existe déjà
+    const isTryingToAddColor = isColorCharacteristic(newChar.name.fr) || isColorCharacteristic(newChar.name.ar)
+    if (isTryingToAddColor && hasColorCharacteristic) {
+      alert("Une caractéristique de couleur existe déjà. Vous ne pouvez avoir qu'une seule caractéristique de type couleur.")
+      return
+    }
+
     setLoading(true)
     try {
       const res = await axios.post("/api/characteristics", {
@@ -69,6 +84,7 @@ export default function CharacteristicsPage() {
         name: { ar: "", fr: "" },
         values: []
       })
+      setIsColorChar(false)
       setIsAddingNew(false)
       showToast("Caractéristique ajoutée avec succès", "success")
     } catch (error) {
@@ -79,6 +95,7 @@ export default function CharacteristicsPage() {
 
   function cancelAdd() {
     setIsAddingNew(false)
+    setIsColorChar(false)
     setNewChar({
       _id: crypto.randomUUID(),
       name: { ar: "", fr: "" },
@@ -90,11 +107,24 @@ export default function CharacteristicsPage() {
   function startEdit(char: ICharacteristic) {
     setEditingId(char._id!)
     setEditChar(JSON.parse(JSON.stringify(char)))
+    // Détecter si c'est une caractéristique de couleur
+    const isColor = isColorCharacteristic(char.name.fr) || isColorCharacteristic(char.name.ar)
+    setIsColorChar(isColor)
+  }
+
+  // Vérifier si une autre caractéristique de couleur existe (pour l'édition)
+  const hasOtherColorCharacteristic = (currentId?: string) => {
+    return characteristics.some(
+      (char) => 
+        char._id !== currentId && 
+        (isColorCharacteristic(char.name.fr) || isColorCharacteristic(char.name.ar))
+    )
   }
 
   function cancelEdit() {
     setEditingId(null)
     setEditChar(null)
+    setIsColorChar(false)
   }
 
   function addEditValueField() {
@@ -114,12 +144,21 @@ export default function CharacteristicsPage() {
 
   async function saveEdit() {
     if (!editChar || !editChar._id) return
+    
+    // Vérifier si l'utilisateur essaie de modifier une caractéristique en couleur alors qu'une autre existe déjà
+    const isTryingToMakeColor = isColorCharacteristic(editChar.name.fr) || isColorCharacteristic(editChar.name.ar)
+    if (isTryingToMakeColor && hasOtherColorCharacteristic(editChar._id)) {
+      alert("Une autre caractéristique de couleur existe déjà. Vous ne pouvez avoir qu'une seule caractéristique de type couleur.")
+      return
+    }
+
     setLoading(true)
     try {
       await axios.put(`/api/characteristics/${editChar._id}`, editChar)
       await fetchData()
       setEditingId(null)
       setEditChar(null)
+      setIsColorChar(false)
       showToast("Caractéristique modifiée avec succès", "success")
     } catch (error) {
       showToast("Erreur lors de la modification de la caractéristique", "error")
@@ -205,6 +244,38 @@ export default function CharacteristicsPage() {
               </div>
 
               <div className="space-y-6">
+                {/* Checkbox pour détecter automatiquement "Couleur" - cachée si une couleur existe déjà */}
+                {!hasColorCharacteristic && (
+                  <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="isColorChar"
+                      checked={isColorChar}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setIsColorChar(checked)
+                        if (checked) {
+                          // Remplir automatiquement les noms
+                          setNewChar({
+                            ...newChar,
+                            name: { fr: "Couleur", ar: "لون" }
+                          })
+                        } else {
+                          // Réinitialiser si décoché
+                          setNewChar({
+                            ...newChar,
+                            name: { fr: "", ar: "" }
+                          })
+                        }
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="isColorChar" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      Cette caractéristique est une couleur
+                    </label>
+                  </div>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -213,13 +284,34 @@ export default function CharacteristicsPage() {
                     <input
                       placeholder="Ex: Couleur, Taille..."
                       value={newChar.name.fr}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const value = e.target.value
                         setNewChar({
                           ...newChar,
-                          name: { ...newChar.name, fr: e.target.value }
+                          name: { ...newChar.name, fr: value }
                         })
-                      }
+                        // Détecter automatiquement si c'est une couleur
+                        const detected = isColorCharacteristic(value)
+                        if (detected) {
+                          if (hasColorCharacteristic) {
+                            alert("Une caractéristique de couleur existe déjà. Vous ne pouvez avoir qu'une seule caractéristique de type couleur.")
+                            setNewChar({
+                              ...newChar,
+                              name: { ...newChar.name, fr: "" }
+                            })
+                            return
+                          }
+                          if (!isColorChar) {
+                            setIsColorChar(true)
+                            setNewChar({
+                              ...newChar,
+                              name: { fr: "Couleur", ar: "لون" }
+                            })
+                          }
+                        }
+                      }}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={isColorChar}
                     />
                   </div>
                   <div>
@@ -230,13 +322,34 @@ export default function CharacteristicsPage() {
                       placeholder="مثال: لون، مقاس..."
                       dir="rtl"
                       value={newChar.name.ar}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const value = e.target.value
                         setNewChar({
                           ...newChar,
-                          name: { ...newChar.name, ar: e.target.value }
+                          name: { ...newChar.name, ar: value }
                         })
-                      }
+                        // Détecter automatiquement si c'est une couleur
+                        const detected = isColorCharacteristic(value)
+                        if (detected) {
+                          if (hasColorCharacteristic) {
+                            alert("Une caractéristique de couleur existe déjà. Vous ne pouvez avoir qu'une seule caractéristique de type couleur.")
+                            setNewChar({
+                              ...newChar,
+                              name: { ...newChar.name, ar: "" }
+                            })
+                            return
+                          }
+                          if (!isColorChar) {
+                            setIsColorChar(true)
+                            setNewChar({
+                              ...newChar,
+                              name: { fr: "Couleur", ar: "لون" }
+                            })
+                          }
+                        }
+                      }}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+                      disabled={isColorChar}
                     />
                   </div>
                 </div>
@@ -261,37 +374,89 @@ export default function CharacteristicsPage() {
                         key={i}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="grid md:grid-cols-2 gap-3 items-center"
+                        className={`grid ${isColorChar ? "md:grid-cols-3" : "md:grid-cols-2"} gap-3 items-center`}
                       >
-                        <input
-                          placeholder="Valeur en français"
-                          value={v.name.fr}
-                          onChange={(e) => {
-                            const updated = [...newChar.values]
-                            updated[i].name.fr = e.target.value
-                            setNewChar({ ...newChar, values: updated })
-                          }}
-                          className="p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
-                        />
-                        <div className="flex gap-2">
-                          <input
-                            placeholder="القيمة بالعربية"
-                            dir="rtl"
-                            value={v.name.ar}
-                            onChange={(e) => {
-                              const updated = [...newChar.values]
-                              updated[i].name.ar = e.target.value
-                              setNewChar({ ...newChar, values: updated })
-                            }}
-                            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-right"
-                          />
-                          <button
-                            onClick={() => removeNewValue(i)}
-                            className="p-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                        {isColorChar ? (
+                          // Mode couleur : color picker
+                          <>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="color"
+                                value={normalizeHexColor(v.name.fr || "#000000")}
+                                onChange={(e) => {
+                                  const hexColor = normalizeHexColor(e.target.value)
+                                  const updated = [...newChar.values]
+                                  updated[i].name.fr = hexColor
+                                  updated[i].name.ar = hexColor
+                                  setNewChar({ ...newChar, values: updated })
+                                }}
+                                className="w-16 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                              />
+                              <input
+                                type="text"
+                                placeholder="#000000"
+                                value={v.name.fr || ""}
+                                onChange={(e) => {
+                                  const hexColor = normalizeHexColor(e.target.value)
+                                  const updated = [...newChar.values]
+                                  updated[i].name.fr = hexColor
+                                  updated[i].name.ar = hexColor
+                                  setNewChar({ ...newChar, values: updated })
+                                }}
+                                className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-mono"
+                                maxLength={7}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-sm"
+                                style={{ backgroundColor: normalizeHexColor(v.name.fr || "#000000") }}
+                              />
+                              <span className="text-sm text-gray-600">
+                                {normalizeHexColor(v.name.fr || "#000000")}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => removeNewValue(i)}
+                              className="p-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        ) : (
+                          // Mode normal : champs texte
+                          <>
+                            <input
+                              placeholder="Valeur en français"
+                              value={v.name.fr}
+                              onChange={(e) => {
+                                const updated = [...newChar.values]
+                                updated[i].name.fr = e.target.value
+                                setNewChar({ ...newChar, values: updated })
+                              }}
+                              className="p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                            />
+                            <div className="flex gap-2">
+                              <input
+                                placeholder="القيمة بالعربية"
+                                dir="rtl"
+                                value={v.name.ar}
+                                onChange={(e) => {
+                                  const updated = [...newChar.values]
+                                  updated[i].name.ar = e.target.value
+                                  setNewChar({ ...newChar, values: updated })
+                                }}
+                                className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-right"
+                              />
+                              <button
+                                onClick={() => removeNewValue(i)}
+                                className="p-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </motion.div>
                     ))}
                     {newChar.values.length === 0 && (
@@ -368,34 +533,108 @@ export default function CharacteristicsPage() {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           {isEditing && editChar ? (
-                            <div className="flex flex-col space-y-2">
-                              <input
-                                value={editChar.name.fr}
-                                onChange={(e) =>
-                                  setEditChar({
-                                    ...editChar,
-                                    name: {
-                                      ...editChar.name,
-                                      fr: e.target.value
+                            <div className="space-y-3">
+                              {/* Checkbox pour mode couleur en édition - cachée si une autre couleur existe */}
+                              {!hasOtherColorCharacteristic(editChar._id) && (
+                                <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                                  <input
+                                    type="checkbox"
+                                    id="isColorCharEdit"
+                                    checked={isColorChar}
+                                    onChange={(e) => {
+                                      const checked = e.target.checked
+                                      setIsColorChar(checked)
+                                      if (checked) {
+                                        setEditChar({
+                                          ...editChar,
+                                          name: { fr: "Couleur", ar: "لون" }
+                                        })
+                                      }
+                                    }}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                  />
+                                  <label htmlFor="isColorCharEdit" className="text-xs font-medium text-gray-700 cursor-pointer">
+                                    Caractéristique de couleur
+                                  </label>
+                                </div>
+                              )}
+                              <div className="flex flex-col space-y-2">
+                                <input
+                                  value={editChar.name.fr}
+                                  onChange={(e) => {
+                                    const value = e.target.value
+                                    setEditChar({
+                                      ...editChar,
+                                      name: {
+                                        ...editChar.name,
+                                        fr: value
+                                      }
+                                    })
+                                    // Détecter automatiquement si c'est une couleur
+                                    const detected = isColorCharacteristic(value)
+                                    if (detected) {
+                                      if (hasOtherColorCharacteristic(editChar._id)) {
+                                        alert("Une autre caractéristique de couleur existe déjà. Vous ne pouvez avoir qu'une seule caractéristique de type couleur.")
+                                        setEditChar({
+                                          ...editChar,
+                                          name: {
+                                            ...editChar.name,
+                                            fr: editChar.name.fr
+                                          }
+                                        })
+                                        return
+                                      }
+                                      if (!isColorChar) {
+                                        setIsColorChar(true)
+                                        setEditChar({
+                                          ...editChar,
+                                          name: { fr: "Couleur", ar: "لون" }
+                                        })
+                                      }
                                     }
-                                  })
-                                }
-                                className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                              />
-                              <input
-                                value={editChar.name.ar}
-                                onChange={(e) =>
-                                  setEditChar({
-                                    ...editChar,
-                                    name: {
-                                      ...editChar.name,
-                                      ar: e.target.value
+                                  }}
+                                  className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                  disabled={isColorChar}
+                                />
+                                <input
+                                  value={editChar.name.ar}
+                                  onChange={(e) => {
+                                    const value = e.target.value
+                                    setEditChar({
+                                      ...editChar,
+                                      name: {
+                                        ...editChar.name,
+                                        ar: value
+                                      }
+                                    })
+                                    // Détecter automatiquement si c'est une couleur
+                                    const detected = isColorCharacteristic(value)
+                                    if (detected) {
+                                      if (hasOtherColorCharacteristic(editChar._id)) {
+                                        alert("Une autre caractéristique de couleur existe déjà. Vous ne pouvez avoir qu'une seule caractéristique de type couleur.")
+                                        setEditChar({
+                                          ...editChar,
+                                          name: {
+                                            ...editChar.name,
+                                            ar: editChar.name.ar
+                                          }
+                                        })
+                                        return
+                                      }
+                                      if (!isColorChar) {
+                                        setIsColorChar(true)
+                                        setEditChar({
+                                          ...editChar,
+                                          name: { fr: "Couleur", ar: "لون" }
+                                        })
+                                      }
                                     }
-                                  })
-                                }
-                                className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-right"
-                                dir="rtl"
-                              />
+                                  }}
+                                  className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-right"
+                                  dir="rtl"
+                                  disabled={isColorChar}
+                                />
+                              </div>
                             </div>
                           ) : (
                             <div>
@@ -415,46 +654,104 @@ export default function CharacteristicsPage() {
                         <td className="px-6 py-4">
                           {isEditing && editChar ? (
                             <div className="space-y-2">
-                              {editChar.values.map((v, i) => (
-                                <div
-                                  key={i}
-                                  className="flex gap-2 items-center"
-                                >
-                                  <input
-                                    value={v.name.fr}
-                                    onChange={(e) => {
-                                      const updated = [...editChar.values]
-                                      updated[i].name.fr = e.target.value
-                                      setEditChar({
-                                        ...editChar,
-                                        values: updated
-                                      })
-                                    }}
-                                    className="flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm"
-                                    placeholder="FR"
-                                  />
-                                  <input
-                                    value={v.name.ar}
-                                    onChange={(e) => {
-                                      const updated = [...editChar.values]
-                                      updated[i].name.ar = e.target.value
-                                      setEditChar({
-                                        ...editChar,
-                                        values: updated
-                                      })
-                                    }}
-                                    className="flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm text-right"
-                                    placeholder="AR"
-                                    dir="rtl"
-                                  />
-                                  <button
-                                    onClick={() => removeEditValue(i)}
-                                    className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                              {editChar.values.map((v, i) => {
+                                const isColor = isColorCharacteristic(editChar.name.fr) || isColorCharacteristic(editChar.name.ar)
+                                return (
+                                  <div
+                                    key={i}
+                                    className={`flex gap-2 items-center ${isColor ? "flex-wrap" : ""}`}
                                   >
-                                    <X className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              ))}
+                                    {isColor ? (
+                                      // Mode couleur : color picker
+                                      <>
+                                        <div className="flex items-center gap-2 flex-1">
+                                          <input
+                                            type="color"
+                                            value={normalizeHexColor(v.name.fr || "#000000")}
+                                            onChange={(e) => {
+                                              const hexColor = normalizeHexColor(e.target.value)
+                                              const updated = [...editChar.values]
+                                              updated[i].name.fr = hexColor
+                                              updated[i].name.ar = hexColor
+                                              setEditChar({
+                                                ...editChar,
+                                                values: updated
+                                              })
+                                            }}
+                                            className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+                                          />
+                                          <input
+                                            type="text"
+                                            placeholder="#000000"
+                                            value={v.name.fr || ""}
+                                            onChange={(e) => {
+                                              const hexColor = normalizeHexColor(e.target.value)
+                                              const updated = [...editChar.values]
+                                              updated[i].name.fr = hexColor
+                                              updated[i].name.ar = hexColor
+                                              setEditChar({
+                                                ...editChar,
+                                                values: updated
+                                              })
+                                            }}
+                                            className="flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm font-mono"
+                                            maxLength={7}
+                                          />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <div
+                                            className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
+                                            style={{ backgroundColor: normalizeHexColor(v.name.fr || "#000000") }}
+                                          />
+                                        </div>
+                                        <button
+                                          onClick={() => removeEditValue(i)}
+                                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                        >
+                                          <X className="w-3 h-3" />
+                                        </button>
+                                      </>
+                                    ) : (
+                                      // Mode normal : champs texte
+                                      <>
+                                        <input
+                                          value={v.name.fr}
+                                          onChange={(e) => {
+                                            const updated = [...editChar.values]
+                                            updated[i].name.fr = e.target.value
+                                            setEditChar({
+                                              ...editChar,
+                                              values: updated
+                                            })
+                                          }}
+                                          className="flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm"
+                                          placeholder="FR"
+                                        />
+                                        <input
+                                          value={v.name.ar}
+                                          onChange={(e) => {
+                                            const updated = [...editChar.values]
+                                            updated[i].name.ar = e.target.value
+                                            setEditChar({
+                                              ...editChar,
+                                              values: updated
+                                            })
+                                          }}
+                                          className="flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm text-right"
+                                          placeholder="AR"
+                                          dir="rtl"
+                                        />
+                                        <button
+                                          onClick={() => removeEditValue(i)}
+                                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                        >
+                                          <X className="w-3 h-3" />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                )
+                              })}
                               <button
                                 onClick={addEditValueField}
                                 className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
@@ -465,14 +762,29 @@ export default function CharacteristicsPage() {
                             </div>
                           ) : (
                             <div className="flex flex-wrap gap-1">
-                              {char.values.slice(0, 3).map((value, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                                >
-                                  {value.name.fr}
-                                </span>
-                              ))}
+                              {char.values.slice(0, 3).map((value, idx) => {
+                                const isColor = isColorCharacteristic(char.name.fr) || isColorCharacteristic(char.name.ar)
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`inline-flex items-center gap-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full ${
+                                      isColor ? "bg-white border border-gray-300" : ""
+                                    }`}
+                                  >
+                                    {isColor && value.name.fr ? (
+                                      <>
+                                        <div
+                                          className="w-4 h-4 rounded-full border border-gray-400"
+                                          style={{ backgroundColor: normalizeHexColor(value.name.fr) }}
+                                        />
+                                        <span className="font-mono text-xs">{normalizeHexColor(value.name.fr)}</span>
+                                      </>
+                                    ) : (
+                                      value.name.fr
+                                    )}
+                                  </span>
+                                )
+                              })}
                               {char.values.length > 3 && (
                                 <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                                   +{char.values.length - 3} plus

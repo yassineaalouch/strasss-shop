@@ -22,6 +22,7 @@ import { Product } from "@/types/product"
 import { RelatedProducts } from "@/components/shop/Relatedproducts"
 import { useCartContext } from "@/app/context/CartContext"
 import { ShareMenu } from "@/components/ShareMenu"
+import { isColorCharacteristic, normalizeHexColor, isValidHexColor } from "@/utils/colorCharacteristic"
 
 const ProductPage: React.FC = () => {
   const { productId } = useParams()
@@ -555,18 +556,35 @@ const ProductPage: React.FC = () => {
                             const valueLabel = value?.[locale] ?? "---"
                             const isSelected = selectedValue === valueLabel
                             
+                            // Vérifier si c'est une caractéristique de couleur
+                            const charNameObj = "name" in char.name ? char.name.name : { fr: charName, ar: charName }
+                            const isColor = isColorCharacteristic(charNameObj.fr) || isColorCharacteristic(charNameObj.ar)
+                            const isHexColor = isColor && isValidHexColor(valueLabel)
+                            
                             return (
                               <button
                                 key={value._id}
                                 type="button"
                                 onClick={() => handleCharacteristicSelect(charName, valueLabel)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                                   isSelected
                                     ? "bg-firstColor text-white shadow-md scale-105"
                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105"
                                 }`}
                               >
-                                {valueLabel}
+                                {isHexColor ? (
+                                  <>
+                                    <div
+                                      className={`w-6 h-6 rounded-full border-2 ${isSelected ? "border-white" : "border-gray-300"} shadow-sm`}
+                                      style={{ backgroundColor: normalizeHexColor(valueLabel) }}
+                                    />
+                                    <span className="font-mono text-xs">
+                                      {normalizeHexColor(valueLabel)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  valueLabel
+                                )}
                               </button>
                             )
                           })}

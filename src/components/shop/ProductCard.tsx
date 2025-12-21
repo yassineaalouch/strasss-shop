@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { ProductCardProps } from "@/types/type"
 import { motion, AnimatePresence } from "framer-motion"
+import { isColorCharacteristic, normalizeHexColor, isValidHexColor } from "@/utils/colorCharacteristic"
 import { Link } from "@/i18n/navigation"
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -754,6 +755,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                                 : String(char.name)
                             const isSelected =
                               selectedValues[charName] === label
+                            
+                            // Vérifier si c'est une caractéristique de couleur
+                            const charNameObj = "name" in char.name ? char.name.name : { fr: String(char.name), ar: String(char.name) }
+                            const isColor = isColorCharacteristic(charNameObj.fr) || isColorCharacteristic(charNameObj.ar)
+                            const isHexColor = isColor && isValidHexColor(label)
 
                             return (
                               <motion.button
@@ -767,9 +773,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
                                   isSelected
                                     ? "bg-firstColor text-white shadow-lg"
                                     : "bg-white text-gray-700 border-2 border-gray-200 hover:border-orange-300"
-                                }`}
+                                } ${isHexColor ? "flex items-center gap-2" : ""}`}
                               >
-                                {label}
+                                {isHexColor ? (
+                                  <>
+                                    <div
+                                      className={`w-6 h-6 rounded-full border-2 ${isSelected ? "border-white" : "border-gray-300"} shadow-sm`}
+                                      style={{ backgroundColor: normalizeHexColor(label) }}
+                                    />
+                                    <span className="font-mono text-xs">
+                                      {normalizeHexColor(label)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  label
+                                )}
                                 {isSelected && (
                                   <motion.div
                                     initial={{ scale: 0 }}
