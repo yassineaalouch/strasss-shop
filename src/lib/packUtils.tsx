@@ -35,7 +35,7 @@ interface Pack {
  */
 async function fetchProductDetails(productId: string): Promise<ProductApiResponse | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
 
     const { data } = await axios.get<{ success: boolean; product: ProductApiResponse }>(
       `${apiUrl}/api/products/${productId}`,
