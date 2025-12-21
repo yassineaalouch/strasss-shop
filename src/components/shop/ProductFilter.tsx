@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
-import { Filter, X } from "lucide-react"
+import React, { useEffect, useState, useMemo } from "react"
+import { Filter, X, ChevronRight } from "lucide-react"
 import { useTranslations, useLocale } from "next-intl"
 import axios from "axios"
-import { Category } from "@/types/category"
+import { Category, CategoryTreeNode } from "@/types/category"
 import { ProductFilterProps } from "@/types/shopFilter"
 import { ICharacteristic } from "@/types/characteristic"
 import { ChevronDown, ChevronUp } from "lucide-react"
@@ -21,9 +21,11 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   const locale = useLocale() as "fr" | "ar"
   const { showToast } = useToast()
   const [categories, setCategories] = useState<string[]>([])
+  const [categoriesData, setCategoriesData] = useState<Category[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [characteristics, setCharacteristics] = useState<ICharacteristic[]>([])
   const [openChar, setOpenChar] = useState<string | null>(null)
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
   const toggleChar = (id: string) => {
     setOpenChar((prev) => (prev === id ? null : id))
@@ -44,10 +46,11 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
       setLoadingCategories(true)
       const response = await axios.get("/api/categories")
       if (response.data.success) {
+        const allCategories: Category[] = response.data.categories
+        setCategoriesData(allCategories)
+        // Garder aussi l'ancienne structure pour compatibilité
         setCategories(
-          response.data.categories.map(
-            (category: Category) => category?.name?.[locale]
-          )
+          allCategories.map((category: Category) => category?.name?.[locale])
         )
       } else {
         showToast(response.data.message || "Erreur lors du chargement des catégories", "error")
@@ -59,12 +62,129 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     }
   }
 
+  // Construire l'arbre de catégories
+  const categoryTree = useMemo(() => {
+    const buildTree = (parentId?: string, level: number = 0): CategoryTreeNode[] => {
+      return categoriesData
+        .filter((cat) => (parentId ? cat.parentId === parentId : !cat.parentId))
+        .filter((cat) => cat.isActive) // Seulement les catégories actives
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map((category) => ({
+          category,
+          children: buildTree(category._id, level + 1),
+          level
+        }))
+    }
+    return buildTree()
+  }, [categoriesData])
+
+  // Fonction pour obtenir tous les IDs de catégories (parent + enfants)
+  const getAllCategoryIds = (categoryId: string): string[] => {
+    const category = categoriesData.find((c) => c._id === categoryId)
+    if (!category) return [categoryId]
+
+    const ids = [categoryId]
+    // Récupérer tous les enfants récursivement
+    const getChildrenIds = (parentId: string) => {
+      const children = categoriesData.filter((c) => c.parentId === parentId)
+      children.forEach((child) => {
+        ids.push(child._id)
+        getChildrenIds(child._id)
+      })
+    }
+    getChildrenIds(categoryId)
+    return ids
+  }
+
   // 🕹 Handlers
-  const handleCategoryChange = (category: string) => {
-    const newCategories = filters.category.includes(category)
-      ? filters.category.filter((c) => c !== category)
-      : [...filters.category, category]
-    onFiltersChange({ ...filters, category: newCategories })
+  const handleCategoryChange = (categoryName: string, categoryId?: string) => {
+    if (!categoryId) {
+      // Fallback si pas d'ID (ne devrait pas arriver)
+      const newCategories = filters.category.includes(categoryName)
+        ? filters.category.filter((c) => c !== categoryName)
+        : [...filters.category, categoryName]
+      onFiltersChange({ ...filters, category: newCategories })
+      return
+    }
+
+    const category = categoriesData.find((c) => c._id === categoryId)
+    if (!category) return
+
+    // Vérifier si c'est une catégorie parente (a des enfants)
+    const hasChildren = categoriesData.some((c) => c.parentId === categoryId)
+    const isCurrentlySelected = filters.category.includes(categoryName)
+
+    if (isCurrentlySelected) {
+      // Désélectionner
+      if (hasChildren) {
+        // Si c'est un parent : retirer la catégorie et toutes ses sous-catégories
+        const allIds = getAllCategoryIds(categoryId)
+        const allNames = allIds
+          .map((id) => {
+            const cat = categoriesData.find((c) => c._id === id)
+            return cat ? cat.name[locale] : null
+          })
+          .filter((name): name is string => name !== null)
+        const newCategories = filters.category.filter((c) => !allNames.includes(c))
+        onFiltersChange({ ...filters, category: newCategories })
+      } else {
+        // Si c'est une sous-catégorie : retirer seulement cette catégorie (pas le parent)
+        const newCategories = filters.category.filter((c) => c !== categoryName)
+        onFiltersChange({ ...filters, category: newCategories })
+      }
+    } else {
+      // Sélectionner
+      if (hasChildren) {
+        // Si c'est un parent : ajouter la catégorie et toutes ses sous-catégories
+        const allIds = getAllCategoryIds(categoryId)
+        const allNames = allIds
+          .map((id) => {
+            const cat = categoriesData.find((c) => c._id === id)
+            return cat ? cat.name[locale] : null
+          })
+          .filter((name): name is string => name !== null)
+        const newCategories = [...new Set([...filters.category, ...allNames])]
+        onFiltersChange({ ...filters, category: newCategories })
+      } else {
+        // Si c'est une sous-catégorie : ajouter seulement cette catégorie (pas le parent)
+        const newCategories = [...new Set([...filters.category, categoryName])]
+        onFiltersChange({ ...filters, category: newCategories })
+      }
+    }
+  }
+
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId)
+      } else {
+        newSet.add(categoryId)
+      }
+      return newSet
+    })
+  }
+
+  // Vérifier si une catégorie ou une de ses sous-catégories est sélectionnée
+  const isCategoryOrChildSelected = (categoryId: string): boolean => {
+    const category = categoriesData.find((c) => c._id === categoryId)
+    if (!category) return false
+    
+    const categoryName = category.name[locale]
+    // Vérifier si cette catégorie spécifique est sélectionnée
+    if (filters.category.includes(categoryName)) return true
+    
+    // Vérifier si une de ses sous-catégories est sélectionnée
+    const allIds = getAllCategoryIds(categoryId)
+    // Exclure la catégorie elle-même pour ne vérifier que les enfants
+    const childIds = allIds.filter((id) => id !== categoryId)
+    const childNames = childIds
+      .map((id) => {
+        const cat = categoriesData.find((c) => c._id === id)
+        return cat ? cat.name[locale] : null
+      })
+      .filter((name): name is string => name !== null)
+    return childNames.some((name) => filters.category.includes(name))
   }
 
   const handleCharacteristicChange = (value: string) => {
@@ -167,30 +287,26 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
             </div>
           </div>
 
-          {/* Catégories - Modern design */}
-          {categories.length > 0 && (
+          {/* Catégories - Tree structure */}
+          {categoryTree.length > 0 && (
             <div className="mb-6 p-4 bg-white rounded-xl border-2 border-gray-100 shadow-sm">
               <h3 className="font-bold text-gray-800 mb-4 text-sm sm:text-base flex items-center gap-2">
                 <div className="w-1 h-4 bg-gradient-to-b from-firstColor to-secondColor rounded-full"></div>
                 {t("sections.categories.title")}
               </h3>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="space-y-1 max-h-60 overflow-y-auto">
                 {!loadingCategories ? (
-                  categories.map((category, i) => (
-                    <label
-                      key={i}
-                      className="flex items-center gap-3 cursor-pointer hover:bg-orange-50 p-2.5 rounded-lg transition-all duration-200 border border-transparent hover:border-orange-200"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filters.category.includes(category)}
-                        onChange={() => handleCategoryChange(category)}
-                        className="w-4 h-4 text-firstColor focus:ring-firstColor rounded border-gray-300"
-                      />
-                      <span className="text-sm text-gray-700 flex-1 font-medium">
-                        {category}
-                      </span>
-                    </label>
+                  categoryTree.map((node) => (
+                    <CategoryTreeNodeComponent
+                      key={node.category._id}
+                      node={node}
+                      locale={locale}
+                      filters={filters}
+                      onCategoryChange={handleCategoryChange}
+                      expandedCategories={expandedCategories}
+                      onToggleExpansion={toggleCategoryExpansion}
+                      isCategoryOrChildSelected={isCategoryOrChildSelected}
+                    />
                   ))
                 ) : (
                   <div className="text-center text-gray-500 py-4">Chargement...</div>
@@ -378,6 +494,92 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
         </div>
       </div>
     </>
+  )
+}
+
+// Composant pour afficher un nœud de catégorie dans l'arbre
+interface CategoryTreeNodeComponentProps {
+  node: CategoryTreeNode
+  locale: "fr" | "ar"
+  filters: ProductFilterProps["filters"]
+  onCategoryChange: (categoryName: string, categoryId?: string) => void
+  expandedCategories: Set<string>
+  onToggleExpansion: (categoryId: string) => void
+  isCategoryOrChildSelected: (categoryId: string) => boolean
+}
+
+const CategoryTreeNodeComponent: React.FC<CategoryTreeNodeComponentProps> = ({
+  node,
+  locale,
+  filters,
+  onCategoryChange,
+  expandedCategories,
+  onToggleExpansion,
+  isCategoryOrChildSelected
+}) => {
+  const categoryName = node.category.name[locale]
+  const hasChildren = node.children.length > 0
+  const isExpanded = expandedCategories.has(node.category._id)
+  const isSelected = filters.category.includes(categoryName)
+  // Vérifier si une sous-catégorie est sélectionnée (mais pas le parent lui-même)
+  const isAnyChildSelected = hasChildren && !isSelected && isCategoryOrChildSelected(node.category._id)
+
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        {/* Bouton d'expansion pour les catégories avec enfants */}
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => onToggleExpansion(node.category._id)}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
+            <ChevronRight
+              size={16}
+              className={`text-gray-500 transition-transform ${
+                isExpanded ? "rotate-90" : ""
+              }`}
+            />
+          </button>
+        ) : (
+          <div className="w-6" /> // Espace pour l'alignement
+        )}
+
+        {/* Checkbox et label */}
+        <label
+          className="flex items-center gap-2 cursor-pointer hover:bg-orange-50 p-2 rounded-lg transition-all duration-200 border border-transparent hover:border-orange-200 flex-1"
+          style={{ paddingLeft: `${node.level * 20 + 8}px` }}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onCategoryChange(categoryName, node.category._id)}
+            className="w-4 h-4 text-firstColor focus:ring-firstColor rounded border-gray-300"
+          />
+          <span className="text-sm text-gray-700 flex-1 font-medium">
+            {categoryName}
+          </span>
+        </label>
+      </div>
+
+      {/* Sous-catégories */}
+      {hasChildren && isExpanded && (
+        <div className="ml-6">
+          {node.children.map((childNode) => (
+            <CategoryTreeNodeComponent
+              key={childNode.category._id}
+              node={childNode}
+              locale={locale}
+              filters={filters}
+              onCategoryChange={onCategoryChange}
+              expandedCategories={expandedCategories}
+              onToggleExpansion={onToggleExpansion}
+              isCategoryOrChildSelected={isCategoryOrChildSelected}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

@@ -85,9 +85,31 @@ export async function GET(
           { "name.ar": { $in: categories } }
         ]
       })
-      const categoryIds = categoryDocs.map((cat) => cat._id)
-      if (categoryIds.length > 0) {
-        query.category = { $in: categoryIds }
+      
+      // Récupérer tous les IDs de catégories (parents + enfants)
+      const allCategoryIds: mongoose.Types.ObjectId[] = []
+      
+      // Fonction récursive pour obtenir tous les descendants d'une catégorie
+      const getAllDescendantIds = async (categoryId: mongoose.Types.ObjectId) => {
+        const children = await Category.find({ parentId: categoryId })
+        for (const child of children) {
+          allCategoryIds.push(child._id)
+          await getAllDescendantIds(child._id)
+        }
+      }
+      
+      // Pour chaque catégorie sélectionnée, ajouter son ID et tous ses descendants
+      for (const categoryDoc of categoryDocs) {
+        allCategoryIds.push(categoryDoc._id)
+        await getAllDescendantIds(categoryDoc._id)
+      }
+      
+      // Supprimer les doublons
+      const uniqueCategoryIds = [...new Set(allCategoryIds.map(id => id.toString()))]
+        .map(id => new mongoose.Types.ObjectId(id))
+      
+      if (uniqueCategoryIds.length > 0) {
+        query.category = { $in: uniqueCategoryIds }
       }
     }
 
