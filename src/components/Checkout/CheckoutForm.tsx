@@ -30,7 +30,7 @@ export default function CheckoutForm({
       newErrors.customerName = t("validation.customerName.minLength")
     }
 
-    // Validation ville
+    // Validation Adresse
     if (!formData.customerAddress.trim()) {
       newErrors.customerAddress = t("validation.customerAddress.required")
     } else if (formData.customerAddress.trim().length < 2) {
@@ -115,7 +115,7 @@ export default function CheckoutForm({
           )}
         </div>
 
-        {/* Ville */}
+        {/* Adresse */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             <MapPin className="inline w-4 h-4 mr-2" />

@@ -161,7 +161,7 @@ const Header: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-lg sm:text-xl font-bold font-lux text-gray-800">
-                  STRASS SHOP
+                    <span className="text-amber-600">STRASS</span> SHOP
                 </h1>
                 <p className="text-xs text-gray-400 hidden sm:block">
                   {t("tagline")}
@@ -290,7 +290,7 @@ const Header: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <h2 className="text-lg font-bold">STRASS SHOP</h2>
+                        <h2 className="text-lg font-bold"><span className="text-amber-600">STRASS</span> SHOP</h2>
                       </div>
                     </div>
                     <motion.button

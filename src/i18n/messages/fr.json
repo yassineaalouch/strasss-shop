@@ -528,8 +528,8 @@
         "placeholder": "Prénom et nom"
       },
       "customerAddress": {
-        "label": "Ville *",
-        "placeholder": "Votre ville de livraison"
+        "label": "Adresse *",
+        "placeholder": "Votre Adresse de livraison"
       },
       "customerPhone": {
         "label": "Téléphone *",
@@ -542,8 +542,8 @@
         "minLength": "Le nom doit contenir au moins 2 caractères"
       },
       "customerAddress": {
-        "required": "La ville est requise",
-        "minLength": "Le nom de la ville doit contenir au moins 2 caractères"
+        "required": "La Adresse est requise",
+        "minLength": "Le nom de la Adresse doit contenir au moins 2 caractères"
       },
       "customerPhone": {
         "required": "Le numéro de téléphone est requis",
@@ -553,7 +553,7 @@
     "delivery": {
       "title": "Livraison",
       "description": "Votre commande sera livrée à {customerAddress} sous 2-3 jours ouvrés. Nous vous contacterons au {customerPhone} pour organiser la livraison.",
-      "placeholderCity": "[Votre ville]",
+      "placeholderCity": "[Votre Adresse]",
       "placeholderPhone": "[Votre numéro]"
     },
     "summary": {

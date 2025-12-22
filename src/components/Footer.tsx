@@ -86,7 +86,7 @@ export default async function Footer() {
                   className="object-cover rounded-lg"
                 />
               </div>
-              <span className="text-xl font-bold font-lux">STRASS SHOP</span>
+              <span className="text-xl font-bold font-lux"><span className="text-amber-600">Strass</span> Shop</span>
             </div> 
             <p className="text-gray-400 mb-4">{t("company.description")}</p>
             <div className="flex items-center mb-2">

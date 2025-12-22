@@ -536,8 +536,8 @@
         "placeholder": "الاسم الأول واللقب"
       },
       "customerAddress": {
-        "label": "المدينة *",
-        "placeholder": "مدينة التوصيل الخاصة بك"
+        "label": "العنوان*",
+        "placeholder": "عنوان التوصيل الخاصة بك"
       },
       "customerPhone": {
         "label": "الهاتف *",
@@ -550,8 +550,8 @@
         "minLength": "يجب أن يحتوي الاسم على حرفين على الأقل"
       },
       "customerAddress": {
-        "required": "المدينة مطلوبة",
-        "minLength": "يجب أن يحتوي اسم المدينة على حرفين على الأقل"
+        "required": "العنوانمطلوبة",
+        "minLength": "يجب أن يحتوي اسم العنوانعلى حرفين على الأقل"
       },
       "customerPhone": {
         "required": "رقم الهاتف مطلوب",

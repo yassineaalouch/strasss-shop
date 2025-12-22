@@ -10,9 +10,9 @@
 //     },
 //     customerAddress: {
 //       type: String,
-//       required: [true, "La ville est requise"],
+//       required: [true, "La Adresse est requise"],
 //       trim: true,
-//       minlength: [2, "La ville doit contenir au moins 2 caractères"]
+//       minlength: [2, "La Adresse doit contenir au moins 2 caractères"]
 //     },
 //     customerPhone: {
 //       type: String,

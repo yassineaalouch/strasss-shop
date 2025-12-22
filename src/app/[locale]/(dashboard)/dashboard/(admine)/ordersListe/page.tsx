@@ -290,7 +290,7 @@
 //         customerPhone: `+212 661 ${(100 + i).toString()} ${(
 //           200 + i
 //         ).toString()}`,
-//         customerAddress: `Adresse ${i}, Ville, Maroc`,
+//         customerAddress: `Adresse ${i}, Adresse, Maroc`,
 //         orderDate: new Date(2025, 0, (i % 20) + 1),
 //         status: statuses[data.statusIndex],
 //         total: Math.round(total * 100) / 100,

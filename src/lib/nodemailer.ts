@@ -104,7 +104,7 @@
 //     html: `
 //       <h2>Nouvelle commande reçue !</h2>
 //       <p><strong>Nom :</strong> ${orderData.customerName}</p>
-//       <p><strong>Ville :</strong> ${orderData.customerAddress}</p>
+//       <p><strong>Adresse :</strong> ${orderData.customerAddress}</p>
 //       <p><strong>Téléphone :</strong> ${orderData.customerPhone}</p>
 //       <hr/>
 //       <p><strong>Sous-total :</strong> ${orderData.subtotal.toFixed(2)} MAD</p>
@@ -222,7 +222,7 @@ export const sendOrderEmail = async (orderData: OrderData): Promise<void> => {
       <div style="font-family:Arial, sans-serif; color:#333;">
         <h2 style="color:#FBBF24;">Nouvelle commande reçue !</h2>
         <p><strong>Nom :</strong> ${orderData.customerName}</p>
-        <p><strong>Ville :</strong> ${orderData.customerAddress}</p>
+        <p><strong>Adresse :</strong> ${orderData.customerAddress}</p>
         <p><strong>Téléphone :</strong> ${orderData.customerPhone}</p>
         <hr style="border:none; border-top:1px solid #eee; margin:10px 0;"/>
         <p><strong>Sous-total :</strong> ${orderData.subtotal.toFixed(
