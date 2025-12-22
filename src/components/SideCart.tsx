@@ -293,6 +293,7 @@ import { Link } from "@/i18n/navigation"
 import Image from "next/image"
 import { FREE_SHIPPING_THRESHOLD } from "@/data/data"
 import { motion, AnimatePresence } from "framer-motion"
+import { isColorCharacteristic, isValidHexColor, normalizeHexColor } from "@/utils/colorCharacteristic"
 
 const SideCart: React.FC<SideCartProps> = ({
   isOpen,
@@ -566,14 +567,30 @@ const SideCart: React.FC<SideCartProps> = ({
 
                                   {item.characteristic && item.characteristic.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mb-1">
-                                      {item.characteristic.slice(0, 2).map((char) => (
-                                        <span
-                                          key={char.name}
-                                          className="bg-gray-100 rounded px-1.5 py-0.5 text-[10px] text-gray-600"
-                                        >
-                                          {char.name}: {char.value}
-                                        </span>
-                                      ))}
+                                      {item.characteristic.slice(0, 2).map((char) => {
+                                        const isColor = isColorCharacteristic(char.name)
+                                        const isHexColor = isValidHexColor(char.value)
+                                        
+                                        return (
+                                          <span
+                                            key={char.name}
+                                            className="bg-gray-100 rounded px-1.5 py-0.5 text-[10px] text-gray-600 flex items-center gap-1"
+                                          >
+                                            <span>{char.name}:</span>
+                                            {isColor && isHexColor ? (
+                                              <span className="flex items-center gap-1">
+                                                <span
+                                                  className="w-3 h-3 rounded-full border border-gray-300"
+                                                  style={{ backgroundColor: normalizeHexColor(char.value) }}
+                                                  title={char.value}
+                                                />
+                                              </span>
+                                            ) : (
+                                              <span>{char.value}</span>
+                                            )}
+                                          </span>
+                                        )
+                                      })}
                                     </div>
                                   )}
 
