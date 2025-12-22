@@ -221,10 +221,6 @@ export default async function Footer() {
           <p className="text-gray-400 text-sm">{t("copyright")}</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <span className="text-gray-400 text-sm">
-              {t("features.securePayment")}
-            </span>
-            <span className="text-gray-400 text-sm">•</span>
-            <span className="text-gray-400 text-sm">
               {t("features.fastDelivery")}
             </span>
             <span className="text-gray-400 text-sm">•</span>

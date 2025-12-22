@@ -335,22 +335,29 @@ const SideCart: React.FC<SideCartProps> = ({
     return total
   }
 
-  // Calcul du total avec réductions
-  const totalPrice = items.reduce(
+  // Calcul du sous-total avec réductions
+  const subtotal = items.reduce(
     (sum, item) => sum + calculateItemTotal(item),
     0
   )
 
+  // Calcul des frais de livraison
+  const hasFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
+  const shippingCost = hasFreeShipping ? 0 : 30
+
+  // Calcul du total final (sous-total + frais de livraison)
+  const totalPrice = subtotal + shippingCost
+
   // Calcul du montant restant pour la livraison gratuite
   const remainingForFreeShipping = Math.max(
     0,
-    FREE_SHIPPING_THRESHOLD - totalPrice
+    FREE_SHIPPING_THRESHOLD - subtotal
   )
 
   // Pourcentage de progression vers la livraison gratuite
   const progressPercentage = Math.min(
     100,
-    (totalPrice / FREE_SHIPPING_THRESHOLD) * 100
+    (subtotal / FREE_SHIPPING_THRESHOLD) * 100
   )
 
   // Fonction pour gérer le pluriel
@@ -428,7 +435,7 @@ const SideCart: React.FC<SideCartProps> = ({
 
           {/* Progress Bar compact pour livraison gratuite */}
           <AnimatePresence mode="wait">
-            {totalPrice < FREE_SHIPPING_THRESHOLD ? (
+            {subtotal < FREE_SHIPPING_THRESHOLD ? (
               <motion.div
                 key="progress"
                 initial={{ height: 0, opacity: 0 }}
@@ -782,13 +789,13 @@ const SideCart: React.FC<SideCartProps> = ({
                   className="flex items-center justify-center text-xs mb-3 p-2 bg-gray-50 rounded-lg"
                 >
                   <Truck size={12} className="mr-1 text-gray-500" />
-                  {totalPrice >= FREE_SHIPPING_THRESHOLD ? (
+                  {hasFreeShipping ? (
                     <span className="text-green-600 font-semibold text-xs">
                       ✨ {t("freeShipping.included")}
                     </span>
                   ) : (
                     <span className="text-gray-500 text-xs">
-                      {t("freeShipping.cost")}
+                      {t("freeShipping.cost")} (+{shippingCost.toFixed(2)} MAD)
                     </span>
                   )}
                 </motion.div>

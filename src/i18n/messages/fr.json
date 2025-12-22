@@ -41,7 +41,7 @@
   "Footer": {
     "company": {
       "name": "Strass Shop",
-      "description": "Votre partenaire de confiance pour tous vos projets de clôture au Maroc.",
+      "description": "Votre partenaire de confiance pour tous vos projets de couture au Maroc.",
       "location": "Meknes, Maroc",
       "phone": "+212 670366581",
       "email": "Denon_taha@hotmail.fr"
@@ -94,7 +94,7 @@
       "editor": {
         "title": "Éditeur du site :",
         "companyName": "Accessoires Couture Premium",
-        "legalForm": "SARL au capital de 50 000 €",
+        "legalForm": "SARL au capital de 50 000 MAD",
         "siret": "SIRET : 123 456 789 00012",
         "ape": "Code APE : 4751Z"
       },
@@ -346,7 +346,7 @@
       "untilWithdrawal": "Jusqu'au retrait",
       "accounting": "Comptabilité",
       "legalObligation": "Obligation légale",
-      "tenYears": "10 ans"
+      "tenYears": "20 ans"
     },
     "section5": {
       "title": "5. Cookies et Technologies Similaires",
@@ -673,7 +673,7 @@
         "description": "Accessoires sélectionnés par nos experts"
       },
       "expertise": {
-        "title": "10 ans d'Expertise",
+        "title": "20 ans d'Expertise",
         "description": "Spécialistes en fournitures de couture"
       },
       "dedicatedSupport": {

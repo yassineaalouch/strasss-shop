@@ -1,5 +1,7 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Link } from "@/i18n/navigation"
-import React from "react"
 
 export function WhatsAppIcon() {
   return (
@@ -11,10 +13,34 @@ export function WhatsAppIcon() {
     </svg>
   )
 }
+
 const WhatsAppButton = () => {
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("212670366581") // Valeur par défaut
+
+  useEffect(() => {
+    const fetchSiteInfo = async () => {
+      try {
+        const response = await fetch("/api/site-info")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.siteInfo?.phone) {
+            // Nettoyer le numéro de téléphone pour WhatsApp (enlever espaces, +, etc.)
+            const phone = data.siteInfo.phone.replace(/\s+/g, "").replace(/\+/g, "")
+            setWhatsappNumber(phone)
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération du numéro WhatsApp:", error)
+        // Garder la valeur par défaut en cas d'erreur
+      }
+    }
+
+    fetchSiteInfo()
+  }, [])
+
   return (
     <Link
-      href="https://wa.me/212612345678"
+      href={`https://wa.me/${whatsappNumber}`}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-100 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition"

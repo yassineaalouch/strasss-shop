@@ -309,8 +309,11 @@ export const useCart = () => {
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
-  // Calcul des frais de livraison (exemple: 50 MAD si pas de livraison gratuite)
-  const shippingCost = hasFreeShipping ? 0 : 50
+  // Calcul des frais de livraison (exemple: 30 MAD si pas de livraison gratuite)
+  const shippingCost = hasFreeShipping ? 0 : 30
+
+  // Calcul du total final (sous-total après réduction + frais de livraison)
+  const total = totalAfterDiscount + shippingCost
 
   // 🚪 Gestion ouverture/fermeture du panier
   const toggleCart = () => setIsCartOpen(!isCartOpen)
@@ -338,7 +341,7 @@ export const useCart = () => {
 
     // Computed values
     totalItems,
-    totalPrice: totalAfterDiscount,
+    totalPrice: total, // Total incluant les frais de livraison
     subtotal,
     discountAmount,
     shipping: shippingCost,

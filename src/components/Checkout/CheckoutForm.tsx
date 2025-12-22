@@ -199,7 +199,7 @@ export default function CheckoutForm({
           <div className="flex justify-between items-center">
             <span className="text-sm sm:text-base">{t("summary.total")}</span>
             <span className="text-lg sm:text-xl font-bold text-secondColor">
-              {total.toFixed(2)}€
+              {total.toFixed(2)}MAD
             </span>
           </div>
         </div>

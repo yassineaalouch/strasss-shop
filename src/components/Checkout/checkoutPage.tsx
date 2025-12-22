@@ -338,7 +338,7 @@ export default function CheckoutPage() {
             }
           : null,
         shipping: shipping, // Frais de livraison calculés
-        total: totalPrice, // Total après réduction
+        total: totalPrice, // Total après réduction + frais de livraison
         hasFreeShipping: hasFreeShipping
       }
 
