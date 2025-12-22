@@ -42,24 +42,31 @@ const SocialMediaCard: React.FC = () => {
   useEffect(() => {
     const fetchHeroContent = async () => {
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-        const response = await fetch(`${baseUrl}/api/hero-content`, {
+        const response = await fetch("/api/hero-content", {
           cache: "no-store"
         })
+        
+        if (!response.ok) {
+          console.error("Erreur HTTP:", response.status)
+          return
+        }
+        
         const result = await response.json()
+        console.log("Données récupérées de l'API:", result)
 
         if (result.success && result.data?.socialLinks) {
           // Filtrer et trier
           const activeLinks = result.data.socialLinks
             .filter((link: SocialLink) => link.isActive)
             .sort((a: SocialLink, b: SocialLink) => a.order - b.order)
+          
+          console.log("Liens sociaux actifs:", activeLinks)
           setSocialMediaLinks(activeLinks)
         } else {
-          // Erreur silencieuse pour le contenu Hero
+          console.warn("Aucun lien social trouvé ou données invalides:", result)
         }
       } catch (error) {
-        // Erreur silencieuse pour le contenu Hero
+        console.error("Erreur lors de la récupération des réseaux sociaux:", error)
       }
     }
 
@@ -111,7 +118,10 @@ const SocialMediaCard: React.FC = () => {
             <div className="relative z-10">
               {socialMediaLinks.length > 0 ? (
                 socialMediaLinks.map((social, index) => {
-                  const IconComponent = iconMap[social.icon] || Heart
+                  const IconComponent = iconMap[social.icon] || ExternalLink
+                  if (!iconMap[social.icon]) {
+                    console.warn(`Icône non trouvée pour: ${social.icon}, utilisation de ExternalLink par défaut`)
+                  }
                   return (
                     <motion.div
                       key={social.id || index}
@@ -150,8 +160,8 @@ const SocialMediaCard: React.FC = () => {
                   )
                 })
               ) : (
-                <p className="text-gray-500 text-sm text-center">
-                  No social links
+                <p className="text-gray-500 text-sm text-center px-4 py-3">
+                  Aucun réseau social disponible
                 </p>
               )}
             </div>
