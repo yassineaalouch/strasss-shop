@@ -170,23 +170,27 @@ export default function QAManager() {
       return
     }
 
+    // Copier automatiquement les horaires français vers l'arabe (même valeur)
+    const hoursToSave = {
+      ...openingHours,
+      hours: openingHours.hours.map((day) => ({
+        ...day,
+        hours: {
+          fr: day.hours.fr || "",
+          ar: day.hours.fr || "" // Copier les horaires français vers l'arabe
+        }
+      }))
+    }
+
     // Validation que tous les jours non fermés ont des horaires complets
-    for (let i = 0; i < openingHours.hours.length; i++) {
-      const day = openingHours.hours[i]
+    for (let i = 0; i < hoursToSave.hours.length; i++) {
+      const day = hoursToSave.hours[i]
       if (!day.isClosed) {
         const frHours = parseHours(day.hours.fr)
-        const arHours = parseHours(day.hours.ar)
         
         if (!frHours.start || !frHours.end) {
           showToast(
-            `Le ${day.day.fr} n'a pas d'horaires complets en français. Veuillez sélectionner l'heure de début et de fin.`,
-            "error"
-          )
-          return
-        }
-        if (!arHours.start || !arHours.end) {
-          showToast(
-            `Le ${day.day.fr} n'a pas d'horaires complets en arabe. Veuillez sélectionner l'heure de début et de fin.`,
+            `Le ${day.day.fr} n'a pas d'horaires complets. Veuillez sélectionner l'heure de début et de fin.`,
             "error"
           )
           return
@@ -196,7 +200,7 @@ export default function QAManager() {
 
     setHoursLoading(true)
     try {
-      const { data } = await axios.put("/api/opening-hours", openingHours)
+      const { data } = await axios.put("/api/opening-hours", hoursToSave)
       if (data.success) {
         showToast("Les horaires d'ouverture ont été mis à jour avec succès.", "success")
         await fetchOpeningHours()
@@ -883,133 +887,72 @@ export default function QAManager() {
                             </label>
                           </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
-                              Horaires (Français)
-                            </label>
-                            <div className="flex items-center gap-2">
-                              <select
-                                key={`fr-start-${index}-${day.isClosed}-${refreshKey}`}
-                                value={parseHours(day.hours?.fr || "").start || ""}
-                                disabled={day.isClosed}
-                                onChange={(e) => {
-                                  const current = parseHours(day.hours?.fr || "")
-                                  const newHours = formatHours(e.target.value, current.end || "")
-                                  const updatedHours = openingHours.hours.map((h, i) =>
-                                    i === index
-                                      ? { ...h, hours: { ...h.hours, fr: newHours }, isClosed: false }
-                                      : h
-                                  )
-                                  setOpeningHours({ ...openingHours, hours: updatedHours })
-                                }}
-                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                                  day.isClosed
-                                    ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
-                                    : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
-                                }`}
-                              >
-                                <option value="">Heure début</option>
-                                {timeOptions.map((time) => (
-                                  <option key={time} value={time}>
-                                    {time}
-                                  </option>
-                                ))}
-                              </select>
-                              <span className="text-gray-500 font-medium">-</span>
-                              <select
-                                key={`fr-end-${index}-${day.isClosed}-${refreshKey}`}
-                                value={parseHours(day.hours?.fr || "").end || ""}
-                                disabled={day.isClosed}
-                                onChange={(e) => {
-                                  const current = parseHours(day.hours?.fr || "")
-                                  const newHours = formatHours(current.start || "", e.target.value)
-                                  const updatedHours = openingHours.hours.map((h, i) =>
-                                    i === index
-                                      ? { ...h, hours: { ...h.hours, fr: newHours }, isClosed: false }
-                                      : h
-                                  )
-                                  setOpeningHours({ ...openingHours, hours: updatedHours })
-                                }}
-                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                                  day.isClosed
-                                    ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
-                                    : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
-                                }`}
-                              >
-                                <option value="">Heure fin</option>
-                                {timeOptions.map((time) => (
-                                  <option key={time} value={time}>
-                                    {time}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Horaires d'ouverture
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <select
+                              key={`start-${index}-${day.isClosed}-${refreshKey}`}
+                              value={parseHours(day.hours?.fr || "").start || ""}
+                              disabled={day.isClosed}
+                              onChange={(e) => {
+                                const current = parseHours(day.hours?.fr || "")
+                                const newHours = formatHours(e.target.value, current.end || "")
+                                // Mettre à jour les deux langues avec la même valeur
+                                const updatedHours = openingHours.hours.map((h, i) =>
+                                  i === index
+                                    ? { ...h, hours: { fr: newHours, ar: newHours }, isClosed: false }
+                                    : h
+                                )
+                                setOpeningHours({ ...openingHours, hours: updatedHours })
+                              }}
+                              className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                day.isClosed
+                                  ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
+                                  : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
+                              }`}
+                            >
+                              <option value="">Heure début</option>
+                              {timeOptions.map((time) => (
+                                <option key={time} value={time}>
+                                  {time}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-gray-500 font-medium">-</span>
+                            <select
+                              key={`end-${index}-${day.isClosed}-${refreshKey}`}
+                              value={parseHours(day.hours?.fr || "").end || ""}
+                              disabled={day.isClosed}
+                              onChange={(e) => {
+                                const current = parseHours(day.hours?.fr || "")
+                                const newHours = formatHours(current.start || "", e.target.value)
+                                // Mettre à jour les deux langues avec la même valeur
+                                const updatedHours = openingHours.hours.map((h, i) =>
+                                  i === index
+                                    ? { ...h, hours: { fr: newHours, ar: newHours }, isClosed: false }
+                                    : h
+                                )
+                                setOpeningHours({ ...openingHours, hours: updatedHours })
+                              }}
+                              className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                day.isClosed
+                                  ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
+                                  : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
+                              }`}
+                            >
+                              <option value="">Heure fin</option>
+                              {timeOptions.map((time) => (
+                                <option key={time} value={time}>
+                                  {time}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                          <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700">
-                              الساعات (العربية)
-                            </label>
-                            <div className="flex items-center gap-2" dir="rtl">
-                              <select
-                                key={`ar-start-${index}-${day.isClosed}-${refreshKey}`}
-                                value={parseHours(day.hours?.ar || "").start || ""}
-                                disabled={day.isClosed}
-                                onChange={(e) => {
-                                  const current = parseHours(day.hours?.ar || "")
-                                  const newHours = formatHours(e.target.value, current.end || "")
-                                  const updatedHours = openingHours.hours.map((h, i) =>
-                                    i === index
-                                      ? { ...h, hours: { ...h.hours, ar: newHours }, isClosed: false }
-                                      : h
-                                  )
-                                  setOpeningHours({ ...openingHours, hours: updatedHours })
-                                }}
-                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right transition-all ${
-                                  day.isClosed
-                                    ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
-                                    : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
-                                }`}
-                                dir="rtl"
-                              >
-                                <option value="">ساعة البداية</option>
-                                {timeOptions.map((time) => (
-                                  <option key={time} value={time}>
-                                    {time}
-                                  </option>
-                                ))}
-                              </select>
-                              <span className="text-gray-500 font-medium">-</span>
-                              <select
-                                key={`ar-end-${index}-${day.isClosed}-${refreshKey}`}
-                                value={parseHours(day.hours?.ar || "").end || ""}
-                                disabled={day.isClosed}
-                                onChange={(e) => {
-                                  const current = parseHours(day.hours?.ar || "")
-                                  const newHours = formatHours(current.start || "", e.target.value)
-                                  const updatedHours = openingHours.hours.map((h, i) =>
-                                    i === index
-                                      ? { ...h, hours: { ...h.hours, ar: newHours }, isClosed: false }
-                                      : h
-                                  )
-                                  setOpeningHours({ ...openingHours, hours: updatedHours })
-                                }}
-                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right transition-all ${
-                                  day.isClosed
-                                    ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
-                                    : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
-                                }`}
-                                dir="rtl"
-                              >
-                                <option value="">ساعة النهاية</option>
-                                {timeOptions.map((time) => (
-                                  <option key={time} value={time}>
-                                    {time}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Les horaires seront automatiquement appliqués aux deux langues (français et arabe)
+                          </p>
                         </div>
                       </div>
                     ))}
