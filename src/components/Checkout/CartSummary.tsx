@@ -312,9 +312,9 @@ export default function CartSummary({
             <div className="space-y-2">
               {items
                 .filter((item) => item.type !== "pack")
-                .map((item) => (
+                .map((item,index) => (
                   <motion.div
-                    key={item.id}
+                    key={index}
                     layout
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}

@@ -2,42 +2,78 @@
 
 import { CartItem } from "@/types/type"
 import { Discount } from "@/types/discount"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+
+// Fonction helper pour charger le panier depuis localStorage
+const loadCartFromStorage = (): CartItem[] => {
+  if (typeof window === "undefined") return []
+  try {
+    const savedCart = localStorage.getItem("couture-cart")
+    return savedCart ? JSON.parse(savedCart) : []
+  } catch (error) {
+    console.error("Erreur lors du chargement du panier:", error)
+    return []
+  }
+}
+
+// Fonction helper pour charger le coupon depuis localStorage
+const loadCouponFromStorage = (): string | null => {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem("couture-coupon")
+}
+
+// Fonction helper pour charger les données du coupon depuis localStorage
+const loadCouponDataFromStorage = (): Discount | null => {
+  if (typeof window === "undefined") return null
+  try {
+    const savedCouponData = localStorage.getItem("couture-coupon-data")
+    return savedCouponData ? JSON.parse(savedCouponData) : null
+  } catch (error) {
+    console.error("Erreur lors du chargement des données du coupon:", error)
+    return null
+  }
+}
 
 export const useCart = () => {
   const FREE_SHIPPING_THRESHOLD = 1000
 
+  // 🧠 Initialiser avec des valeurs par défaut pour éviter les problèmes d'hydratation
+  // Le serveur et le client doivent avoir le même rendu initial
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [coupon, setCoupon] = useState<string | null>(null)
   const [couponData, setCouponData] = useState<Discount | null>(null)
   const [couponError, setCouponError] = useState<string | null>(null)
+  
+  // 🔒 Flag pour éviter d'écraser le localStorage avant le chargement initial
+  const isInitialized = useRef(false)
 
-  // 🧠 Charger le panier au démarrage
+  // 🧠 Charger le panier depuis localStorage après le montage (côté client uniquement)
   useEffect(() => {
-    const savedCart = localStorage.getItem("couture-cart")
-    const savedCoupon = localStorage.getItem("couture-coupon")
-    const savedCouponData = localStorage.getItem("couture-coupon-data")
+    // Charger depuis localStorage de manière synchrone
+    const savedCart = loadCartFromStorage()
+    const savedCoupon = loadCouponFromStorage()
+    const savedCouponData = loadCouponDataFromStorage()
 
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart))
-      } catch (error) {
-        console.error("Erreur lors du chargement du panier:", error)
-      }
+    if (savedCart.length > 0) {
+      setCartItems(savedCart)
     }
-    if (savedCoupon) setCoupon(savedCoupon)
+    if (savedCoupon) {
+      setCoupon(savedCoupon)
+    }
     if (savedCouponData) {
-      try {
-        setCouponData(JSON.parse(savedCouponData))
-      } catch (error) {
-        console.error("Erreur lors du chargement des données du coupon:", error)
-      }
+      setCouponData(savedCouponData)
     }
+    
+    // Marquer comme initialisé après le chargement
+    isInitialized.current = true
   }, [])
 
-  // 💾 Sauvegarder à chaque modification
+  // 💾 Sauvegarder à chaque modification (seulement après l'initialisation)
   useEffect(() => {
+    // Ne pas sauvegarder avant que le chargement initial soit terminé
+    if (!isInitialized.current) return
+    
     localStorage.setItem("couture-cart", JSON.stringify(cartItems))
     if (coupon) {
       localStorage.setItem("couture-coupon", coupon)

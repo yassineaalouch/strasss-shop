@@ -38,11 +38,13 @@ const Header: React.FC = () => {
   const { showToast } = useToast()
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null)
   const [hasPacks, setHasPacks] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     fetchSiteInfo()
     checkPacks()
   }, [])
@@ -182,7 +184,7 @@ const Header: React.FC = () => {
               >
                 <ShoppingCart size={20} />
                 <span className="hidden sm:inline ml-1">{t("cart")}</span>
-                {totalItems > 0 && (
+                {mounted && totalItems > 0 && (
                   <span className="absolute -top-2 -right-2 bg-firstColor text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium animate-pulse">
                     {totalItems}
                   </span>

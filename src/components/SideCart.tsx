@@ -534,7 +534,7 @@ const SideCart: React.FC<SideCartProps> = ({
                           .filter((item) => item.type !== "pack")
                           .map((item, index) => (
                             <motion.div
-                              key={item.id}
+                              key={index}
                               layout
                               initial={{ opacity: 0, x: 50 }}
                               animate={{ opacity: 1, x: 0 }}
