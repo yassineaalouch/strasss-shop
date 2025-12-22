@@ -50,6 +50,7 @@ export default function QAManager() {
   const [searchTerm, setSearchTerm] = useState("")
   const [openingHours, setOpeningHours] = useState<OpeningHoursData | null>(null)
   const [hoursLoading, setHoursLoading] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0) // Pour forcer le re-render des sélecteurs
 
   const [form, setForm] = useState<IQA>({
     question: { ar: "", fr: "" },
@@ -62,10 +63,23 @@ export default function QAManager() {
       if (data.success) {
         setQAs(data.data || [])
       } else {
-        showToast(data.message || "Erreur lors du chargement des Q&A", "error")
+        showToast(
+          data.message || "Impossible de charger les questions et réponses depuis le serveur.",
+          "error"
+        )
       }
     } catch (error) {
-      showToast("Erreur lors du chargement des Q&A", "error")
+      let errorMessage = "Impossible de charger les questions et réponses."
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message) {
+          errorMessage = `Erreur réseau : ${error.message}`
+        }
+      } else if (error instanceof Error) {
+        errorMessage = `Erreur : ${error.message}`
+      }
+      showToast(errorMessage, "error")
     }
   }
 
@@ -79,28 +93,133 @@ export default function QAManager() {
       const { data } = await axios.get("/api/opening-hours")
       if (data.success) {
         setOpeningHours(data.data)
+        setRefreshKey(prev => prev + 1) // Réinitialiser la clé après chargement
       } else {
-        showToast(data.message || "Erreur lors du chargement des horaires", "error")
+        showToast(
+          data.message || "Impossible de charger les horaires d'ouverture depuis le serveur.",
+          "error"
+        )
       }
     } catch (error) {
-      showToast("Erreur lors du chargement des horaires", "error")
+      let errorMessage = "Impossible de charger les horaires d'ouverture."
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message) {
+          errorMessage = `Erreur réseau : ${error.message}`
+        }
+      } else if (error instanceof Error) {
+        errorMessage = `Erreur : ${error.message}`
+      }
+      showToast(errorMessage, "error")
     }
   }
 
+  // Fonction helper pour générer les options d'heures (00:00 à 23:30 par pas de 30 minutes)
+  const generateTimeOptions = () => {
+    const options = []
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`
+        options.push(timeString)
+      }
+    }
+    return options
+  }
+
+  const timeOptions = generateTimeOptions()
+
+  // Fonction pour parser les horaires (ex: "08:00 - 18:00" -> { start: "08:00", end: "18:00" })
+  const parseHours = (hoursString: string) => {
+    if (!hoursString || hoursString.trim() === "") {
+      return { start: "", end: "" }
+    }
+    const parts = hoursString.split("-").map((p) => p.trim())
+    return {
+      start: parts[0] || "",
+      end: parts[1] || ""
+    }
+  }
+
+  // Fonction pour formater les horaires (ex: { start: "08:00", end: "18:00" } -> "08:00 - 18:00")
+  const formatHours = (start: string, end: string) => {
+    // Nettoyer les valeurs
+    const cleanStart = (start || "").trim()
+    const cleanEnd = (end || "").trim()
+    
+    // Si les deux sont vides, retourner une chaîne vide
+    if (!cleanStart && !cleanEnd) return ""
+    
+    // Si une seule partie est remplie, garder le format pour faciliter le parsing
+    if (cleanStart && !cleanEnd) return `${cleanStart} - `
+    if (!cleanStart && cleanEnd) return ` - ${cleanEnd}`
+    
+    // Si les deux sont remplis, retourner le format complet
+    return `${cleanStart} - ${cleanEnd}`
+  }
+
   const handleSaveHours = async () => {
-    if (!openingHours) return
+    if (!openingHours) {
+      showToast("Aucune donnée d'horaires à sauvegarder.", "error")
+      return
+    }
+
+    // Validation avant envoi
+    if (!openingHours.hours || openingHours.hours.length !== 7) {
+      showToast("Les horaires doivent contenir exactement 7 jours.", "error")
+      return
+    }
+
+    // Validation que tous les jours non fermés ont des horaires complets
+    for (let i = 0; i < openingHours.hours.length; i++) {
+      const day = openingHours.hours[i]
+      if (!day.isClosed) {
+        const frHours = parseHours(day.hours.fr)
+        const arHours = parseHours(day.hours.ar)
+        
+        if (!frHours.start || !frHours.end) {
+          showToast(
+            `Le ${day.day.fr} n'a pas d'horaires complets en français. Veuillez sélectionner l'heure de début et de fin.`,
+            "error"
+          )
+          return
+        }
+        if (!arHours.start || !arHours.end) {
+          showToast(
+            `Le ${day.day.fr} n'a pas d'horaires complets en arabe. Veuillez sélectionner l'heure de début et de fin.`,
+            "error"
+          )
+          return
+        }
+      }
+    }
 
     setHoursLoading(true)
     try {
       const { data } = await axios.put("/api/opening-hours", openingHours)
       if (data.success) {
-        showToast("Horaires d'ouverture mis à jour avec succès", "success")
+        showToast("Les horaires d'ouverture ont été mis à jour avec succès.", "success")
         await fetchOpeningHours()
       } else {
-        showToast(data.message || "Erreur lors de la sauvegarde", "error")
+        showToast(
+          data.message || "La sauvegarde a échoué. Veuillez réessayer.",
+          "error"
+        )
       }
     } catch (error) {
-      showToast("Erreur lors de la sauvegarde des horaires", "error")
+      let errorMessage = "Impossible de sauvegarder les horaires d'ouverture."
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.response?.data?.errors) {
+          errorMessage = `Erreurs de validation : ${error.response.data.errors.join(", ")}`
+        } else if (error.message) {
+          errorMessage = `Erreur réseau : ${error.message}`
+        }
+      } else if (error instanceof Error) {
+        errorMessage = `Erreur : ${error.message}`
+      }
+      showToast(errorMessage, "error")
     } finally {
       setHoursLoading(false)
     }
@@ -140,7 +259,17 @@ export default function QAManager() {
       showToast(editingQA ? "Q&A mise à jour avec succès" : "Q&A créée avec succès", "success")
       closeForm()
     } catch (error) {
-      showToast("Erreur lors de la sauvegarde de la Q&A", "error")
+      let errorMessage = "Impossible de sauvegarder la question et réponse."
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message) {
+          errorMessage = `Erreur réseau : ${error.message}`
+        }
+      } else if (error instanceof Error) {
+        errorMessage = `Erreur : ${error.message}`
+      }
+      showToast(errorMessage, "error")
     } finally {
       setLoading(false)
     }
@@ -178,7 +307,17 @@ export default function QAManager() {
       setEditingId(null)
       setEditForm(null)
     } catch (error) {
-      showToast("Erreur lors de la mise à jour de la Q&A", "error")
+      let errorMessage = "Impossible de mettre à jour la question et réponse."
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message) {
+          errorMessage = `Erreur réseau : ${error.message}`
+        }
+      } else if (error instanceof Error) {
+        errorMessage = `Erreur : ${error.message}`
+      }
+      showToast(errorMessage, "error")
     } finally {
       setLoading(false)
     }
@@ -210,7 +349,17 @@ export default function QAManager() {
       await fetchQAs()
       showToast("Q&A supprimée avec succès", "success")
     } catch (error) {
-      showToast("Erreur lors de la suppression de la Q&A", "error")
+      let errorMessage = "Impossible de supprimer la question et réponse."
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.message) {
+          errorMessage = `Erreur réseau : ${error.message}`
+        }
+      } else if (error instanceof Error) {
+        errorMessage = `Erreur : ${error.message}`
+      }
+      showToast(errorMessage, "error")
     }
   }
 
@@ -683,89 +832,184 @@ export default function QAManager() {
                     .map((day, index) => (
                       <div
                         key={index}
-                        className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-gray-200 rounded-lg"
+                        className={`p-4 border-2 rounded-lg transition-colors ${
+                          day.isClosed
+                            ? "border-red-200 bg-red-50"
+                            : "border-gray-200 bg-white"
+                        }`}
                       >
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Jour (Français)
-                          </label>
-                          <input
-                            type="text"
-                            value={day.day.fr}
-                            onChange={(e) => {
-                              const updatedHours = openingHours.hours.map((h, i) =>
-                                i === index ? { ...h, day: { ...h.day, fr: e.target.value } } : h
-                              )
-                              setOpeningHours({ ...openingHours, hours: updatedHours })
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                          />
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <span className="text-blue-600 font-semibold">{index + 1}</span>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{day.day.fr}</h4>
+                              <p className="text-sm text-gray-500 text-right" dir="rtl">
+                                {day.day.ar}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={day.isClosed}
+                              onChange={(e) => {
+                                const isClosed = e.target.checked
+                                const updatedHours = openingHours.hours.map((h, i) => {
+                                  if (i === index) {
+                                    return {
+                                      ...h,
+                                      isClosed,
+                                      hours: isClosed
+                                        ? { fr: "", ar: "" }
+                                        : { fr: "", ar: "" } // Toujours initialiser à vide quand on décoche
+                                    }
+                                  }
+                                  return h
+                                })
+                                // Forcer la mise à jour en créant un nouvel objet et en incrémentant la clé
+                                setOpeningHours({ 
+                                  ...openingHours, 
+                                  hours: updatedHours 
+                                })
+                                // Forcer le re-render des sélecteurs
+                                setRefreshKey(prev => prev + 1)
+                              }}
+                              className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <label className="text-sm font-medium text-gray-700">
+                              Fermé ce jour
+                            </label>
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            اليوم (العربية)
-                          </label>
-                          <input
-                            type="text"
-                            value={day.day.ar}
-                            onChange={(e) => {
-                              const updatedHours = openingHours.hours.map((h, i) =>
-                                i === index ? { ...h, day: { ...h.day, ar: e.target.value } } : h
-                              )
-                              setOpeningHours({ ...openingHours, hours: updatedHours })
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right"
-                            dir="rtl"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Horaires (Français)
-                          </label>
-                          <input
-                            type="text"
-                            value={day.hours.fr}
-                            onChange={(e) => {
-                              const updatedHours = openingHours.hours.map((h, i) =>
-                                i === index ? { ...h, hours: { ...h.hours, fr: e.target.value } } : h
-                              )
-                              setOpeningHours({ ...openingHours, hours: updatedHours })
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            placeholder="08:00 - 18:00 ou Fermé"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            الساعات (العربية)
-                          </label>
-                          <input
-                            type="text"
-                            value={day.hours.ar}
-                            onChange={(e) => {
-                              const updatedHours = openingHours.hours.map((h, i) =>
-                                i === index ? { ...h, hours: { ...h.hours, ar: e.target.value } } : h
-                              )
-                              setOpeningHours({ ...openingHours, hours: updatedHours })
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right"
-                            dir="rtl"
-                            placeholder="08:00 - 18:00 ou مغلق"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={day.isClosed}
-                            onChange={(e) => {
-                              const updatedHours = openingHours.hours.map((h, i) =>
-                                i === index ? { ...h, isClosed: e.target.checked } : h
-                              )
-                              setOpeningHours({ ...openingHours, hours: updatedHours })
-                            }}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                          />
-                          <label className="text-sm text-gray-700">Fermé ce jour</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Horaires (Français)
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <select
+                                key={`fr-start-${index}-${day.isClosed}-${refreshKey}`}
+                                value={parseHours(day.hours?.fr || "").start || ""}
+                                disabled={day.isClosed}
+                                onChange={(e) => {
+                                  const current = parseHours(day.hours?.fr || "")
+                                  const newHours = formatHours(e.target.value, current.end || "")
+                                  const updatedHours = openingHours.hours.map((h, i) =>
+                                    i === index
+                                      ? { ...h, hours: { ...h.hours, fr: newHours }, isClosed: false }
+                                      : h
+                                  )
+                                  setOpeningHours({ ...openingHours, hours: updatedHours })
+                                }}
+                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                  day.isClosed
+                                    ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
+                                    : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
+                                }`}
+                              >
+                                <option value="">Heure début</option>
+                                {timeOptions.map((time) => (
+                                  <option key={time} value={time}>
+                                    {time}
+                                  </option>
+                                ))}
+                              </select>
+                              <span className="text-gray-500 font-medium">-</span>
+                              <select
+                                key={`fr-end-${index}-${day.isClosed}-${refreshKey}`}
+                                value={parseHours(day.hours?.fr || "").end || ""}
+                                disabled={day.isClosed}
+                                onChange={(e) => {
+                                  const current = parseHours(day.hours?.fr || "")
+                                  const newHours = formatHours(current.start || "", e.target.value)
+                                  const updatedHours = openingHours.hours.map((h, i) =>
+                                    i === index
+                                      ? { ...h, hours: { ...h.hours, fr: newHours }, isClosed: false }
+                                      : h
+                                  )
+                                  setOpeningHours({ ...openingHours, hours: updatedHours })
+                                }}
+                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                  day.isClosed
+                                    ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
+                                    : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
+                                }`}
+                              >
+                                <option value="">Heure fin</option>
+                                {timeOptions.map((time) => (
+                                  <option key={time} value={time}>
+                                    {time}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              الساعات (العربية)
+                            </label>
+                            <div className="flex items-center gap-2" dir="rtl">
+                              <select
+                                key={`ar-start-${index}-${day.isClosed}-${refreshKey}`}
+                                value={parseHours(day.hours?.ar || "").start || ""}
+                                disabled={day.isClosed}
+                                onChange={(e) => {
+                                  const current = parseHours(day.hours?.ar || "")
+                                  const newHours = formatHours(e.target.value, current.end || "")
+                                  const updatedHours = openingHours.hours.map((h, i) =>
+                                    i === index
+                                      ? { ...h, hours: { ...h.hours, ar: newHours }, isClosed: false }
+                                      : h
+                                  )
+                                  setOpeningHours({ ...openingHours, hours: updatedHours })
+                                }}
+                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right transition-all ${
+                                  day.isClosed
+                                    ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
+                                    : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
+                                }`}
+                                dir="rtl"
+                              >
+                                <option value="">ساعة البداية</option>
+                                {timeOptions.map((time) => (
+                                  <option key={time} value={time}>
+                                    {time}
+                                  </option>
+                                ))}
+                              </select>
+                              <span className="text-gray-500 font-medium">-</span>
+                              <select
+                                key={`ar-end-${index}-${day.isClosed}-${refreshKey}`}
+                                value={parseHours(day.hours?.ar || "").end || ""}
+                                disabled={day.isClosed}
+                                onChange={(e) => {
+                                  const current = parseHours(day.hours?.ar || "")
+                                  const newHours = formatHours(current.start || "", e.target.value)
+                                  const updatedHours = openingHours.hours.map((h, i) =>
+                                    i === index
+                                      ? { ...h, hours: { ...h.hours, ar: newHours }, isClosed: false }
+                                      : h
+                                  )
+                                  setOpeningHours({ ...openingHours, hours: updatedHours })
+                                }}
+                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right transition-all ${
+                                  day.isClosed
+                                    ? "bg-gray-100 cursor-not-allowed border-gray-200 opacity-60"
+                                    : "bg-white border-gray-300 hover:border-blue-400 cursor-pointer"
+                                }`}
+                                dir="rtl"
+                              >
+                                <option value="">ساعة النهاية</option>
+                                {timeOptions.map((time) => (
+                                  <option key={time} value={time}>
+                                    {time}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}

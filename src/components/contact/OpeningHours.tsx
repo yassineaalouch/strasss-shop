@@ -40,9 +40,14 @@ const OpeningHours = () => {
       const { data } = await axios.get("/api/opening-hours")
       if (data.success) {
         setOpeningHoursData(data.data)
+      } else {
+        console.error("Erreur lors du chargement des horaires:", data.message)
       }
     } catch (error) {
-      console.error("Error fetching opening hours:", error)
+      console.error("Erreur lors du chargement des horaires:", error)
+      if (axios.isAxiosError(error)) {
+        console.error("Détails de l'erreur:", error.response?.data || error.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -81,25 +86,36 @@ const OpeningHours = () => {
       </h3>
 
       <div className="space-y-3">
-        {sortedHours.map((schedule, index) => (
-          <div
-            key={index}
-            className="flex justify-between items-center py-2 px-3 rounded"
-          >
-            <span className="font-medium text-gray-700">
-              {schedule.day[locale as "fr" | "ar"]}
-            </span>
-            <span
-              className={`${
-                schedule.isClosed
-                  ? "text-red-500 font-medium"
-                  : "text-gray-600"
-              }`}
+        {sortedHours.map((schedule, index) => {
+          const hoursText = schedule.hours[locale as "fr" | "ar"]
+          const isClosed = schedule.isClosed || !hoursText || hoursText.trim() === ""
+          // Si fermé, afficher "Fermé" en rouge
+          const displayText = isClosed
+            ? locale === "fr"
+              ? "Fermé"
+              : "مغلق"
+            : hoursText || ""
+          
+          return (
+            <div
+              key={index}
+              className="flex justify-between items-center py-2 px-3 rounded"
             >
-              {schedule.hours[locale as "fr" | "ar"]}
-            </span>
-          </div>
-        ))}
+              <span className="font-medium text-gray-700">
+                {schedule.day[locale as "fr" | "ar"]}
+              </span>
+              <span
+                className={`${
+                  isClosed
+                    ? "text-red-500 font-medium"
+                    : "text-gray-600"
+                }`}
+              >
+                {displayText}
+              </span>
+            </div>
+          )
+        })}
       </div>
 
       {openingHoursData.note && (

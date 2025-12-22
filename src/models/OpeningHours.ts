@@ -17,13 +17,15 @@ const OpeningHourDaySchema = new mongoose.Schema({
   hours: {
     fr: {
       type: String,
-      required: [true, "Les horaires en français sont requis"],
-      trim: true
+      required: false, // Validation faite côté API
+      trim: true,
+      default: ""
     },
     ar: {
       type: String,
-      required: [true, "Les horaires en arabe sont requis"],
-      trim: true
+      required: false, // Validation faite côté API
+      trim: true,
+      default: ""
     }
   },
   isClosed: {
