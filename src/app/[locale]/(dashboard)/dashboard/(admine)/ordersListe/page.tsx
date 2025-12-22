@@ -1285,6 +1285,7 @@ import {
 import { CreateOrderModal } from "@/components/dashboard/CreateOrderModal"
 import { useToast } from "@/components/ui/Toast"
 import { PackProduct } from "@/types/pack"
+import { isColorCharacteristic, isValidHexColor, normalizeHexColor } from "@/utils/colorCharacteristic"
 
 const AdminOrdersTable: React.FC = () => {
   const { showToast } = useToast()
@@ -1638,11 +1639,11 @@ const AdminOrdersTable: React.FC = () => {
     return { productCount, packCount }
   }
 
-  const renderOrderItem = (item: OrderLineItem) => {
+  const renderOrderItem = (item: OrderLineItem, index: number) => {
     if (item.type === "product") {
       return (
         <div
-          key={item.id}
+          key={index}
           className="flex items-center space-x-4 bg-white p-3 rounded-lg border"
         >
           <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
@@ -1661,6 +1662,35 @@ const AdminOrdersTable: React.FC = () => {
                 {item.name}
               </p>
             </div>
+            {/* Affichage des caractéristiques */}
+            {item.characteristic && item.characteristic.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1 mb-1">
+                {item.characteristic.slice(0, 2).map((char, idx) => {
+                  const isColor = isColorCharacteristic(char.name)
+                  const isHexColor = isValidHexColor(char.value)
+                  
+                  return (
+                    <span
+                      key={idx}
+                      className="bg-gray-100 rounded px-1.5 py-0.5 text-[10px] text-gray-600 flex items-center gap-1"
+                    >
+                      <span>{char.name}:</span>
+                      {isColor && isHexColor ? (
+                        <span className="flex items-center gap-1">
+                          <span
+                            className="w-3 h-3 rounded-full border border-gray-300"
+                            style={{ backgroundColor: normalizeHexColor(char.value) }}
+                            title={char.value}
+                          />
+                        </span>
+                      ) : (
+                        <span>{char.value}</span>
+                      )}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
             <p className="text-sm text-gray-500">Quantité: {item.quantity}</p>
           </div>
           <div className="text-right">
@@ -2287,7 +2317,7 @@ const AdminOrdersTable: React.FC = () => {
                                         <div className="space-y-2">
                                           {order.items
                                             .filter((item) => item.type === "product")
-                                            .map((item) => renderOrderItem(item))}
+                                            .map((item,index) => renderOrderItem(item,index))}
                                         </div>
                                       </div>
                                     )}
@@ -2302,7 +2332,7 @@ const AdminOrdersTable: React.FC = () => {
                                         <div className="space-y-2">
                                           {order.items
                                             .filter((item) => item.type === "pack")
-                                            .map((item) => renderOrderItem(item))}
+                                            .map((item ,index) => renderOrderItem(item,index))}
                                         </div>
                                       </div>
                                     )}
