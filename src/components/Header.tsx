@@ -37,12 +37,14 @@ const Header: React.FC = () => {
   const { cartItems, updateQuantity, removeItem } = useCartContext()
   const { showToast } = useToast()
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null)
+  const [hasPacks, setHasPacks] = useState(false)
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
 
   useEffect(() => {
     fetchSiteInfo()
+    checkPacks()
   }, [])
 
   const fetchSiteInfo = async () => {
@@ -59,6 +61,25 @@ const Header: React.FC = () => {
       }
     } catch (error) {
       showToast("Erreur lors du chargement des informations du site", "error")
+    }
+  }
+
+  const checkPacks = async () => {
+    try {
+      const response = await fetch("/api/product-packs")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data && data.data.length > 0) {
+          setHasPacks(true)
+        } else {
+          setHasPacks(false)
+        }
+      } else {
+        setHasPacks(false)
+      }
+    } catch (error) {
+      // Erreur silencieuse - par défaut, on cache les packs
+      setHasPacks(false)
     }
   }
 
@@ -80,11 +101,15 @@ const Header: React.FC = () => {
       label: t("navigation.shop"),
       icon: Store
     },
-    {
-      href: "/packs",
-      label: t("navigation.packages"),
-      icon: Package
-    },
+    ...(hasPacks
+      ? [
+          {
+            href: "/packs",
+            label: t("navigation.packages"),
+            icon: Package
+          }
+        ]
+      : []),
     {
       href: "/contact",
       label: t("navigation.contact"),
@@ -202,14 +227,16 @@ const Header: React.FC = () => {
                   {t("navigation.shop")}
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/packs"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
-                >
-                  {t("navigation.packages")}
-                </Link>
-              </li>
+              {hasPacks && (
+                <li>
+                  <Link
+                    href="/packs"
+                    className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
+                  >
+                    {t("navigation.packages")}
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   href="/contact"

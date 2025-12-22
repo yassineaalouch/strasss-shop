@@ -39,9 +39,9 @@ const ShopPage = async ({ searchParams }: ShopPageProps) => {
 
   params.append("page", resolvedSearchParams.page || "1")
   params.append("limit", resolvedSearchParams.limit || "8")
-
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL||"http://localhost:3000"
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/products?${params.toString()}`,
+    `${baseUrl}/api/products?${params.toString()}`,
     { cache: "no-store" }
   )
 
