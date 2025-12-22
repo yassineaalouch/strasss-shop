@@ -10,14 +10,37 @@ import {
   Plus,
   Search,
   MessageCircle,
-  MessageCircleQuestion
+  MessageCircleQuestion,
+  Clock
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ILocalizedText, IQA } from "@/types/qa"
 import { useToast } from "@/components/ui/Toast"
 
+interface OpeningHourDay {
+  day: {
+    fr: string
+    ar: string
+  }
+  hours: {
+    fr: string
+    ar: string
+  }
+  isClosed: boolean
+  order: number
+}
+
+interface OpeningHoursData {
+  hours: OpeningHourDay[]
+  note: {
+    fr: string
+    ar: string
+  }
+}
+
 export default function QAManager() {
   const { showToast } = useToast()
+  const [activeTab, setActiveTab] = useState<"qa" | "hours">("qa")
   const [qas, setQAs] = useState<IQA[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingQA, setEditingQA] = useState<IQA | null>(null)
@@ -25,6 +48,8 @@ export default function QAManager() {
   const [editForm, setEditForm] = useState<IQA | null>(null)
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [openingHours, setOpeningHours] = useState<OpeningHoursData | null>(null)
+  const [hoursLoading, setHoursLoading] = useState(false)
 
   const [form, setForm] = useState<IQA>({
     question: { ar: "", fr: "" },
@@ -46,7 +71,40 @@ export default function QAManager() {
 
   useEffect(() => {
     fetchQAs()
+    fetchOpeningHours()
   }, [])
+
+  const fetchOpeningHours = async () => {
+    try {
+      const { data } = await axios.get("/api/opening-hours")
+      if (data.success) {
+        setOpeningHours(data.data)
+      } else {
+        showToast(data.message || "Erreur lors du chargement des horaires", "error")
+      }
+    } catch (error) {
+      showToast("Erreur lors du chargement des horaires", "error")
+    }
+  }
+
+  const handleSaveHours = async () => {
+    if (!openingHours) return
+
+    setHoursLoading(true)
+    try {
+      const { data } = await axios.put("/api/opening-hours", openingHours)
+      if (data.success) {
+        showToast("Horaires d'ouverture mis à jour avec succès", "success")
+        await fetchOpeningHours()
+      } else {
+        showToast(data.message || "Erreur lors de la sauvegarde", "error")
+      }
+    } catch (error) {
+      showToast("Erreur lors de la sauvegarde des horaires", "error")
+    } finally {
+      setHoursLoading(false)
+    }
+  }
 
   const filteredQAs = qas.filter(
     (qa) =>
@@ -164,37 +222,72 @@ export default function QAManager() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Gestion des Questions & Réponses
+                Contact Page Content
               </h1>
               <p className="text-gray-600 mt-1">
-                Gérez le contenu de la FAQ de votre site
+                Gérez le contenu de la page de contact (FAQ et horaires d'ouverture)
               </p>
             </div>
+            {activeTab === "qa" && (
+              <button
+                onClick={openCreateForm}
+                className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Nouvelle Q&A
+              </button>
+            )}
+          </div>
+
+          {/* Onglets */}
+          <div className="flex gap-2 border-b border-gray-200">
             <button
-              onClick={openCreateForm}
-              className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              onClick={() => setActiveTab("qa")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "qa"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
             >
-              <Plus className="w-4 h-4" />
-              Nouvelle Q&A
+              <div className="flex items-center gap-2">
+                <MessageCircleQuestion className="w-4 h-4" />
+                Questions & Réponses
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab("hours")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "hours"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Horaires d'Ouverture
+              </div>
             </button>
           </div>
         </div>
 
-        {/* Barre de recherche */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Rechercher une question ou réponse..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+        {/* Contenu conditionnel selon l'onglet */}
+        {activeTab === "qa" ? (
+          <>
+            {/* Barre de recherche */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher une question ou réponse..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Formulaire de création */}
         <AnimatePresence>
@@ -446,7 +539,7 @@ export default function QAManager() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                      <div className="flex items-center gap-2 ml-4 shrink-0">
                         {isEditing ? (
                           <>
                             <button
@@ -554,6 +647,175 @@ export default function QAManager() {
             </motion.div>
           )}
         </div>
+          </>
+        ) : (
+          /* Section Horaires d'Ouverture */
+          <div className="space-y-6">
+            {openingHours && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    Horaires d'Ouverture
+                  </h2>
+                  <button
+                    onClick={handleSaveHours}
+                    disabled={hoursLoading}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    {hoursLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Sauvegarde...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Sauvegarder
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {openingHours.hours
+                    .sort((a, b) => a.order - b.order)
+                    .map((day, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-gray-200 rounded-lg"
+                      >
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Jour (Français)
+                          </label>
+                          <input
+                            type="text"
+                            value={day.day.fr}
+                            onChange={(e) => {
+                              const updatedHours = openingHours.hours.map((h, i) =>
+                                i === index ? { ...h, day: { ...h.day, fr: e.target.value } } : h
+                              )
+                              setOpeningHours({ ...openingHours, hours: updatedHours })
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            اليوم (العربية)
+                          </label>
+                          <input
+                            type="text"
+                            value={day.day.ar}
+                            onChange={(e) => {
+                              const updatedHours = openingHours.hours.map((h, i) =>
+                                i === index ? { ...h, day: { ...h.day, ar: e.target.value } } : h
+                              )
+                              setOpeningHours({ ...openingHours, hours: updatedHours })
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right"
+                            dir="rtl"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Horaires (Français)
+                          </label>
+                          <input
+                            type="text"
+                            value={day.hours.fr}
+                            onChange={(e) => {
+                              const updatedHours = openingHours.hours.map((h, i) =>
+                                i === index ? { ...h, hours: { ...h.hours, fr: e.target.value } } : h
+                              )
+                              setOpeningHours({ ...openingHours, hours: updatedHours })
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            placeholder="08:00 - 18:00 ou Fermé"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            الساعات (العربية)
+                          </label>
+                          <input
+                            type="text"
+                            value={day.hours.ar}
+                            onChange={(e) => {
+                              const updatedHours = openingHours.hours.map((h, i) =>
+                                i === index ? { ...h, hours: { ...h.hours, ar: e.target.value } } : h
+                              )
+                              setOpeningHours({ ...openingHours, hours: updatedHours })
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right"
+                            dir="rtl"
+                            placeholder="08:00 - 18:00 ou مغلق"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={day.isClosed}
+                            onChange={(e) => {
+                              const updatedHours = openingHours.hours.map((h, i) =>
+                                i === index ? { ...h, isClosed: e.target.checked } : h
+                              )
+                              setOpeningHours({ ...openingHours, hours: updatedHours })
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          />
+                          <label className="text-sm text-gray-700">Fermé ce jour</label>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+
+                {/* Note */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Note</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Note (Français)
+                      </label>
+                      <textarea
+                        value={openingHours.note.fr}
+                        onChange={(e) => {
+                          setOpeningHours({
+                            ...openingHours,
+                            note: { ...openingHours.note, fr: e.target.value }
+                          })
+                        }}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-vertical"
+                        placeholder="Note affichée sous les horaires"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        ملاحظة (العربية)
+                      </label>
+                      <textarea
+                        value={openingHours.note.ar}
+                        onChange={(e) => {
+                          setOpeningHours({
+                            ...openingHours,
+                            note: { ...openingHours.note, ar: e.target.value }
+                          })
+                        }}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-vertical text-right"
+                        dir="rtl"
+                        placeholder="ملاحظة تظهر تحت الساعات"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,20 +1,72 @@
 "use client"
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Clock } from "lucide-react"
-import { OpeningHour } from "@/types/type"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
+import axios from "axios"
+
+interface OpeningHourDay {
+  day: {
+    fr: string
+    ar: string
+  }
+  hours: {
+    fr: string
+    ar: string
+  }
+  isClosed: boolean
+  order: number
+}
+
+interface OpeningHoursData {
+  hours: OpeningHourDay[]
+  note: {
+    fr: string
+    ar: string
+  }
+}
+
 const OpeningHours = () => {
   const t = useTranslations("ContactPage.OpeningHours")
+  const locale = useLocale()
+  const [openingHoursData, setOpeningHoursData] = useState<OpeningHoursData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const openingHours: OpeningHour[] = [
-    { day: t("days.monday"), hours: t("hours.weekdays") },
-    { day: t("days.tuesday"), hours: t("hours.weekdays") },
-    { day: t("days.wednesday"), hours: t("hours.weekdays") },
-    { day: t("days.thursday"), hours: t("hours.weekdays") },
-    { day: t("days.friday"), hours: t("hours.weekdays") },
-    { day: t("days.saturday"), hours: t("hours.saturday") },
-    { day: t("days.sunday"), hours: t("hours.closed") }
-  ]
+  useEffect(() => {
+    fetchOpeningHours()
+  }, [])
+
+  const fetchOpeningHours = async () => {
+    try {
+      const { data } = await axios.get("/api/opening-hours")
+      if (data.success) {
+        setOpeningHoursData(data.data)
+      }
+    } catch (error) {
+      console.error("Error fetching opening hours:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!openingHoursData) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-8">
+        <p className="text-center text-gray-500">Aucun horaire disponible</p>
+      </div>
+    )
+  }
+
+  const sortedHours = [...openingHoursData.hours].sort((a, b) => a.order - b.order)
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
@@ -29,30 +81,34 @@ const OpeningHours = () => {
       </h3>
 
       <div className="space-y-3">
-        {openingHours.map((schedule, index) => (
+        {sortedHours.map((schedule, index) => (
           <div
             key={index}
             className="flex justify-between items-center py-2 px-3 rounded"
           >
-            <span className="font-medium text-gray-700">{schedule.day}</span>
+            <span className="font-medium text-gray-700">
+              {schedule.day[locale as "fr" | "ar"]}
+            </span>
             <span
               className={`${
-                schedule.hours === t("hours.closed")
+                schedule.isClosed
                   ? "text-red-500 font-medium"
                   : "text-gray-600"
               }`}
             >
-              {schedule.hours}
+              {schedule.hours[locale as "fr" | "ar"]}
             </span>
           </div>
         ))}
       </div>
 
-      <div className="mt-6 p-4 bg-green-50 rounded-lg">
-        <p className="text-sm text-green-700 text-center">
-          <strong>{t("note.label")}</strong> {t("note.text")}
-        </p>
-      </div>
+      {openingHoursData.note && (
+        <div className="mt-6 p-4 bg-green-50 rounded-lg">
+          <p className="text-sm text-green-700 text-center">
+            <strong>{t("note.label")}</strong> {openingHoursData.note[locale as "fr" | "ar"]}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

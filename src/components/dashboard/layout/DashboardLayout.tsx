@@ -107,7 +107,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     },
     {
       id: "qa",
-      label: "Question Réponse",
+      label: "Contact Page Content",
       icon: <MessageCircleQuestion className="w-5 h-5" />,
       href: "/dashboard/qa",
       isActive: currentPath.includes("/dashboard/qa")
