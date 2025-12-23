@@ -149,7 +149,8 @@ const ProductPage: React.FC = () => {
           image: product.images?.[0] ?? "/No_Image_Available.jpg",
           type: "product",
           discount: discount,
-          characteristic: formattedCharacteristics
+          characteristic: formattedCharacteristics,
+          maxQuantity: product.quantity // Stocker la quantité maximale disponible
         },
         quantity
       )
@@ -623,9 +624,26 @@ const ProductPage: React.FC = () => {
                       >
                         -
                       </button>
-                      <span className="px-6 py-3 min-w-16 text-center font-bold text-lg text-firstColor">
-                        {cartQuantity}
-                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        max={product.quantity}
+                        value={cartQuantity}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const newQuantity = parseInt(e.target.value) || 1
+                          let finalQuantity = Math.min(newQuantity, product.quantity)
+                          finalQuantity = Math.max(1, finalQuantity)
+                          updateQuantity(cartItem!, finalQuantity)
+                        }}
+                        onBlur={(e) => {
+                          const value = parseInt(e.target.value)
+                          if (isNaN(value) || value < 1) {
+                            updateQuantity(cartItem!, 1)
+                          }
+                        }}
+                        className="px-6 py-3 min-w-16 text-center font-bold text-lg text-firstColor border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-firstColor rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                      />
                       <button
                         onClick={() => {
                           if (cartQuantity < product.quantity) {
@@ -664,9 +682,26 @@ const ProductPage: React.FC = () => {
                       >
                         -
                       </button>
-                      <span className="px-4 py-2 min-w-12 text-center">
-                        {quantity}
-                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        max={product.quantity}
+                        value={quantity}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const newQuantity = parseInt(e.target.value) || 1
+                          let finalQuantity = Math.min(newQuantity, product.quantity)
+                          finalQuantity = Math.max(1, finalQuantity)
+                          setQuantity(finalQuantity)
+                        }}
+                        onBlur={(e) => {
+                          const value = parseInt(e.target.value)
+                          if (isNaN(value) || value < 1) {
+                            setQuantity(1)
+                          }
+                        }}
+                        className="px-4 py-2 min-w-12 text-center border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-firstColor rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                      />
                       <button
                         onClick={() => setQuantity((prev) => prev + 1)}
                         className="px-3 py-2 hover:bg-gray-100 disabled:opacity-50"

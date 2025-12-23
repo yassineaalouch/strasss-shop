@@ -369,6 +369,13 @@ const SideCart: React.FC<SideCartProps> = ({
   }
 
   const handleQuantityChange = (item: CartItem, change: number) => {
+    // Pour les produits, vérifier la limite de quantité maximale
+    if (change > 0 && item.type !== "pack" && item.maxQuantity !== undefined) {
+      if (item.quantity >= item.maxQuantity) {
+        return // Ne pas augmenter si on a atteint le maximum
+      }
+    }
+    
     const newQuantity = Math.max(0, item.quantity + change)
     if (newQuantity === 0) {
       onRemoveItem(item)
@@ -603,12 +610,43 @@ const SideCart: React.FC<SideCartProps> = ({
                                       >
                                         <Minus size={12} className="text-gray-600" />
                                       </button>
-                                      <span className="px-2 py-0.5 text-xs font-bold text-gray-800 min-w-[28px] text-center">
-                                        {item.quantity}
-                                      </span>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        max={item.type !== "pack" && item.maxQuantity ? item.maxQuantity : undefined}
+                                        value={item.quantity}
+                                        onFocus={(e) => e.target.select()}
+                                        onChange={(e) => {
+                                          const newQuantity = parseInt(e.target.value) || 1
+                                          let finalQuantity = newQuantity
+                                          
+                                          // Vérifier la limite pour les produits
+                                          if (item.type !== "pack" && item.maxQuantity !== undefined) {
+                                            finalQuantity = Math.min(newQuantity, item.maxQuantity)
+                                          }
+                                          
+                                          // S'assurer que la quantité est au moins 1
+                                          finalQuantity = Math.max(1, finalQuantity)
+                                          
+                                          onUpdateQuantity(item, finalQuantity)
+                                        }}
+                                        onBlur={(e) => {
+                                          // Si le champ est vide ou invalide, remettre la quantité actuelle
+                                          const value = parseInt(e.target.value)
+                                          if (isNaN(value) || value < 1) {
+                                            onUpdateQuantity(item, 1)
+                                          }
+                                        }}
+                                        className="w-10 px-1 py-0.5 text-xs font-bold text-gray-800 text-center border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-orange-500 rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                                      />
                                       <button
                                         onClick={() => handleQuantityChange(item, 1)}
-                                        className="p-1 hover:bg-orange-100 rounded-r-lg transition-colors"
+                                        disabled={
+                                          item.type !== "pack" &&
+                                          item.maxQuantity !== undefined &&
+                                          item.quantity >= item.maxQuantity
+                                        }
+                                        className="p-1 hover:bg-orange-100 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
                                         <Plus size={12} className="text-gray-600" />
                                       </button>

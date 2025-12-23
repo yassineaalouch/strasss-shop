@@ -183,6 +183,7 @@ export interface CartItem {
     image: string
   }> // Produits inclus dans le pack (seulement pour type="pack")
   discountPrice?: number // Prix avec réduction pour les packs
+  maxQuantity?: number // Quantité maximale disponible (seulement pour les produits)
 }
 
 export interface SideCartProps {

@@ -385,12 +385,52 @@ export default function CartSummary({
                         >
                           <Minus size={10} className="text-gray-600" />
                         </button>
-                        <span className="px-2 sm:px-3 py-1 sm:py-1.5 font-semibold text-gray-800 text-xs sm:text-sm min-w-[1.5rem] sm:min-w-[2.5rem] text-center">
-                          {item.quantity}
-                        </span>
+                        <input
+                          type="number"
+                          min="1"
+                          max={item.type !== "pack" && item.maxQuantity ? item.maxQuantity : undefined}
+                          value={item.quantity}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const newQuantity = parseInt(e.target.value) || 1
+                            let finalQuantity = newQuantity
+                            
+                            // Vérifier la limite pour les produits
+                            if (item.type !== "pack" && item.maxQuantity !== undefined) {
+                              finalQuantity = Math.min(newQuantity, item.maxQuantity)
+                            }
+                            
+                            // S'assurer que la quantité est au moins 1
+                            finalQuantity = Math.max(1, finalQuantity)
+                            
+                            updateQuantity(item, finalQuantity)
+                          }}
+                          onBlur={(e) => {
+                            // Si le champ est vide ou invalide, remettre la quantité actuelle
+                            const value = parseInt(e.target.value)
+                            if (isNaN(value) || value < 1) {
+                              updateQuantity(item, 1)
+                            }
+                          }}
+                          className="w-12 sm:w-16 px-1 sm:px-2 py-1 sm:py-1.5 font-semibold text-gray-800 text-xs sm:text-sm text-center border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-firstColor rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        />
                         <button
-                          onClick={() => updateQuantity(item, item.quantity + 1)}
-                          className="p-1 sm:p-2 hover:bg-gray-200 rounded-r-md transition-colors"
+                          onClick={() => {
+                            // Vérifier la limite de quantité pour les produits (pas les packs)
+                            if (item.type !== "pack" && item.maxQuantity) {
+                              if (item.quantity < item.maxQuantity) {
+                                updateQuantity(item, item.quantity + 1)
+                              }
+                            } else {
+                              updateQuantity(item, item.quantity + 1)
+                            }
+                          }}
+                          disabled={
+                            item.type !== "pack" &&
+                            item.maxQuantity !== undefined &&
+                            item.quantity >= item.maxQuantity
+                          }
+                          className="p-1 sm:p-2 hover:bg-gray-200 rounded-r-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           type="button"
                         >
                           <Plus size={10} className="text-gray-600" />
@@ -483,12 +523,52 @@ export default function CartSummary({
                         >
                           <Minus size={10} className="text-gray-600" />
                         </button>
-                        <span className="px-2 sm:px-3 py-1 sm:py-1.5 font-semibold text-gray-800 text-xs sm:text-sm min-w-[1.5rem] sm:min-w-[2.5rem] text-center">
-                          {item.quantity}
-                        </span>
+                        <input
+                          type="number"
+                          min="1"
+                          max={item.type !== "pack" && item.maxQuantity ? item.maxQuantity : undefined}
+                          value={item.quantity}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const newQuantity = parseInt(e.target.value) || 1
+                            let finalQuantity = newQuantity
+                            
+                            // Vérifier la limite pour les produits
+                            if (item.type !== "pack" && item.maxQuantity !== undefined) {
+                              finalQuantity = Math.min(newQuantity, item.maxQuantity)
+                            }
+                            
+                            // S'assurer que la quantité est au moins 1
+                            finalQuantity = Math.max(1, finalQuantity)
+                            
+                            updateQuantity(item, finalQuantity)
+                          }}
+                          onBlur={(e) => {
+                            // Si le champ est vide ou invalide, remettre la quantité actuelle
+                            const value = parseInt(e.target.value)
+                            if (isNaN(value) || value < 1) {
+                              updateQuantity(item, 1)
+                            }
+                          }}
+                          className="w-12 sm:w-16 px-1 sm:px-2 py-1 sm:py-1.5 font-semibold text-gray-800 text-xs sm:text-sm text-center border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-firstColor rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        />
                         <button
-                          onClick={() => updateQuantity(item, item.quantity + 1)}
-                          className="p-1 sm:p-2 hover:bg-gray-200 rounded-r-md transition-colors"
+                          onClick={() => {
+                            // Vérifier la limite de quantité pour les produits (pas les packs)
+                            if (item.type !== "pack" && item.maxQuantity) {
+                              if (item.quantity < item.maxQuantity) {
+                                updateQuantity(item, item.quantity + 1)
+                              }
+                            } else {
+                              updateQuantity(item, item.quantity + 1)
+                            }
+                          }}
+                          disabled={
+                            item.type !== "pack" &&
+                            item.maxQuantity !== undefined &&
+                            item.quantity >= item.maxQuantity
+                          }
+                          className="p-1 sm:p-2 hover:bg-gray-200 rounded-r-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           type="button"
                         >
                           <Plus size={10} className="text-gray-600" />

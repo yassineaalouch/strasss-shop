@@ -141,12 +141,25 @@ export const useCart = () => {
             cartItem.characteristic || [],
             item.characteristic || []
           )
-            ? { ...cartItem, quantity: cartItem.quantity + quantity }
+            ? {
+                ...cartItem,
+                quantity: Math.min(
+                  cartItem.quantity + quantity,
+                  item.maxQuantity ?? Infinity
+                )
+              }
             : cartItem
         )
       }
 
-      return [...currentItems, { ...item, quantity, type: item.type || "product" }]
+      return [
+        ...currentItems,
+        {
+          ...item,
+          quantity: Math.min(quantity, item.maxQuantity ?? Infinity),
+          type: item.type || "product"
+        }
+      ]
     })
   }
 
@@ -155,6 +168,11 @@ export const useCart = () => {
     if (quantity <= 0) {
       removeItem(item)
       return
+    }
+
+    // Pour les produits, vérifier la limite de quantité maximale
+    if (item.type !== "pack" && item.maxQuantity !== undefined) {
+      quantity = Math.min(quantity, item.maxQuantity)
     }
 
     setCartItems((currentItems) =>

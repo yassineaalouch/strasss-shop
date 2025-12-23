@@ -55,7 +55,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
         price: product.price,
         image: product.images?.[0] ?? "/No_Image_Available.jpg",
         type: "product",
-        discount: discount
+        discount: discount,
+        maxQuantity: product.quantity // Stocker la quantité maximale disponible
       })
 
       // Animation de succès
@@ -105,7 +106,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
       image: product.images?.[0] ?? "/No_Image_Available.jpg",
       characteristic: formattedCharacteristics,
       type: "product",
-      discount: discount
+      discount: discount,
+      maxQuantity: product.quantity // Stocker la quantité maximale disponible
     })
 
     setShowModal(false)
