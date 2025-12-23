@@ -55,6 +55,8 @@ const AdminEditProduct: React.FC = () => {
   const [selectedCharacteristics, setSelectedCharacteristics] = useState<
     SelectedCharacteristic[]
   >([])
+  const [newValueInputs, setNewValueInputs] = useState<Record<number, { fr: string; ar: string }>>({})
+  const [addingNewValue, setAddingNewValue] = useState<Record<number, boolean>>({})
 
   // Fonction pour mapper les caractéristiques du produit vers le format selectedCharacteristics
   const mapProductCharacteristicsToSelected = (
@@ -266,6 +268,125 @@ const AdminEditProduct: React.FC = () => {
         }
       })
     )
+  }
+
+  const handleAddNewValue = async (charIndex: number) => {
+    const characteristicId = selectedCharacteristics[charIndex].characteristicId
+    if (!characteristicId) return
+
+    const newValue = newValueInputs[charIndex]
+    if (!newValue) return
+
+    // Trouver la caractéristique actuelle pour vérifier si c'est une couleur
+    const characteristic = characteristics.find((c) => c._id === characteristicId)
+    if (!characteristic) {
+      showToast("Caractéristique introuvable", "error")
+      return
+    }
+
+    const isColor = isColorCharacteristic(characteristic.name.fr) || isColorCharacteristic(characteristic.name.ar)
+
+    // Pour les couleurs, vérifier que c'est un hex valide
+    if (isColor) {
+      if (!newValue.fr.trim() || !isValidHexColor(newValue.fr.trim())) {
+        showToast("Veuillez entrer un code couleur hexadécimal valide (ex: #FF0000)", "warning")
+        return
+      }
+    } else {
+      // Pour les autres caractéristiques, vérifier que les deux champs sont remplis
+      if (!newValue.fr.trim() || !newValue.ar.trim()) {
+        showToast("Veuillez remplir les deux champs (FR et AR)", "warning")
+        return
+      }
+    }
+
+    setAddingNewValue((prev) => ({ ...prev, [charIndex]: true }))
+
+    try {
+      // Normaliser la valeur (pour les couleurs, utiliser le même code pour FR et AR)
+      const normalizedValue = isColor
+        ? {
+            fr: normalizeHexColor(newValue.fr.trim()),
+            ar: normalizeHexColor(newValue.fr.trim()) // Pour les couleurs, FR et AR sont identiques
+          }
+        : {
+            fr: newValue.fr.trim(),
+            ar: newValue.ar.trim()
+          }
+
+      // Vérifier si la valeur existe déjà
+      const valueExists = characteristic.values.some(
+        (v) => {
+          if (isColor) {
+            // Pour les couleurs, comparer les codes hex normalisés
+            return normalizeHexColor(v.name.fr) === normalizedValue.fr
+          } else {
+            // Pour les autres, comparer les textes
+            return v.name.fr.toLowerCase() === normalizedValue.fr.toLowerCase() ||
+                   v.name.ar === normalizedValue.ar
+          }
+        }
+      )
+
+      if (valueExists) {
+        showToast("Cette valeur existe déjà", "warning")
+        setAddingNewValue((prev) => ({ ...prev, [charIndex]: false }))
+        return
+      }
+
+      // Créer la nouvelle valeur (sans _id, Mongoose le générera automatiquement)
+      const newValueObj: ICharacteristicValue = {
+        name: normalizedValue
+      }
+
+      // Ajouter la nouvelle valeur à la caractéristique
+      const updatedCharacteristic = {
+        name: characteristic.name,
+        values: [...characteristic.values, newValueObj]
+      }
+
+      // Mettre à jour via l'API
+      const response = await axios.put(
+        `/api/characteristics/${characteristicId}`,
+        updatedCharacteristic
+      )
+
+      if (response.data) {
+        // Mettre à jour la liste des caractéristiques
+        setCharacteristics((prev) =>
+          prev.map((c) => (c._id === characteristicId ? response.data : c))
+        )
+
+        // Trouver la nouvelle valeur dans la réponse (elle aura maintenant un _id généré par MongoDB)
+        const updatedChar = response.data
+        const addedValue = updatedChar.values[updatedChar.values.length - 1]
+
+        // Sélectionner automatiquement la nouvelle valeur
+        setSelectedCharacteristics((prev) =>
+          prev.map((item, i) => {
+            if (i !== charIndex) return item
+            return {
+              ...item,
+              selectedValues: [...item.selectedValues, addedValue]
+            }
+          })
+        )
+
+        // Réinitialiser les champs de saisie
+        setNewValueInputs((prev) => ({
+          ...prev,
+          [charIndex]: { fr: "", ar: "" }
+        }))
+
+        showToast("Valeur ajoutée avec succès", "success")
+      }
+    } catch (error: any) {
+      console.error("Erreur lors de l'ajout de la valeur:", error)
+      const errorMessage = error?.response?.data?.message || error?.message || "Erreur lors de l'ajout de la valeur"
+      showToast(errorMessage, "error")
+    } finally {
+      setAddingNewValue((prev) => ({ ...prev, [charIndex]: false }))
+    }
   }
 
   // Fonction pour transformer les données avant soumission
@@ -1191,6 +1312,155 @@ const AdminEditProduct: React.FC = () => {
                               Veuillez sélectionner au moins une valeur
                             </p>
                           )}
+
+                          {/* Formulaire pour ajouter une nouvelle valeur */}
+                          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Créer une nouvelle valeur
+                            </label>
+                            {(() => {
+                              const currentChar = characteristics.find((c) => c._id === char.characteristicId)
+                              const isColor = currentChar && (isColorCharacteristic(currentChar.name.fr) || isColorCharacteristic(currentChar.name.ar))
+                              
+                              if (isColor) {
+                                // Mode couleur : color picker
+                                return (
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                      <input
+                                        type="color"
+                                        value={normalizeHexColor(newValueInputs[index]?.fr || "#000000")}
+                                        onChange={(e) => {
+                                          const hexColor = normalizeHexColor(e.target.value)
+                                          setNewValueInputs((prev) => ({
+                                            ...prev,
+                                            [index]: { fr: hexColor, ar: hexColor }
+                                          }))
+                                        }}
+                                        className="w-16 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                                        disabled={isSubmitting || addingNewValue[index]}
+                                      />
+                                      <input
+                                        type="text"
+                                        placeholder="#000000"
+                                        value={newValueInputs[index]?.fr || ""}
+                                        onChange={(e) => {
+                                          const hexColor = normalizeHexColor(e.target.value)
+                                          setNewValueInputs((prev) => ({
+                                            ...prev,
+                                            [index]: { fr: hexColor, ar: hexColor }
+                                          }))
+                                        }}
+                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+                                        maxLength={7}
+                                        disabled={isSubmitting || addingNewValue[index]}
+                                      />
+                                      <div className="flex items-center gap-2">
+                                        <div
+                                          className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-sm"
+                                          style={{ backgroundColor: normalizeHexColor(newValueInputs[index]?.fr || "#000000") }}
+                                        />
+                                        <span className="text-sm text-gray-600 font-mono">
+                                          {normalizeHexColor(newValueInputs[index]?.fr || "#000000")}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddNewValue(index)}
+                                      disabled={
+                                        isSubmitting ||
+                                        addingNewValue[index] ||
+                                        !newValueInputs[index]?.fr?.trim() ||
+                                        !isValidHexColor(newValueInputs[index]?.fr || "")
+                                      }
+                                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                    >
+                                      {addingNewValue[index] ? (
+                                        <>
+                                          <Loader2 className="animate-spin" size={16} />
+                                          Ajout...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Plus size={16} />
+                                          Ajouter la couleur
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
+                                )
+                              } else {
+                                // Mode normal : champs texte
+                                return (
+                                  <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                      <div>
+                                        <input
+                                          type="text"
+                                          value={newValueInputs[index]?.fr || ""}
+                                          onChange={(e) =>
+                                            setNewValueInputs((prev) => ({
+                                              ...prev,
+                                              [index]: {
+                                                ...(prev[index] || { fr: "", ar: "" }),
+                                                fr: e.target.value
+                                              }
+                                            }))
+                                          }
+                                          placeholder="Valeur (Français)"
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                          disabled={isSubmitting || addingNewValue[index]}
+                                        />
+                                      </div>
+                                      <div>
+                                        <input
+                                          type="text"
+                                          value={newValueInputs[index]?.ar || ""}
+                                          onChange={(e) =>
+                                            setNewValueInputs((prev) => ({
+                                              ...prev,
+                                              [index]: {
+                                                ...(prev[index] || { fr: "", ar: "" }),
+                                                ar: e.target.value
+                                              }
+                                            }))
+                                          }
+                                          placeholder="القيمة (العربية)"
+                                          dir="rtl"
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                          disabled={isSubmitting || addingNewValue[index]}
+                                        />
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddNewValue(index)}
+                                      disabled={
+                                        isSubmitting ||
+                                        addingNewValue[index] ||
+                                        !newValueInputs[index]?.fr?.trim() ||
+                                        !newValueInputs[index]?.ar?.trim()
+                                      }
+                                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                    >
+                                      {addingNewValue[index] ? (
+                                        <>
+                                          <Loader2 className="animate-spin" size={16} />
+                                          Ajout...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Plus size={16} />
+                                          Ajouter la valeur
+                                        </>
+                                      )}
+                                    </button>
+                                  </>
+                                )
+                              }
+                            })()}
+                          </div>
                         </div>
                       )}
                     </div>
