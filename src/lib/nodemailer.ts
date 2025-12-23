@@ -124,6 +124,7 @@
 // }
 
 import nodemailer, { Transporter } from "nodemailer"
+import { isColorCharacteristic, isValidHexColor, normalizeHexColor } from "@/utils/colorCharacteristic"
 
 interface OrderItem {
   id: string
@@ -132,6 +133,8 @@ interface OrderItem {
   price: number
   quantity: number
   image: string
+  characteristic?: Array<{ name: string; value: string }>
+  type?: "product" | "pack"
 }
 
 interface OrderData {
@@ -166,21 +169,64 @@ export const transporter: Transporter = nodemailer.createTransport({
 })
 
 export const sendOrderEmail = async (orderData: OrderData): Promise<void> => {
-  // Liste des produits
+  // Liste des produits avec caractéristiques
   const itemsList = orderData.items
-    .map(
-      (item) => `
+    .map((item) => {
+      // Générer le HTML des caractéristiques si elles existent (uniquement pour les produits)
+      let characteristicsHtml = ""
+      if (item.type !== "pack" && item.characteristic && item.characteristic.length > 0) {
+        const characteristicsList = item.characteristic
+          .slice(0, 3) // Limiter à 3 caractéristiques pour l'email
+          .map((char) => {
+            const isColor = isColorCharacteristic(char.name)
+            const isHexColor = isValidHexColor(char.value)
+            
+            if (isColor && isHexColor) {
+              // Afficher un cercle coloré pour les couleurs
+              return `
+                <span style="display:inline-block; margin-right:8px; margin-bottom:4px;">
+                  <span style="font-size:11px; color:#666;">${char.name}:</span>
+                  <span 
+                    style="display:inline-block; width:16px; height:16px; border-radius:50%; border:1px solid #ddd; background-color:${normalizeHexColor(char.value)}; vertical-align:middle; margin-left:4px;"
+                    title="${char.value}"
+                  ></span>
+                </span>
+              `
+            } else {
+              // Afficher le texte normal pour les autres caractéristiques
+              return `
+                <span style="display:inline-block; margin-right:8px; margin-bottom:4px; font-size:11px; color:#666;">
+                  <strong>${char.name}:</strong> ${char.value}
+                </span>
+              `
+            }
+          })
+          .join("")
+        
+        if (characteristicsList) {
+          characteristicsHtml = `
+            <div style="margin-top:4px; padding-top:4px; border-top:1px solid #f0f0f0;">
+              ${characteristicsList}
+            </div>
+          `
+        }
+      }
+      
+      return `
       <tr style="border-bottom:1px solid #eee;">
         <td style="padding:8px;"><img src="${item.image}" alt="${
         item.name
       }" width="50" style="border-radius:6px;" /></td>
-        <td style="padding:8px;">${item.name}</td>
+        <td style="padding:8px;">
+          <div>${item.name}</div>
+          ${characteristicsHtml}
+        </td>
         <td style="padding:8px; text-align:center;">${item.quantity}</td>
         <td style="padding:8px; text-align:right;">${item.price.toFixed(
           2
         )} MAD</td>
       </tr>`
-    )
+    })
     .join("")
 
   // Coupon info
