@@ -129,12 +129,20 @@ import { isColorCharacteristic, isValidHexColor, normalizeHexColor } from "@/uti
 interface OrderItem {
   id: string
   name: string
-  category: string
+  category?: string
   price: number
   quantity: number
   image: string
   characteristic?: Array<{ name: string; value: string }>
   type?: "product" | "pack"
+  discountPrice?: number
+  items?: Array<{
+    id: string
+    name: string
+    quantity: number
+    price: number
+    image: string
+  }>
 }
 
 interface OrderData {
@@ -169,7 +177,7 @@ export const transporter: Transporter = nodemailer.createTransport({
 })
 
 export const sendOrderEmail = async (orderData: OrderData): Promise<void> => {
-  // Liste des produits avec caractéristiques
+  // Liste des produits et packs avec caractéristiques
   const itemsList = orderData.items
     .map((item) => {
       // Générer le HTML des caractéristiques si elles existent (uniquement pour les produits)
@@ -212,19 +220,51 @@ export const sendOrderEmail = async (orderData: OrderData): Promise<void> => {
         }
       }
       
+      // Gérer l'affichage du prix (avec réduction pour les packs si applicable)
+      let priceHtml = ""
+      if (item.type === "pack" && item.discountPrice) {
+        const totalOriginal = item.price * item.quantity
+        const totalDiscount = item.discountPrice * item.quantity
+        priceHtml = `
+          <div style="text-align:right;">
+            <div style="color:#10b981; font-weight:bold;">${totalDiscount.toFixed(2)} MAD</div>
+            <div style="color:#999; font-size:11px; text-decoration:line-through;">${totalOriginal.toFixed(2)} MAD</div>
+          </div>
+        `
+      } else {
+        priceHtml = `<div style="text-align:right;">${(item.price * item.quantity).toFixed(2)} MAD</div>`
+      }
+      
+      // Informations supplémentaires pour les packs
+      let packInfoHtml = ""
+      if (item.type === "pack") {
+        const packItemsCount = item.items?.length || 0
+        packInfoHtml = `
+          <div style="margin-top:4px; padding-top:4px; border-top:1px solid #f0f0f0;">
+            <span style="font-size:11px; color:#9333ea; font-weight:bold;">📦 PACK</span>
+            ${packItemsCount > 0 ? `<span style="font-size:11px; color:#666; margin-left:8px;">${packItemsCount} produit${packItemsCount > 1 ? "s" : ""} inclus</span>` : ""}
+          </div>
+        `
+      }
+      
       return `
-      <tr style="border-bottom:1px solid #eee;">
-        <td style="padding:8px;"><img src="${item.image}" alt="${
-        item.name
-      }" width="50" style="border-radius:6px;" /></td>
+      <tr style="border-bottom:1px solid #eee; ${item.type === "pack" ? "background-color:#faf5ff;" : ""}">
         <td style="padding:8px;">
-          <div>${item.name}</div>
+          <img src="${item.image}" alt="${
+        item.name
+      }" width="50" style="border-radius:6px; ${item.type === "pack" ? "border:2px solid #9333ea;" : ""}" />
+        </td>
+        <td style="padding:8px;">
+          <div style="font-weight:${item.type === "pack" ? "bold" : "normal"}; color:${item.type === "pack" ? "#9333ea" : "#333"};">
+            ${item.name}
+          </div>
+          ${packInfoHtml}
           ${characteristicsHtml}
         </td>
         <td style="padding:8px; text-align:center;">${item.quantity}</td>
-        <td style="padding:8px; text-align:right;">${item.price.toFixed(
-          2
-        )} MAD</td>
+        <td style="padding:8px;">
+          ${priceHtml}
+        </td>
       </tr>`
     })
     .join("")
