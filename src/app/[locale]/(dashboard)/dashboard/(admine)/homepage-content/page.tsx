@@ -699,9 +699,11 @@ export default function HomePageContentPage() {
     } else if (bannerLinkType === "category") {
       const category = availableCategories.find((c) => c._id === itemId)
       if (category) {
+        // Utiliser le nom de la catégorie (en français) dans l'URL au lieu de l'ID
+        const categoryName = encodeURIComponent(category.name.fr)
         setPromoBanner((prev) => ({
           ...prev,
-          link: `/shop?category=${itemId}`,
+          link: `/shop?category=${categoryName}`,
           linkId: itemId
         }))
       }
