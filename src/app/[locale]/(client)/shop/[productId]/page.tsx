@@ -38,6 +38,12 @@ const ProductPage: React.FC = () => {
   const [showShareModal, setShowShareModal] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
   const [selectedCharacteristics, setSelectedCharacteristics] = useState<Record<string, string>>({})
+  
+  // États pour l'effet de zoom
+  const [isZoomActive, setIsZoomActive] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [imageRef, setImageRef] = useState<HTMLDivElement | null>(null)
+  const [zoomBoxPosition, setZoomBoxPosition] = useState({ top: 0, left: 0 })
 
   // Check if product is in cart and get cart quantity
   const cartItem = product
@@ -370,13 +376,77 @@ const ProductPage: React.FC = () => {
             <div className="relative aspect-square bg-white rounded-lg overflow-hidden border">
               {product.images.length > 0 ? (
                 <>
-                  <Image
-                    src={product.images[selectedImageIndex]}
-                    alt={product.name[locale]}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
+                  <div
+                    ref={setImageRef}
+                    className="relative w-full h-full cursor-zoom-in"
+                    onMouseEnter={() => setIsZoomActive(true)}
+                    onMouseLeave={() => setIsZoomActive(false)}
+                    onMouseMove={(e) => {
+                      if (imageRef) {
+                        const rect = imageRef.getBoundingClientRect()
+                        const x = ((e.clientX - rect.left) / rect.width) * 100
+                        const y = ((e.clientY - rect.top) / rect.height) * 100
+                        setMousePosition({ x, y })
+                        
+                        // Calculer la position de la boîte de zoom
+                        const zoomBoxSize = 384 // w-96 = 384px
+                        const spacing = 16
+                        const rightPosition = rect.right + spacing
+                        const leftPosition = rect.left - zoomBoxSize - spacing
+                        
+                        // Vérifier si la boîte peut être placée à droite
+                        if (rightPosition + zoomBoxSize <= window.innerWidth) {
+                          setZoomBoxPosition({
+                            left: rightPosition,
+                            top: Math.max(16, rect.top)
+                          })
+                        } else if (leftPosition >= 0) {
+                          // Sinon, la placer à gauche
+                          setZoomBoxPosition({
+                            left: leftPosition,
+                            top: Math.max(16, rect.top)
+                          })
+                        } else {
+                          // Sinon, la placer en dessous
+                          setZoomBoxPosition({
+                            left: Math.max(16, rect.left),
+                            top: rect.bottom + spacing
+                          })
+                        }
+                      }
+                    }}
+                  >
+                    <Image
+                      src={product.images[selectedImageIndex]}
+                      alt={product.name[locale]}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
+                  
+                  {/* Boîte de zoom */}
+                  {isZoomActive && (
+                    <div 
+                      className="fixed w-96 h-96 border-2 border-gray-300 rounded-lg overflow-hidden bg-white shadow-2xl z-50 pointer-events-none hidden lg:block"
+                      style={{
+                        left: `${zoomBoxPosition.left}px`,
+                        top: `${zoomBoxPosition.top}px`,
+                        maxWidth: 'calc(100vw - 32px)',
+                        maxHeight: 'calc(100vh - 32px)'
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundImage: `url(${product.images[selectedImageIndex]})`,
+                          backgroundSize: `${400}%`,
+                          backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
+                          backgroundRepeat: 'no-repeat'
+                        }}
+                      />
+                    </div>
+                  )}
 
                   {/* Badges */}
                   <div className="absolute top-4 left-4 flex flex-col space-y-2">
