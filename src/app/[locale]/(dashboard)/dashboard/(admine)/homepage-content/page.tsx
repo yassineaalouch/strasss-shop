@@ -2178,7 +2178,7 @@ export default function HomePageContentPage() {
                               }`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                              {item.images && item.images[0] && <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                                   <Image
                                     src={
                                       (item.images && item.images[0]) ||
@@ -2189,7 +2189,7 @@ export default function HomePageContentPage() {
                                     fill
                                     className="object-cover"
                                   />
-                                </div>
+                                </div>}
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium text-sm truncate">
                                     {item.name?.fr || item.name || ""}
