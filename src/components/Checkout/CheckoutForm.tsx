@@ -1,9 +1,46 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useTranslations } from "next-intl"
 import { User, MapPin, Phone, ShoppingCart, Truck } from "lucide-react"
 import { CheckoutFormProps, CheckoutFormData, FormErrors } from "@/types/type"
+
+// Clé pour le localStorage
+const CHECKOUT_FORM_STORAGE_KEY = "couture-checkout-form"
+
+// Fonction pour charger les données depuis localStorage
+const loadCheckoutFormFromStorage = (): CheckoutFormData => {
+  if (typeof window === "undefined") {
+    return {
+      customerName: "",
+      customerAddress: "",
+      customerPhone: ""
+    }
+  }
+  try {
+    const savedData = localStorage.getItem(CHECKOUT_FORM_STORAGE_KEY)
+    if (savedData) {
+      return JSON.parse(savedData)
+    }
+  } catch (error) {
+    console.error("Erreur lors du chargement des données du formulaire:", error)
+  }
+  return {
+    customerName: "",
+    customerAddress: "",
+    customerPhone: ""
+  }
+}
+
+// Fonction pour sauvegarder les données dans localStorage
+const saveCheckoutFormToStorage = (data: CheckoutFormData): void => {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(CHECKOUT_FORM_STORAGE_KEY, JSON.stringify(data))
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde des données du formulaire:", error)
+  }
+}
 
 export default function CheckoutForm({
   onSubmit,
@@ -17,8 +54,22 @@ export default function CheckoutForm({
     customerAddress: "",
     customerPhone: ""
   })
-
   const [errors, setErrors] = useState<FormErrors>({})
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Charger les données depuis localStorage au montage
+  useEffect(() => {
+    const savedData = loadCheckoutFormFromStorage()
+    setFormData(savedData)
+    setIsInitialized(true)
+  }, [])
+
+  // Sauvegarder les données dans localStorage à chaque changement (après l'initialisation)
+  useEffect(() => {
+    if (isInitialized) {
+      saveCheckoutFormToStorage(formData)
+    }
+  }, [formData, isInitialized])
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
@@ -55,6 +106,8 @@ export default function CheckoutForm({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
     if (validateForm()) {
+      // Sauvegarder les données avant de soumettre
+      saveCheckoutFormToStorage(formData)
       onSubmit(formData)
     }
   }
