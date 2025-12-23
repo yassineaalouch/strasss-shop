@@ -188,3 +188,33 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+// DELETE - Supprimer tous les produits en vedette
+export async function DELETE() {
+  try {
+    await connectToDatabase()
+
+    const result = await FeaturedProducts.deleteOne({
+      singleton: "featured_products"
+    })
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Tous les produits en vedette ont été supprimés",
+        deletedCount: result.deletedCount
+      },
+      { status: 200 }
+    )
+  } catch (error: unknown) {
+    console.error("Erreur lors de la suppression des produits en vedette:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Erreur serveur",
+        error: error instanceof Error ? error.message : "Erreur inconnue"
+      },
+      { status: 500 }
+    )
+  }
+}
+

@@ -534,6 +534,36 @@ export default function HomePageContentPage() {
     }
   }
 
+  const deleteAllFeaturedProducts = async () => {
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir supprimer tous les produits en vedette ? Cette action est irréversible."
+      )
+    ) {
+      return
+    }
+
+    setSaving(true)
+    try {
+      const response = await fetch("/api/featured-products", {
+        method: "DELETE"
+      })
+      const data = await response.json()
+      if (data.success) {
+        showToast("Tous les produits en vedette ont été supprimés", "success")
+        setFeaturedProductIds([])
+        setFeaturedProducts([])
+        fetchFeaturedProducts()
+      } else {
+        showToast(data.message || "Erreur", "error")
+      }
+    } catch (error) {
+      showToast("Erreur lors de la suppression", "error")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   // ============ PROMO BANNER ============
 
   const fetchAllPacks = async () => {
@@ -1694,23 +1724,42 @@ export default function HomePageContentPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">Produits en Vedette</h2>
-                <button
-                  onClick={saveFeaturedProducts}
-                  disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Enregistrement...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Enregistrer
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={deleteAllFeaturedProducts}
+                    disabled={saving || featuredProductIds.length === 0}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Suppression...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" />
+                        Supprimer tout
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={saveFeaturedProducts}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Enregistrement...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Enregistrer
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="text-sm text-gray-600 mb-4">
