@@ -1641,34 +1641,39 @@ export default function HomePageContentPage() {
                       </button>
                     </div>
                     <div className="p-6 space-y-4">
-                      {!editingCategoryId && (
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Sélectionner une catégorie existante
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Rechercher..."
-                            value={categorySearch}
-                            onChange={(e) => setCategorySearch(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg mb-2"
-                          />
-                          <select
-                            value={selectedCategoryId}
-                            onChange={(e) =>
-                              handleCategorySelect(e.target.value)
-                            }
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
-                          >
-                            <option value="">-- Sélectionner --</option>
-                            {filteredCategories.map((cat) => (
-                              <option key={cat._id} value={cat._id}>
-                                {cat.name.fr} / {cat.name.ar}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          {editingCategoryId 
+                            ? "Modifier la catégorie (optionnel)" 
+                            : "Sélectionner une catégorie existante"}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Rechercher..."
+                          value={categorySearch}
+                          onChange={(e) => setCategorySearch(e.target.value)}
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg mb-2"
+                        />
+                        <select
+                          value={selectedCategoryId}
+                          onChange={(e) =>
+                            handleCategorySelect(e.target.value)
+                          }
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                        >
+                          <option value="">-- Sélectionner --</option>
+                          {filteredCategories.map((cat) => (
+                            <option key={cat._id} value={cat._id}>
+                              {cat.name.fr} / {cat.name.ar}
+                            </option>
+                          ))}
+                        </select>
+                        {editingCategoryId && selectedCategoryId && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            ⚠️ Changer la catégorie mettra à jour le nom, l&apos;URL et le nombre de produits
+                          </p>
+                        )}
+                      </div>
 
                       <div className="flex gap-2 p-1 bg-gray-100 rounded-lg w-fit">
                         <button
