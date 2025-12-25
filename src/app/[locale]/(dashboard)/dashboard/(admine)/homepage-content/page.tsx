@@ -317,13 +317,91 @@ export default function HomePageContentPage() {
     }
   }
 
+  // Fonction pour obtenir tous les descendants d'une catégorie
+  const getAllDescendants = (categoryId: string): Category[] => {
+    const descendants: Category[] = []
+    const directChildren = availableCategories.filter(
+      (c) => c.parentId === categoryId
+    )
+
+    for (const child of directChildren) {
+      descendants.push(child)
+      descendants.push(...getAllDescendants(child._id))
+    }
+
+    return descendants
+  }
+
+  // Fonction pour générer l'URL automatiquement
+  const generateCategoryUrl = (category: Category): string => {
+    const categoriesToInclude: Category[] = [category]
+    
+    // Si c'est une catégorie parent (pas de parentId), inclure tous ses enfants
+    if (!category.parentId) {
+      const children = getAllDescendants(category._id)
+      categoriesToInclude.push(...children)
+    }
+
+    // Construire l'URL avec tous les noms de catégories
+    const categoryParams = categoriesToInclude
+      .map((cat) => encodeURIComponent(cat.name.fr))
+      .join("&category=")
+
+    return `/shop?category=${categoryParams}`
+  }
+
+  // Fonction pour compter les produits d'une catégorie et de tous ses enfants
+  const countProductsInCategoryAndChildren = async (
+    categoryId: string
+  ): Promise<number> => {
+    try {
+      // Compter les produits de la catégorie principale
+      const mainCountResponse = await fetch(
+        `/api/categories/${categoryId}/products-count`
+      )
+      const mainCountData = await mainCountResponse.json()
+      let totalCount = mainCountData.success ? mainCountData.count : 0
+
+      // Si c'est une catégorie parent, compter aussi les produits des enfants
+      const selectedCategory = availableCategories.find(
+        (cat) => cat._id === categoryId
+      )
+      if (selectedCategory && !selectedCategory.parentId) {
+        const children = getAllDescendants(categoryId)
+        // Compter les produits de chaque catégorie enfant
+        for (const child of children) {
+          try {
+            const childCountResponse = await fetch(
+              `/api/categories/${child._id}/products-count`
+            )
+            const childCountData = await childCountResponse.json()
+            if (childCountData.success) {
+              totalCount += childCountData.count
+            }
+          } catch (error) {
+            console.error(
+              `Erreur lors du comptage des produits pour la catégorie ${child._id}:`,
+              error
+            )
+          }
+        }
+      }
+
+      return totalCount
+    } catch (error) {
+      console.error("Erreur lors du comptage des produits:", error)
+      return 0
+    }
+  }
+
   const handleCategorySelect = async (categoryId: string) => {
     if (!categoryId) {
       setSelectedCategoryId("")
       setCategoryFormData((prev) => ({
         ...prev,
         name: { fr: "", ar: "" },
-        productCount: 0
+        productCount: 0,
+        url: "/shop"
       }))
       return
     }
@@ -332,31 +410,30 @@ export default function HomePageContentPage() {
     )
     if (selectedCategory) {
       setSelectedCategoryId(categoryId)
+      // Générer automatiquement l'URL
+      const generatedUrl = generateCategoryUrl(selectedCategory)
       setCategoryFormData((prev) => ({
         ...prev,
         name: {
           fr: selectedCategory.name.fr,
           ar: selectedCategory.name.ar
-        }
+        },
+        url: generatedUrl
       }))
+      
+      // Compter les produits (catégorie + enfants si parent)
       try {
-        const countResponse = await fetch(
-          `/api/categories/${categoryId}/products-count`
-        )
-        const countData = await countResponse.json()
-        if (countData.success) {
-          setCategoryFormData((prev) => ({
-            ...prev,
-            productCount: countData.count
-          }))
-        } else {
-          showToast(
-            countData.message || "Erreur lors du comptage des produits",
-            "error"
-          )
-        }
+        const totalCount = await countProductsInCategoryAndChildren(categoryId)
+        setCategoryFormData((prev) => ({
+          ...prev,
+          productCount: totalCount
+        }))
       } catch (error) {
         showToast("Erreur lors du comptage des produits", "error")
+        setCategoryFormData((prev) => ({
+          ...prev,
+          productCount: 0
+        }))
       }
     }
   }
@@ -393,6 +470,11 @@ export default function HomePageContentPage() {
   }
 
   const saveCategory = async () => {
+    // En mode création, une catégorie doit être sélectionnée
+    if (!editingCategoryId && !selectedCategoryId) {
+      showToast("Veuillez sélectionner une catégorie", "warning")
+      return
+    }
     if (!categoryFormData.name.fr || !categoryFormData.name.ar) {
       showToast("Veuillez remplir le nom", "warning")
       return
@@ -1485,13 +1567,40 @@ export default function HomePageContentPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setEditingCategoryId(cat._id)
+                            // Trouver la catégorie correspondante dans availableCategories
+                            const matchingCategory = availableCategories.find(
+                              (ac) => ac.name.fr === cat.name.fr && ac.name.ar === cat.name.ar
+                            )
+                            
+                            let categoryUrl = cat.url
+                            let productCount = cat.productCount
+                            
+                            if (matchingCategory) {
+                              // Régénérer l'URL automatiquement
+                              categoryUrl = generateCategoryUrl(matchingCategory)
+                              setSelectedCategoryId(matchingCategory._id)
+                              
+                              // Recalculer le nombre de produits (catégorie + enfants si parent)
+                              try {
+                                const totalCount = await countProductsInCategoryAndChildren(
+                                  matchingCategory._id
+                                )
+                                productCount = totalCount
+                              } catch (error) {
+                                console.error("Erreur lors du recalcul du nombre de produits:", error)
+                                // Garder la valeur existante en cas d'erreur
+                              }
+                            } else {
+                              setSelectedCategoryId("")
+                            }
+                            
                             setCategoryFormData({
                               name: cat.name,
                               image: cat.image,
-                              productCount: cat.productCount,
-                              url: cat.url,
+                              productCount: productCount,
+                              url: categoryUrl,
                               order: cat.order,
                               isActive: cat.isActive
                             })
@@ -1594,18 +1703,16 @@ export default function HomePageContentPage() {
                         <input
                           type="text"
                           value={categoryFormData.name[currentLanguage]}
-                          onChange={(e) =>
-                            setCategoryFormData({
-                              ...categoryFormData,
-                              name: {
-                                ...categoryFormData.name,
-                                [currentLanguage]: e.target.value
-                              }
-                            })
-                          }
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                          readOnly
+                          disabled={!!selectedCategoryId || !!editingCategoryId}
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-50 cursor-not-allowed"
                           dir={currentLanguage === "ar" ? "rtl" : "ltr"}
                         />
+                        {(selectedCategoryId || editingCategoryId) && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Le nom ne peut pas être modifié
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -1664,6 +1771,11 @@ export default function HomePageContentPage() {
                           }
                           className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
                         />
+                        {selectedCategoryId && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Le nombre est initialisé automatiquement (catégorie + sous-catégories si parent). Vous pouvez le modifier si nécessaire.
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -1673,15 +1785,16 @@ export default function HomePageContentPage() {
                         <input
                           type="text"
                           value={categoryFormData.url}
-                          onChange={(e) =>
-                            setCategoryFormData({
-                              ...categoryFormData,
-                              url: e.target.value
-                            })
-                          }
+                          readOnly
+                          disabled={!!selectedCategoryId || !!editingCategoryId}
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-50 cursor-not-allowed"
                           placeholder="/shop"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
                         />
+                        {(selectedCategoryId || editingCategoryId) && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            L&apos;URL est générée automatiquement. Pour les catégories parent, elle inclut aussi les sous-catégories.
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex justify-end gap-4 pt-4 border-t">
