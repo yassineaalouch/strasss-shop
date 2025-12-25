@@ -207,6 +207,44 @@ export async function PUT(
           { success: false, message: "Erreur lors de la sauvegarde : la valeur du coupon doit être positive" },
           { status: 400 }
         )
+
+      // Déterminer les valeurs finales pour usageLimit et minimumPurchase
+      const finalUsageLimit = usageLimit !== undefined ? usageLimit : existingDiscount.usageLimit
+      const finalMinimumPurchase = minimumPurchase !== undefined ? minimumPurchase : existingDiscount.minimumPurchase
+
+      // Validation : usageLimit est obligatoire pour les codes promo
+      if (!finalUsageLimit || finalUsageLimit <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Erreur lors de la sauvegarde : le nombre d'utilisation limit est requis pour les codes promo"
+          },
+          { status: 400 }
+        )
+      }
+
+      // Validation : minimumPurchase est obligatoire pour les codes promo
+      if (!finalMinimumPurchase || finalMinimumPurchase <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Erreur lors de la sauvegarde : le montant minimum du panier est requis pour les codes promo"
+          },
+          { status: 400 }
+        )
+      }
+
+      // Validation : le montant de réduction doit être inférieur au montant minimum du panier
+      if (value >= finalMinimumPurchase) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Erreur lors de la sauvegarde : le montant de réduction doit être inférieur au montant minimum du panier"
+          },
+          { status: 400 }
+        )
+      }
+
       if (couponCode.toUpperCase().trim() !== existingDiscount.couponCode) {
         const duplicateCoupon = await Discount.findOne({
           couponCode: couponCode.toUpperCase().trim(),
@@ -249,11 +287,12 @@ export async function PUT(
     }
     
     // Pour les types autres que COUPON, ignorer usageLimit et minimumPurchase
+    // Pour COUPON, ces champs sont obligatoires (déjà validés ci-dessus)
     const finalUsageLimit = type === "COUPON" 
-      ? (usageLimit !== undefined ? (usageLimit || null) : existingDiscount.usageLimit)
+      ? (usageLimit !== undefined ? usageLimit : existingDiscount.usageLimit)
       : null
     const finalMinimumPurchase = type === "COUPON"
-      ? (minimumPurchase !== undefined ? (minimumPurchase || null) : existingDiscount.minimumPurchase)
+      ? (minimumPurchase !== undefined ? minimumPurchase : existingDiscount.minimumPurchase)
       : null
 
     const updatedDiscount = await Discount.findByIdAndUpdate(

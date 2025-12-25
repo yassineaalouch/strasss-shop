@@ -57,12 +57,12 @@ const DiscountSchema = new Schema<DiscountDocument>(
     value: {
       type: Number,
       min: [0, "La valeur doit être positive"],
-      max: [100, "Le pourcentage ne peut pas dépasser 100%"],
       validate: {
         validator: function (this: DiscountDocument, val: number) {
           if ((this.type === "PERCENTAGE" || this.type === "COUPON") && !val)
             return false
           if (this.type === "PERCENTAGE" && (val < 0 || val > 100)) return false
+          if (this.type === "COUPON" && val <= 0) return false
           return true
         },
         message: "La valeur est invalide pour ce type de promotion"
@@ -141,7 +141,14 @@ const DiscountSchema = new Schema<DiscountDocument>(
     },
     usageLimit: {
       type: Number,
-      min: [0, "La limite d'utilisation doit être positive"],
+      min: [1, "La limite d'utilisation doit être au moins 1"],
+      validate: {
+        validator: function (this: DiscountDocument, val: number) {
+          if (this.type === "COUPON" && (!val || val <= 0)) return false
+          return true
+        },
+        message: "La limite d'utilisation est requise pour les codes promo"
+      },
       default: null
     },
     usageCount: {
@@ -152,6 +159,16 @@ const DiscountSchema = new Schema<DiscountDocument>(
     minimumPurchase: {
       type: Number,
       min: [0, "Le montant minimum doit être positif"],
+      validate: {
+        validator: function (this: DiscountDocument, val: number) {
+          if (this.type === "COUPON" && (!val || val <= 0)) return false
+          if (this.type === "COUPON" && this.value && val && this.value >= val) {
+            return false
+          }
+          return true
+        },
+        message: "Le montant minimum est requis pour les codes promo et doit être supérieur au montant de réduction"
+      },
       default: null
     },
     applicableCategories: [
@@ -249,6 +266,15 @@ DiscountSchema.pre<DiscountDocument>("save", function (next) {
     }
     if (!this.value || this.value <= 0) {
       return next(new Error("La valeur du coupon doit être positive"))
+    }
+    if (!this.usageLimit || this.usageLimit <= 0) {
+      return next(new Error("La limite d'utilisation est requise pour les codes promo"))
+    }
+    if (!this.minimumPurchase || this.minimumPurchase <= 0) {
+      return next(new Error("Le montant minimum du panier est requis pour les codes promo"))
+    }
+    if (this.value >= this.minimumPurchase) {
+      return next(new Error("Le montant de réduction doit être inférieur au montant minimum du panier"))
     }
   }
 

@@ -257,6 +257,26 @@ const AdminDiscountsManager: React.FC = () => {
       return
     }
 
+    // Validation spécifique pour les codes promo
+    if (formData.type === "COUPON") {
+      if (!formData.usageLimit || formData.usageLimit <= 0) {
+        showToast("Erreur lors de la sauvegarde : le nombre d'utilisation limit est requis", "error")
+        return
+      }
+      if (!formData.minimumPurchase || formData.minimumPurchase <= 0) {
+        showToast("Erreur lors de la sauvegarde : le montant minimum du panier est requis", "error")
+        return
+      }
+      if (!formData.value || formData.value <= 0) {
+        showToast("Erreur lors de la sauvegarde : le montant de réduction est requis", "error")
+        return
+      }
+      if (formData.value >= formData.minimumPurchase) {
+        showToast("Erreur lors de la sauvegarde : le montant de réduction doit être inférieur au montant minimum du panier", "error")
+        return
+      }
+    }
+
     // Préparer le payload avec gestion automatique des dates et champs conditionnels
     const payload: DiscountFormData = {
       ...formData,
@@ -264,8 +284,8 @@ const AdminDiscountsManager: React.FC = () => {
       buyQuantity: formData.buyQuantity ? formData.buyQuantity : undefined,
       getQuantity: formData.getQuantity ? formData.getQuantity : undefined,
       // Pour les types autres que COUPON, ignorer usageLimit et minimumPurchase
-      usageLimit: formData.type === "COUPON" ? (formData.usageLimit || undefined) : undefined,
-      minimumPurchase: formData.type === "COUPON" ? (formData.minimumPurchase || undefined) : undefined,
+      usageLimit: formData.type === "COUPON" ? formData.usageLimit : undefined,
+      minimumPurchase: formData.type === "COUPON" ? formData.minimumPurchase : undefined,
       // Gestion automatique des dates : si pas de startDate, mettre aujourd'hui, si pas de endDate, null (indéfini)
       startDate: formData.startDate || new Date().toISOString().split("T")[0],
       endDate: formData.endDate || ""
@@ -852,22 +872,28 @@ const AdminDiscountsManager: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Montant de réduction (DH)
+                      Montant de réduction (DH) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      value={formData.value}
+                      required
+                      value={formData.value || ""}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          value: Number(e.target.value)
+                          value: e.target.value ? Number(e.target.value) : undefined
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="50.00"
                     />
+                    {formData.value && formData.minimumPurchase && formData.value >= formData.minimumPurchase && (
+                      <p className="text-xs text-red-500 mt-1">
+                        Le montant de réduction doit être inférieur au montant minimum du panier ({formData.minimumPurchase} MAD)
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -954,47 +980,54 @@ const AdminDiscountsManager: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre d&apos;utilisation Limit
+                      Nombre d&apos;utilisation Limit <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
-                      min="0"
+                      min="1"
+                      required
                       value={formData.usageLimit || ""}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          usageLimit: e.target.value ? Number(e.target.value) : 0
+                          usageLimit: e.target.value ? Number(e.target.value) : undefined
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Illimité si vide"
+                      placeholder="Ex: 16"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Laissez vide pour un usage illimité
+                      Nombre maximum d&apos;utilisations autorisées
                     </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Montant minimum du panier (MAD)
+                      Montant minimum du panier (MAD) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
+                      required
                       value={formData.minimumPurchase || ""}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          minimumPurchase: e.target.value ? Number(e.target.value) : 0
+                          minimumPurchase: e.target.value ? Number(e.target.value) : undefined
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Aucun minimum si vide"
+                      placeholder="Ex: 600"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Montant minimum requis pour utiliser ce coupon
+                      Montant minimum requis pour utiliser ce coupon (doit être supérieur au montant de réduction)
                     </p>
+                    {formData.value && formData.minimumPurchase && formData.value >= formData.minimumPurchase && (
+                      <p className="text-xs text-red-500 mt-1">
+                        Le montant de réduction doit être inférieur au montant minimum du panier
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
