@@ -44,6 +44,8 @@ const ProductPage: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [imageRef, setImageRef] = useState<HTMLDivElement | null>(null)
   const [zoomBoxPosition, setZoomBoxPosition] = useState({ top: 0, left: 0 })
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   // Check if product is in cart and get cart quantity
   const cartItem = product
@@ -70,6 +72,10 @@ const ProductPage: React.FC = () => {
         if (response.data.success) {
           const productData = response.data.product
           setProduct(productData)
+          setSelectedImageIndex(0)
+          setImageLoaded(false)
+          setImageError(false)
+          setIsZoomActive(false)
           console.log("productData", productData)
           // Charger les détails de la catégorie
           if (productData.category) {
@@ -97,6 +103,9 @@ const ProductPage: React.FC = () => {
       setSelectedImageIndex((prev) =>
         prev === product.images.length - 1 ? 0 : prev + 1
       )
+      // Reset image loaded state when changing image
+      setImageLoaded(false)
+      setImageError(false)
     }
   }
 
@@ -105,8 +114,20 @@ const ProductPage: React.FC = () => {
       setSelectedImageIndex((prev) =>
         prev === 0 ? product.images.length - 1 : prev - 1
       )
+      // Reset image loaded state when changing image
+      setImageLoaded(false)
+      setImageError(false)
     }
   }
+
+  // Réinitialiser l'état de chargement quand l'image change
+  useEffect(() => {
+    if (product && product.images[selectedImageIndex]) {
+      setImageLoaded(false)
+      setImageError(false)
+      setIsZoomActive(false)
+    }
+  }, [product, selectedImageIndex])
 
   // Handle characteristic selection
   const handleCharacteristicSelect = (charName: string, value: string) => {
@@ -378,10 +399,18 @@ const ProductPage: React.FC = () => {
                 <>
                   <div
                     ref={setImageRef}
-                    className="relative w-full h-full cursor-zoom-in"
-                    onMouseEnter={() => setIsZoomActive(true)}
+                    className={`relative w-full h-full ${imageLoaded && !imageError ? 'cursor-zoom-in' : 'cursor-default'}`}
+                    onMouseEnter={() => {
+                      if (imageLoaded && !imageError) {
+                        setIsZoomActive(true)
+                      }
+                    }}
                     onMouseLeave={() => setIsZoomActive(false)}
                     onMouseMove={(e) => {
+                      if (!imageLoaded || imageError) {
+                        setIsZoomActive(false)
+                        return
+                      }
                       if (imageRef) {
                         const rect = imageRef.getBoundingClientRect()
                         const x = ((e.clientX - rect.left) / rect.width) * 100
@@ -422,11 +451,16 @@ const ProductPage: React.FC = () => {
                       fill
                       className="object-cover"
                       priority
+                      onLoad={() => setImageLoaded(true)}
+                      onError={() => {
+                        setImageError(true)
+                        setImageLoaded(false)
+                      }}
                     />
                   </div>
                   
                   {/* Boîte de zoom */}
-                  {isZoomActive && (
+                  {isZoomActive && imageLoaded && !imageError && product.images[selectedImageIndex] && (
                     <div 
                       className="fixed w-96 h-96 border-2 border-gray-300 rounded-lg overflow-hidden bg-white shadow-2xl z-50 pointer-events-none hidden lg:block"
                       style={{
@@ -439,10 +473,11 @@ const ProductPage: React.FC = () => {
                       <div
                         className="absolute inset-0"
                         style={{
-                          backgroundImage: `url(${product.images[selectedImageIndex]})`,
-                          backgroundSize: `${400}%`,
+                          backgroundImage: `url(${JSON.stringify(product.images[selectedImageIndex])})`,
+                          backgroundSize: '400%',
                           backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
-                          backgroundRepeat: 'no-repeat'
+                          backgroundRepeat: 'no-repeat',
+                          willChange: 'background-position'
                         }}
                       />
                     </div>
@@ -500,7 +535,11 @@ const ProductPage: React.FC = () => {
                 {product.images.map((image, index) => (
                   <button
                     key={index}
-                    onClick={() => setSelectedImageIndex(index)}
+                    onClick={() => {
+                      setSelectedImageIndex(index)
+                      setImageLoaded(false)
+                      setImageError(false)
+                    }}
                     className={`aspect-square relative rounded-lg overflow-hidden border-2 ${
                       selectedImageIndex === index
                         ? "border-blue-500"
