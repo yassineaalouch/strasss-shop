@@ -17,6 +17,7 @@ import {
 } from "@/types/characteristic"
 import { useToast } from "@/components/ui/Toast"
 import { isColorCharacteristic, normalizeHexColor, isValidHexColor } from "@/utils/colorCharacteristic"
+import { uploadFilesDirectlyToS3 } from "@/lib/uploadToS3"
 
 const AdminEditProduct: React.FC = () => {
   const { productId } = useParams()
@@ -524,24 +525,22 @@ const AdminEditProduct: React.FC = () => {
     URL.revokeObjectURL(imagePreviews[index])
   }
 
-  // Upload des images vers S3
+  // Upload des images directement vers S3 avec presigned URLs
   const uploadImagesToS3 = async (): Promise<string[]> => {
     if (imageFiles.length === 0) return []
 
     setUploadingImages(true)
 
     try {
-      const formData = new FormData()
-      imageFiles.forEach((file) => formData.append("files", file))
-
-      const response = await axios.post("/api/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
+      const urls = await uploadFilesDirectlyToS3(imageFiles, {
+        compress: true,
+        maxWidth: 1920,
+        quality: 85
       })
 
-      return response.data.urls
+      return urls
     } catch (err) {
+      console.error("Upload error:", err)
       showToast("Erreur lors de l'upload des images", "error")
       throw new Error("Erreur lors de l'upload des images")
     } finally {

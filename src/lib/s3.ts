@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand
 } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { randomUUID } from "crypto"
 import sharp from "sharp"
 
@@ -70,4 +71,48 @@ export async function deleteFileFromS3(fileName: string) {
 
   const command = new DeleteObjectCommand(params)
   await s3.send(command)
+}
+
+/**
+ * Generate a presigned URL for direct client-side upload to S3
+ * @param fileName - The name of the file to upload
+ * @param contentType - The MIME type of the file (default: image/webp)
+ * @param expiresIn - URL expiration time in seconds (default: 300 = 5 minutes)
+ * @returns Presigned URL and the final file URL
+ */
+export async function generatePresignedUrl(
+  fileName: string,
+  contentType: string = "image/webp",
+  expiresIn: number = 300
+): Promise<{ presignedUrl: string; fileUrl: string }> {
+  const bucket = process.env.AWS_BUCKET_NAME!
+  const region = process.env.AWS_REGION!.trim()
+
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: fileName,
+    ContentType: contentType
+  })
+
+  const presignedUrl = await getSignedUrl(s3, command, { expiresIn })
+
+  // Generate the final file URL
+  const encodedFileName = encodeURIComponent(fileName)
+  const fileUrl = `https://${bucket}.s3.${region}.amazonaws.com/${encodedFileName}`
+
+  return { presignedUrl, fileUrl }
+}
+
+/**
+ * Generate presigned URLs for multiple files
+ */
+export async function generatePresignedUrls(
+  fileNames: string[],
+  contentType: string = "image/webp",
+  expiresIn: number = 300
+): Promise<Array<{ presignedUrl: string; fileUrl: string }>> {
+  const promises = fileNames.map((fileName) =>
+    generatePresignedUrl(fileName, contentType, expiresIn)
+  )
+  return Promise.all(promises)
 }

@@ -1214,6 +1214,7 @@ import {
 import Image from "next/image"
 import axios from "axios"
 import { useToast } from "@/components/ui/Toast"
+import { uploadFilesDirectlyToS3 } from "@/lib/uploadToS3"
 
 // Types
 interface HeroContent {
@@ -1335,17 +1336,15 @@ const HeroContentAdmin: React.FC = () => {
     setUploadingImages(true)
 
     try {
-      const formData = new FormData()
-      imageFiles.forEach((file) => formData.append("files", file))
-
-      const response = await axios.post("/api/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
+      const urls = await uploadFilesDirectlyToS3(imageFiles, {
+        compress: true,
+        maxWidth: 1920,
+        quality: 85
       })
 
-      return response.data.urls
+      return urls
     } catch (err) {
+      console.error("Upload error:", err)
       showToast("Erreur lors de l'upload des images", "error")
       throw new Error("Erreur lors de l'upload des images")
     } finally {

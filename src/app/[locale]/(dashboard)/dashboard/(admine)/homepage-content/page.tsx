@@ -36,6 +36,7 @@ import axios from "axios"
 import { Product } from "@/types/product"
 import { Category } from "@/types/category"
 import { SiteInfo } from "@/types/site-info"
+import { uploadFilesDirectlyToS3 } from "@/lib/uploadToS3"
 
 type TabType =
   | "hero"
@@ -242,12 +243,16 @@ export default function HomePageContentPage() {
     if (heroImageFiles.length === 0) return []
     setUploadingHeroImages(true)
     try {
-      const formData = new FormData()
-      heroImageFiles.forEach((file) => formData.append("files", file))
-      const response = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+      const urls = await uploadFilesDirectlyToS3(heroImageFiles, {
+        compress: true,
+        maxWidth: 1920,
+        quality: 85
       })
-      return response.data.urls
+      return urls
+    } catch (err) {
+      console.error("Upload error:", err)
+      showToast("Erreur lors de l'upload des images", "error")
+      throw err
     } finally {
       setUploadingHeroImages(false)
     }
@@ -458,15 +463,21 @@ export default function HomePageContentPage() {
 
   const uploadCategoryImageToS3 = async (): Promise<string> => {
     if (!categoryImageFile) throw new Error("Aucune image à télécharger")
-    const formData = new FormData()
-    formData.append("files", categoryImageFile)
-    const response = await axios.post("/api/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    })
-    if (response.data.success && response.data.urls?.length > 0) {
-      return response.data.urls[0]
+    try {
+      const urls = await uploadFilesDirectlyToS3([categoryImageFile], {
+        compress: true,
+        maxWidth: 1920,
+        quality: 85
+      })
+      if (urls.length > 0) {
+        return urls[0]
+      }
+      throw new Error("Erreur lors de l'upload")
+    } catch (err) {
+      console.error("Upload error:", err)
+      showToast("Erreur lors de l'upload de l'image", "error")
+      throw err
     }
-    throw new Error("Erreur lors de l'upload")
   }
 
   const saveCategory = async () => {
@@ -736,15 +747,21 @@ export default function HomePageContentPage() {
   }
 
   const uploadBannerImageToS3 = async (file: File): Promise<string> => {
-    const formData = new FormData()
-    formData.append("files", file)
-    const response = await axios.post("/api/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    })
-    if (response.data.success && response.data.urls?.length > 0) {
-      return response.data.urls[0]
+    try {
+      const urls = await uploadFilesDirectlyToS3([file], {
+        compress: true,
+        maxWidth: 1920,
+        quality: 85
+      })
+      if (urls.length > 0) {
+        return urls[0]
+      }
+      throw new Error("Erreur lors de l'upload")
+    } catch (err) {
+      console.error("Upload error:", err)
+      showToast("Erreur lors de l'upload de l'image", "error")
+      throw err
     }
-    throw new Error("Erreur lors de l'upload")
   }
 
   const handleBannerLinkTypeChange = (

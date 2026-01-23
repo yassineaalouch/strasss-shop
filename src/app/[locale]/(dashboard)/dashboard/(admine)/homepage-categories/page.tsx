@@ -21,6 +21,7 @@ import {
 import { useToast } from "@/components/ui/Toast"
 import Image from "next/image"
 import axios from "axios"
+import { uploadFilesDirectlyToS3 } from "@/lib/uploadToS3"
 import {
   HomePageCategory,
   HomePageCategoryFormData
@@ -173,21 +174,19 @@ export default function HomePageCategoriesPage() {
     setUploadingImage(true)
 
     try {
-      const formData = new FormData()
-      formData.append("files", imageFile)
-
-      const response = await axios.post("/api/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
+      const urls = await uploadFilesDirectlyToS3([imageFile], {
+        compress: true,
+        maxWidth: 1920,
+        quality: 85
       })
 
-      if (response.data.success && response.data.urls && response.data.urls.length > 0) {
-        return response.data.urls[0]
+      if (urls.length > 0) {
+        return urls[0]
       } else {
         throw new Error("Erreur lors de l'upload")
       }
     } catch (err) {
+      console.error("Upload error:", err)
       showToast("Erreur lors de l'upload de l'image", "error")
       throw new Error("Erreur lors de l'upload de l'image")
     } finally {
