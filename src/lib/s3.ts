@@ -42,7 +42,9 @@ export async function uploadFileToS3(file: File): Promise<string> {
 
   await s3.send(new PutObjectCommand(uploadParams))
 
-  return `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`
+  // Encoder le nom du fichier correctement (espaces -> %20, pas +)
+  const encodedFileName = encodeURIComponent(fileName)
+  return `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${encodedFileName}`
 }
 
 /**

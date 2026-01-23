@@ -446,6 +446,11 @@ export async function POST(
       )
     }
 
+    // Normaliser les URLs d'images : remplacer + par %20 pour les espaces
+    const normalizedImages = images.map((url: string) => 
+      url.replace(/\+/g, '%2B')
+    )
+
     // Créer le nouveau produit
     const newProduct = await Product.create({
       name: {
@@ -458,7 +463,7 @@ export async function POST(
       },
       price,
       originalPrice,
-      images,
+      images: normalizedImages,
       category: mongoose.Types.ObjectId.isValid(category) ? category : null,
       discount: mongoose.Types.ObjectId.isValid(discount) ? discount : null,
       Characteristic: Characteristic,

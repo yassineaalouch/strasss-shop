@@ -248,6 +248,11 @@ export async function PUT(
     const oldQuantity = existingProduct.quantity ?? 0
     const newQuantity = quantity || 0
 
+    // Normaliser les URLs d'images : remplacer + par %20 pour les espaces
+    const normalizedImages = images.map((url: string) => 
+      url.replace(/\+/g, '%2B')
+    )
+
     // Mettre à jour le produit
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -262,7 +267,7 @@ export async function PUT(
         },
         price,
         originalPrice,
-        images,
+        images: normalizedImages,
         category: mongoose.Types.ObjectId.isValid(category)
           ? new mongoose.Types.ObjectId(category)
           : null,
