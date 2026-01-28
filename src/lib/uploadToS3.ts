@@ -13,6 +13,17 @@ function generateFileName(originalFileName: string): string {
 }
 
 /**
+ * Generate a raw filename (keeps original extension) for non-image uploads (e.g. video)
+ */
+function generateRawFileName(originalFileName: string): string {
+  const parts = originalFileName.split(".")
+  const extension = parts.length > 1 ? `.${parts.pop()}` : ""
+  const baseName = parts.join(".").replace(/\s+/g, "_")
+  const uuid = crypto.randomUUID ? crypto.randomUUID() : generateUUID()
+  return `${uuid}-${baseName}${extension}`
+}
+
+/**
  * Fallback UUID generator for browsers that don't support crypto.randomUUID
  */
 function generateUUID(): string {
@@ -178,6 +189,43 @@ export async function uploadFilesDirectlyToS3(
     return presignedData.map((item) => item.fileUrl)
   } catch (error) {
     console.error("Direct S3 upload error:", error)
+    throw error
+  }
+}
+
+/**
+ * Upload a single video file directly to S3 without compression.
+ * The file goes from the navigateur -> S3 via URL présignée, sans passer par Next.js.
+ */
+export async function uploadVideoFileDirectlyToS3(file: File): Promise<string> {
+  if (!file) {
+    throw new Error("Aucun fichier vidéo fourni")
+  }
+
+  try {
+    const fileName = generateRawFileName(file.name)
+
+    const response = await axios.post("/api/upload/presigned", {
+      fileNames: [fileName],
+      contentType: file.type || "video/mp4"
+    })
+
+    if (!response.data.success || !response.data.data || !response.data.data[0]) {
+      throw new Error("Échec de la génération de l'URL présignée pour la vidéo")
+    }
+
+    const presignedData = response.data.data[0] as {
+      presignedUrl: string
+      fileUrl: string
+    }
+
+    // Upload direct au bucket S3
+    await uploadFileToS3(file, presignedData.presignedUrl)
+
+    // Retourner l'URL finale S3
+    return presignedData.fileUrl
+  } catch (error) {
+    console.error("Direct S3 video upload error:", error)
     throw error
   }
 }

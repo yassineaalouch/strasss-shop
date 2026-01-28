@@ -28,7 +28,8 @@ import {
   Github,
   Globe,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  PlayCircle
 } from "lucide-react"
 import { useToast } from "@/components/ui/Toast"
 import Image from "next/image"
@@ -36,7 +37,10 @@ import axios from "axios"
 import { Product } from "@/types/product"
 import { Category } from "@/types/category"
 import { SiteInfo } from "@/types/site-info"
-import { uploadFilesDirectlyToS3 } from "@/lib/uploadToS3"
+import {
+  uploadFilesDirectlyToS3,
+  uploadVideoFileDirectlyToS3
+} from "@/lib/uploadToS3"
 
 type TabType =
   | "hero"
@@ -44,6 +48,7 @@ type TabType =
   | "featured-products"
   | "promo-banner"
   | "site-info"
+  | "home-video"
 
 interface HeroContent {
   title: { ar: string; fr: string }
@@ -59,6 +64,13 @@ interface HeroContent {
     isActive: boolean
     order: number
   }>
+}
+
+interface HomeVideoConfig {
+  sourceType: "upload" | "youtube"
+  youtubeUrl: string
+  videoUrl: string
+  isActive: boolean
 }
 
 export default function HomePageContentPage() {
@@ -157,6 +169,17 @@ export default function HomePageContentPage() {
     location: { fr: "", ar: "" }
   })
 
+  // Home Video States
+  const [homeVideo, setHomeVideo] = useState<HomeVideoConfig>({
+    sourceType: "upload",
+    youtubeUrl: "",
+    videoUrl: "",
+    isActive: false
+  })
+  const [homeVideoFile, setHomeVideoFile] = useState<File | null>(null)
+  const [homeVideoPreviewUrl, setHomeVideoPreviewUrl] = useState<string>("")
+  const [uploadingHomeVideo, setUploadingHomeVideo] = useState(false)
+
   useEffect(() => {
     fetchAllData()
   }, [])
@@ -172,7 +195,8 @@ export default function HomePageContentPage() {
         fetchAllProducts(),
         fetchSiteInfo(),
         fetchPromoBanner(),
-        fetchAllPacks()
+        fetchAllPacks(),
+        fetchHomeVideo()
       ])
     } catch (error) {
       showToast("Erreur lors du chargement des données", "error")
@@ -203,6 +227,188 @@ export default function HomePageContentPage() {
       }
     } catch (error) {
       showToast("Erreur lors du chargement du contenu Hero", "error")
+    }
+  }
+
+  // ============ HOME VIDEO ============
+  const fetchHomeVideo = async () => {
+    try {
+      const response = await axios.get("/api/home-video")
+      if (response.data.success && response.data.data) {
+        const data = response.data.data as HomeVideoConfig
+        setHomeVideo({
+          sourceType: data.sourceType || "upload",
+          youtubeUrl: data.youtubeUrl || "",
+          videoUrl: data.videoUrl || "",
+          isActive: data.isActive ?? false
+        })
+      } else {
+        showToast(
+          response.data.message ||
+            "Erreur lors du chargement de la configuration vidéo",
+          "error"
+        )
+      }
+    } catch (error) {
+      showToast(
+        "Erreur lors du chargement de la configuration vidéo",
+        "error"
+      )
+    }
+  }
+
+  const handleHomeVideoFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("video/")) {
+      showToast("Seules les vidéos sont autorisées", "warning")
+      return
+    }
+
+    // Limite de 200MB pour éviter les fichiers trop lourds
+    const maxSizeMb = 200
+    if (file.size > maxSizeMb * 1024 * 1024) {
+      showToast(
+        `La taille de la vidéo ne doit pas dépasser ${maxSizeMb}MB`,
+        "warning"
+      )
+      return
+    }
+
+    if (homeVideoPreviewUrl) {
+      URL.revokeObjectURL(homeVideoPreviewUrl)
+    }
+
+    setHomeVideoFile(file)
+    setHomeVideoPreviewUrl(URL.createObjectURL(file))
+    // On force le type "upload" si un fichier est choisi
+    setHomeVideo((prev) => ({
+      ...prev,
+      sourceType: "upload"
+    }))
+  }
+
+  const uploadHomeVideoToS3 = async (): Promise<string> => {
+    if (!homeVideoFile) {
+      throw new Error("Aucune vidéo à télécharger")
+    }
+    setUploadingHomeVideo(true)
+    try {
+      const url = await uploadVideoFileDirectlyToS3(homeVideoFile)
+      return url
+    } catch (err) {
+      console.error("Upload vidéo error:", err)
+      showToast("Erreur lors de l'upload de la vidéo", "error")
+      throw err
+    } finally {
+      setUploadingHomeVideo(false)
+    }
+  }
+
+  const saveHomeVideo = async () => {
+    if (!homeVideo.isActive) {
+      // Si la section est désactivée, on enregistre simplement l'état
+      try {
+        const response = await axios.put("/api/home-video", {
+          sourceType: homeVideo.sourceType,
+          youtubeUrl: homeVideo.youtubeUrl || "",
+          videoUrl: homeVideo.videoUrl || "",
+          isActive: false
+        })
+        if (response.data.success) {
+          showToast(
+            "Configuration de la vidéo d'accueil mise à jour",
+            "success"
+          )
+          await fetchHomeVideo()
+        } else {
+          showToast(response.data.message || "Erreur", "error")
+        }
+      } catch (error) {
+        showToast(
+          "Erreur lors de la sauvegarde de la configuration vidéo",
+          "error"
+        )
+      }
+      return
+    }
+
+    if (homeVideo.sourceType === "youtube") {
+      if (!homeVideo.youtubeUrl.trim()) {
+        showToast(
+          "Veuillez renseigner l'URL YouTube de la vidéo",
+          "warning"
+        )
+        return
+      }
+
+      try {
+        const response = await axios.put("/api/home-video", {
+          sourceType: "youtube",
+          youtubeUrl: homeVideo.youtubeUrl.trim(),
+          isActive: true
+        })
+        if (response.data.success) {
+          showToast(
+            "Vidéo YouTube mise à jour pour la page d'accueil",
+            "success"
+          )
+          setHomeVideoFile(null)
+          if (homeVideoPreviewUrl) {
+            URL.revokeObjectURL(homeVideoPreviewUrl)
+            setHomeVideoPreviewUrl("")
+          }
+          await fetchHomeVideo()
+        } else {
+          showToast(response.data.message || "Erreur", "error")
+        }
+      } catch (error) {
+        showToast(
+          "Erreur lors de la sauvegarde de la vidéo YouTube",
+          "error"
+        )
+      }
+      return
+    }
+
+    // sourceType === "upload"
+    try {
+      let finalVideoUrl = homeVideo.videoUrl
+
+      if (homeVideoFile) {
+        finalVideoUrl = await uploadHomeVideoToS3()
+      }
+
+      if (!finalVideoUrl) {
+        showToast("Veuillez télécharger une vidéo", "warning")
+        return
+      }
+
+      const response = await axios.put("/api/home-video", {
+        sourceType: "upload",
+        videoUrl: finalVideoUrl,
+        isActive: true
+      })
+
+      if (response.data.success) {
+        showToast(
+          "Vidéo uploadée et configurée pour la page d'accueil",
+          "success"
+        )
+        setHomeVideoFile(null)
+        if (homeVideoPreviewUrl) {
+          URL.revokeObjectURL(homeVideoPreviewUrl)
+          setHomeVideoPreviewUrl("")
+        }
+        await fetchHomeVideo()
+      } else {
+        showToast(response.data.message || "Erreur", "error")
+      }
+    } catch (error) {
+      // Les toasts sont déjà gérés dans les helpers
     }
   }
 
@@ -1050,6 +1256,19 @@ export default function HomePageContentPage() {
               <div className="flex items-center gap-2">
                 <Megaphone className="w-5 h-5" />
                 Bannière Publicitaire
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab("home-video")}
+              className={`px-6 py-4 font-medium transition-colors whitespace-nowrap ${
+                activeTab === "home-video"
+                  ? "border-b-2 border-orange-600 text-orange-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <PlayCircle className="w-5 h-5" />
+                Vidéo d&apos;accueil
               </div>
             </button>
             <button
@@ -2372,6 +2591,197 @@ export default function HomePageContentPage() {
                     Bannière active (affichée sur la page d&apos;accueil)
                   </span>
                 </label>
+              </div>
+            </div>
+          )}
+
+          {/* HOME VIDEO TAB */}
+          {activeTab === "home-video" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">Vidéo de la page d&apos;accueil</h2>
+                  <p className="text-gray-600 mt-1 text-sm">
+                    Configurez une vidéo de démonstration de produit ou tout autre contenu
+                    à afficher directement sur la page d&apos;accueil.
+                  </p>
+                </div>
+                <button
+                  onClick={saveHomeVideo}
+                  disabled={saving || uploadingHomeVideo}
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                >
+                  {saving || uploadingHomeVideo ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Enregistrer
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={homeVideo.isActive}
+                    onChange={(e) =>
+                      setHomeVideo((prev) => ({
+                        ...prev,
+                        isActive: e.target.checked
+                      }))
+                    }
+                    className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Section vidéo active (affichée sur la page d&apos;accueil)
+                  </span>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                {/* Type de source */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Type de source de la vidéo
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setHomeVideo((prev) => ({
+                            ...prev,
+                            sourceType: "upload"
+                          }))
+                        }
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          homeVideo.sourceType === "upload"
+                            ? "bg-orange-600 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        Upload vers S3
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setHomeVideo((prev) => ({
+                            ...prev,
+                            sourceType: "youtube"
+                          }))
+                        }
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          homeVideo.sourceType === "youtube"
+                            ? "bg-orange-600 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        URL YouTube
+                      </button>
+                    </div>
+                  </div>
+
+                  {homeVideo.sourceType === "youtube" ? (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium mb-1">
+                        URL YouTube *
+                      </label>
+                      <input
+                        type="url"
+                        value={homeVideo.youtubeUrl}
+                        onChange={(e) =>
+                          setHomeVideo((prev) => ({
+                            ...prev,
+                            youtubeUrl: e.target.value
+                          }))
+                        }
+                        placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Collez l&apos;URL de la vidéo YouTube à afficher.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Vidéo à uploader vers S3 *
+                        </label>
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="video/*"
+                            onChange={handleHomeVideoFileChange}
+                            className="hidden"
+                            disabled={uploadingHomeVideo || saving}
+                          />
+                          <div className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 transition-colors">
+                            <Upload className="w-5 h-5 text-gray-400" />
+                            <span className="text-sm text-gray-600">
+                              Cliquez pour sélectionner une vidéo
+                            </span>
+                          </div>
+                        </label>
+                        <p className="text-xs text-gray-500 mt-1">
+                          La vidéo sera envoyée directement depuis le navigateur vers Amazon S3,
+                          sans passer par le serveur Next.js.
+                        </p>
+                      </div>
+
+                      {(homeVideoPreviewUrl || homeVideo.videoUrl) && (
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium">
+                            Aperçu de la vidéo
+                          </label>
+                          <div className="relative w-full rounded-xl overflow-hidden bg-black">
+                            <video
+                              src={homeVideoPreviewUrl || homeVideo.videoUrl}
+                              controls
+                              className="w-full aspect-video"
+                            />
+                          </div>
+                          {homeVideoPreviewUrl && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (homeVideoPreviewUrl) {
+                                  URL.revokeObjectURL(homeVideoPreviewUrl)
+                                }
+                                setHomeVideoFile(null)
+                                setHomeVideoPreviewUrl("")
+                              }}
+                              className="text-xs text-red-600 hover:text-red-700"
+                            >
+                              Retirer la vidéo sélectionnée
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3 bg-gray-50 rounded-xl p-4 text-sm text-gray-700">
+                  <h3 className="font-semibold mb-1">Notes importantes</h3>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>
+                      <strong>Poids conseillé</strong>: essayez de rester en
+                      dessous de 200&nbsp;MB pour de meilleures performances.
+                    </li>
+                    <li>
+                      <strong>Désactivation</strong>: décochez &quot;Section vidéo
+                      active&quot; si vous ne souhaitez pas afficher la vidéo sur la
+                      page d&apos;accueil.
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           )}

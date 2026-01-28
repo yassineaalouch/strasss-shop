@@ -22,6 +22,49 @@ async function getHomePageCategories() {
   return []
 }
 
+interface HomeVideoConfig {
+  sourceType: "upload" | "youtube"
+  youtubeUrl: string
+  videoUrl: string
+  isActive: boolean
+}
+
+async function getHomeVideo(): Promise<HomeVideoConfig | null> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    const response = await fetch(`${baseUrl}/api/home-video`)
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && data.data && data.data.isActive) {
+        return {
+          sourceType: data.data.sourceType,
+          youtubeUrl: data.data.youtubeUrl || "",
+          videoUrl: data.data.videoUrl || "",
+          isActive: data.data.isActive
+        }
+      }
+    }
+  } catch (error) {
+    // Erreur silencieuse - retourner null
+  }
+  return null
+}
+
+function extractYouTubeVideoId(url: string): string | null {
+  try {
+    if (!url) return null
+    const trimmed = url.trim()
+
+    // Formats classiques YouTube
+    const regExp =
+      /(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_\-]+)/i
+    const match = trimmed.match(regExp)
+    return match && match[1] ? match[1] : null
+  } catch {
+    return null
+  }
+}
+
 const CategoriesSection = async () => {
   const t = await getTranslations("HomePage")
   const locale = (await getLocale()) as "fr" | "ar"
@@ -500,11 +543,68 @@ const PromoBannerSection = async () => {
   )
 }
 
+// Composant Vidéo d'accueil
+const HomeVideoSection = async () => {
+  const config = await getHomeVideo()
+
+  if (!config || !config.isActive) {
+    return null
+  }
+
+  // YouTube
+  if (config.sourceType === "youtube" && config.youtubeUrl) {
+    const videoId = extractYouTubeVideoId(config.youtubeUrl)
+    if (!videoId) {
+      return null
+    }
+
+    const embedUrl = `https://www.youtube.com/embed/${videoId}`
+
+    return (
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="relative w-full max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl aspect-video bg-black">
+            <iframe
+              src={embedUrl}
+              title="Vidéo de présentation"
+              className="w-full h-full"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // Vidéo uploadée sur S3
+  if (config.sourceType === "upload" && config.videoUrl) {
+    return (
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="relative w-full max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl aspect-video bg-black">
+            <video
+              src={config.videoUrl}
+              controls
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  return null
+}
+
 // Composant Principal
 const HomePage: React.FC = async () => {
   return (
     <div className="min-h-screen bg-white">
       <HeroSection />
+      <HomeVideoSection />
       <CategoriesSection />
       <PromoBannerSection />
       <FeaturedProducts />
