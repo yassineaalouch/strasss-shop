@@ -8,6 +8,8 @@ import "@/models/Discount";
 import { ProductRequestBody } from "@/types/product"
 import mongoose from "mongoose"
 import { sendLowStockEmail } from "@/lib/nodemailer"
+import { updateHomePageCategoryCountByCategoryId } from "@/lib/updateHomePageCategoryCount"
+import { deleteMultipleFilesFromS3 } from "@/lib/s3"
 
 interface ValidationError extends Error {
   name: "ValidationError"
@@ -244,9 +246,15 @@ export async function PUT(
       )
     }
 
-    // Sauvegarder l'ancienne quantité pour vérifier le stock bas
+    // Sauvegarder l'ancienne catégorie et quantité pour vérifier les changements
+    const oldCategoryId = existingProduct.category
+      ? existingProduct.category.toString()
+      : null
     const oldQuantity = existingProduct.quantity ?? 0
     const newQuantity = quantity || 0
+    const newCategoryId = mongoose.Types.ObjectId.isValid(category)
+      ? category
+      : null
 
     // Normaliser les URLs d'images : remplacer + par %20 pour les espaces
     const normalizedImages = images.map((url: string) => 
@@ -311,6 +319,32 @@ export async function PUT(
         console.error(
           "Erreur lors de l'envoi de l'email de stock bas:",
           emailError
+        )
+      }
+    }
+
+    // Mettre à jour le productCount des HomePageCategory si la catégorie a changé
+    if (oldCategoryId !== newCategoryId) {
+      // Mettre à jour l'ancienne catégorie si elle existait
+      if (oldCategoryId) {
+        updateHomePageCategoryCountByCategoryId(oldCategoryId).catch(
+          (error) => {
+            console.error(
+              "Erreur lors de la mise à jour du productCount (ancienne catégorie):",
+              error
+            )
+          }
+        )
+      }
+      // Mettre à jour la nouvelle catégorie si elle existe
+      if (newCategoryId) {
+        updateHomePageCategoryCountByCategoryId(newCategoryId).catch(
+          (error) => {
+            console.error(
+              "Erreur lors de la mise à jour du productCount (nouvelle catégorie):",
+              error
+            )
+          }
         )
       }
     }
@@ -397,7 +431,37 @@ export async function DELETE(
       )
     }
 
+    // Sauvegarder la catégorie et les images avant la suppression
+    const categoryId = product.category ? product.category.toString() : null
+    const productImages = product.images && Array.isArray(product.images) ? product.images : []
+
+    // Supprimer toutes les images du produit de S3
+    if (productImages.length > 0) {
+      try {
+        console.log(`Suppression de ${productImages.length} image(s) de S3 pour le produit ${productId}...`)
+        await deleteMultipleFilesFromS3(productImages)
+        console.log(`Toutes les images du produit ${productId} ont été supprimées de S3`)
+      } catch (error) {
+        console.error(
+          `Erreur lors de la suppression des images de S3 pour le produit ${productId}:`,
+          error
+        )
+        // Continuer avec la suppression du produit même si la suppression des images échoue
+      }
+    }
+
+    // Supprimer le produit de la base de données
     await Product.findByIdAndDelete(productId)
+
+    // Mettre à jour le productCount des HomePageCategory si le produit avait une catégorie
+    if (categoryId) {
+      updateHomePageCategoryCountByCategoryId(categoryId).catch((error) => {
+        console.error(
+          "Erreur lors de la mise à jour du productCount après suppression:",
+          error
+        )
+      })
+    }
 
     return NextResponse.json(
       {

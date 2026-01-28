@@ -74,6 +74,61 @@ export async function deleteFileFromS3(fileName: string) {
 }
 
 /**
+ * Extract the file name from an S3 URL and decode it
+ * @param imageUrl - The full S3 URL (e.g., https://bucket.s3.region.amazonaws.com/encodedFileName)
+ * @returns The decoded file name or null if extraction fails
+ */
+export function extractFileNameFromS3Url(imageUrl: string): string | null {
+  try {
+    if (!imageUrl || typeof imageUrl !== "string") {
+      return null
+    }
+
+    // Remove query parameters if any (e.g., ?version=... or ?X-Amz-...)
+    const urlWithoutQuery = imageUrl.split("?")[0]
+    
+    // Extract the file name from the URL (everything after the last /)
+    const urlParts = urlWithoutQuery.split("/")
+    const encodedFileName = urlParts[urlParts.length - 1]
+    
+    if (!encodedFileName) {
+      return null
+    }
+
+    // Decode the URL-encoded file name
+    const decodedFileName = decodeURIComponent(encodedFileName)
+    
+    return decodedFileName
+  } catch (error) {
+    console.error(`Erreur lors de l'extraction du nom de fichier depuis l'URL: ${imageUrl}`, error)
+    return null
+  }
+}
+
+/**
+ * Delete multiple files from S3
+ * @param imageUrls - Array of S3 URLs to delete
+ */
+export async function deleteMultipleFilesFromS3(imageUrls: string[]): Promise<void> {
+  const deletePromises = imageUrls.map(async (imageUrl) => {
+    try {
+      const fileName = extractFileNameFromS3Url(imageUrl)
+      if (fileName) {
+        await deleteFileFromS3(fileName)
+        console.log(`Image supprimée de S3: ${fileName}`)
+      } else {
+        console.warn(`Impossible d'extraire le nom de fichier depuis l'URL: ${imageUrl}`)
+      }
+    } catch (error) {
+      console.error(`Erreur lors de la suppression de l'image ${imageUrl}:`, error)
+      // Continue avec les autres images même si une suppression échoue
+    }
+  })
+
+  await Promise.all(deletePromises)
+}
+
+/**
  * Generate a presigned URL for direct client-side upload to S3
  * @param fileName - The name of the file to upload
  * @param contentType - The MIME type of the file (default: image/webp)

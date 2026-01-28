@@ -7,6 +7,7 @@ import Product from "@/models/Product"
 import { ProductResponse, ProductRequestBody } from "@/types/product"
 import mongoose from "mongoose"
 import { FilterQuery, SortOptions } from "@/types/searchParams"
+import { updateHomePageCategoryCountByCategoryId } from "@/lib/updateHomePageCategoryCount"
 
 interface ValidationError extends Error {
   name: "ValidationError"
@@ -472,6 +473,18 @@ export async function POST(
       isNewProduct: isNewProduct || false,
       isOnSale: isOnSale || false
     })
+
+    // Mettre à jour le productCount des HomePageCategory si le produit a une catégorie
+    if (newProduct.category) {
+      updateHomePageCategoryCountByCategoryId(newProduct.category).catch(
+        (error) => {
+          console.error(
+            "Erreur lors de la mise à jour du productCount après création:",
+            error
+          )
+        }
+      )
+    }
 
     return NextResponse.json(
       {
