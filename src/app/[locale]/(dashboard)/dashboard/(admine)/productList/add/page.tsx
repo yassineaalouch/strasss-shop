@@ -396,8 +396,8 @@ const AdminAddProduct: React.FC = () => {
     if (formData.price <= 0) newErrors.price = "Prix doit être supérieur à 0"
     if (formData.images.length === 0 && imageFiles.length === 0)
       newErrors.images = "Au moins une image requise"
-    if (formData.quantity < 0)
-      newErrors.quantity = "Quantité ne peut pas être négative"
+    if (formData.quantity <= 0)
+      newErrors.quantity = "La quantité doit être supérieure à 0"
     if (!formData.description.fr.trim())
       newErrors.descriptionFr = "Description en français requise"
     if (!formData.description.ar.trim())
@@ -547,18 +547,20 @@ const AdminAddProduct: React.FC = () => {
                     </label>
                     <input
                       type="number"
-                      value={formData.price}
-                      onChange={(e) =>
+                      value={formData.price === 0 ? "" : formData.price}
+                      onChange={(e) => {
+                        const raw = e.target.value
                         handleInputChange(
                           "price",
-                          parseFloat(e.target.value) || 0
+                          raw === "" ? 0 : parseFloat(raw) || 0
                         )
-                      }
+                      }}
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors.price ? "border-red-500" : "border-gray-300"
                       }`}
                       min="0"
                       step="0.01"
+                      placeholder="0"
                       disabled={isSubmitting}
                     />
                     {errors.price && (
@@ -667,17 +669,19 @@ const AdminAddProduct: React.FC = () => {
                     </label>
                     <input
                       type="number"
-                      value={formData.quantity}
-                      onChange={(e) =>
+                      value={formData.quantity === 0 ? "" : formData.quantity}
+                      onChange={(e) => {
+                        const raw = e.target.value
                         handleInputChange(
                           "quantity",
-                          parseInt(e.target.value) || 0
+                          raw === "" ? 0 : parseInt(raw, 10) || 0
                         )
-                      }
+                      }}
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors.quantity ? "border-red-500" : "border-gray-300"
                       }`}
                       min="0"
+                      placeholder="0"
                       disabled={isSubmitting}
                     />
                     {errors.quantity && (
