@@ -124,6 +124,16 @@ const OrderItemSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  lineTotal: {
+    type: Number,
+    default: null
+  },
+  discountLabel: {
+    type: String,
+    default: null
+  },
+  buyQuantity: { type: Number, default: null },
+  getQuantity: { type: Number, default: null },
   characteristic: [
     {
       name: String,

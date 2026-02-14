@@ -320,14 +320,17 @@ const SideCart: React.FC<SideCartProps> = ({
         total -= (total * percent) / 100
       }
 
-      // 🟢 Cas 2 : "Buy A get B free" (ex: buy2get1)
+      // 🟢 Cas 2 : "Buy X get Y free" — la réduction s'applique dès que la quantité atteint X (pas seulement à X+Y)
       else if (item.discount.type === "BUY_X_GET_Y") {
-        const buyQuantity = item.discount.buyQuantity
-        const getQuantity = item.discount.getQuantity
-        if (getQuantity && buyQuantity) {
-          const group = buyQuantity + getQuantity
-          const freeCount = Math.floor(item.quantity / group) * getQuantity
-          const paidCount = item.quantity - freeCount
+        const X = item.discount.buyQuantity ?? 0
+        const Y = item.discount.getQuantity ?? 0
+        if (Y && X && item.quantity >= X) {
+          const groupSize = X + Y
+          const fullGroups = Math.floor(item.quantity / groupSize)
+          const remainder = item.quantity % groupSize
+          const paidInRemainder =
+            remainder === 0 ? 0 : remainder <= X ? remainder : X
+          const paidCount = fullGroups * X + paidInRemainder
           total = paidCount * item.price
         }
       }

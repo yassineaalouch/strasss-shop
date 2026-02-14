@@ -1360,6 +1360,12 @@ const AdminOrdersTable: React.FC = () => {
               price: number
               discountPrice?: number
               image?: string
+              discount?: string | null
+              lineTotal?: number | null
+              discountLabel?: string | null
+              buyQuantity?: number | null
+              getQuantity?: number | null
+              characteristic?: { name: string; value: string }[] | null
               type: string
               items?: Array<{
                 id: string
@@ -1414,6 +1420,10 @@ const AdminOrdersTable: React.FC = () => {
                   price: item.price,
                   image: item.image,
                   discount: item.discount,
+                  lineTotal: item.lineTotal,
+                  discountLabel: item.discountLabel,
+                  buyQuantity: item.buyQuantity,
+                  getQuantity: item.getQuantity,
                   characteristic: item.characteristic,
                   type: "product"
                 } as OrderItem
@@ -1692,10 +1702,36 @@ const AdminOrdersTable: React.FC = () => {
               </div>
             )}
             <p className="text-sm text-gray-500">Quantité: {item.quantity}</p>
+            {/* Réduction appliquée sur le produit (pour éviter la confusion avec le total commande) */}
+            {item.discount && (
+              <div className="mt-1 p-1.5 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                {item.discountLabel && (
+                  <p className="font-medium">🎁 {item.discountLabel}</p>
+                )}
+                {item.lineTotal != null && item.lineTotal !== item.price * item.quantity ? (
+                  <p className="mt-0.5">
+                    Prix ligne après réduction: <strong>{Number(item.lineTotal).toFixed(2)} DH</strong>
+                    <span className="ml-1 line-through text-amber-600">
+                      (sans réduction: {(item.price * item.quantity).toFixed(2)} DH)
+                    </span>
+                  </p>
+                ) : !item.discountLabel && item.lineTotal == null && (
+                  <p className="font-medium">
+                    Réduction produit appliquée (
+                    {item.discount === "BUY_X_GET_Y" && item.buyQuantity != null && item.getQuantity != null
+                      ? `Achetez ${item.buyQuantity}, obtenez ${item.getQuantity} gratuit`
+                      : item.discount === "BUY_X_GET_Y"
+                        ? "Achetez X, obtenez Y gratuit"
+                        : "pourcentage"}
+                    ). Le total de la commande inclut déjà cette réduction.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <div className="text-right">
             <p className="text-sm font-medium text-gray-900">
-              {(item.price * item.quantity).toFixed(2)} DH
+              {(item.lineTotal != null ? Number(item.lineTotal) : item.price * item.quantity).toFixed(2)} DH
             </p>
             <p className="text-xs text-gray-500">
               {item.price.toFixed(2)} DH/unité

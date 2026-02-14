@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
+import mongoose from "mongoose"
 import { connectToDatabase } from "@/lib/mongodb"
 import Order from "@/models/Order"
 import Discount from "@/models/Discount"
+import Product from "@/models/Product"
 import { sendOrderEmail } from "@/lib/nodemailer"
 import { OrderRequestBody } from "@/types/order"
 
@@ -311,6 +313,49 @@ export async function GET(request: NextRequest) {
         }
         return true
       })
+    }
+
+    // Enrichir les items produit : si discount BUY_X_GET_Y sans buyQuantity/getQuantity, les récupérer depuis le produit
+    const productIdsToEnrich = new Set<string>()
+    for (const order of filteredOrders as any[]) {
+      for (const item of order.items || []) {
+        if (
+          item.type === "product" &&
+          item.discount === "BUY_X_GET_Y" &&
+          (item.buyQuantity == null || item.getQuantity == null) &&
+          item.id
+        ) {
+          productIdsToEnrich.add(String(item.id))
+        }
+      }
+    }
+    const productDiscountMap = new Map<string, { buyQuantity: number; getQuantity: number }>()
+    if (productIdsToEnrich.size > 0) {
+      const products = await Product.find({
+        _id: { $in: Array.from(productIdsToEnrich).map((id) => new mongoose.Types.ObjectId(id)) }
+      })
+        .populate("discount")
+        .lean()
+      for (const p of products as any[]) {
+        const discount = p.discount
+        if (discount && discount.type === "BUY_X_GET_Y" && discount.buyQuantity != null && discount.getQuantity != null) {
+          productDiscountMap.set(String(p._id), {
+            buyQuantity: discount.buyQuantity,
+            getQuantity: discount.getQuantity
+          })
+        }
+      }
+    }
+    for (const order of filteredOrders as any[]) {
+      for (const item of order.items || []) {
+        if (item.type === "product" && item.discount === "BUY_X_GET_Y" && (item.buyQuantity == null || item.getQuantity == null) && item.id) {
+          const enriched = productDiscountMap.get(String(item.id))
+          if (enriched) {
+            item.buyQuantity = enriched.buyQuantity
+            item.getQuantity = enriched.getQuantity
+          }
+        }
+      }
     }
 
     return NextResponse.json(

@@ -69,6 +69,10 @@ export interface OrderItem {
   price: number
   image: string
   discount?: string | null
+  lineTotal?: number | null
+  discountLabel?: string | null
+  buyQuantity?: number | null
+  getQuantity?: number | null
   characteristic?: { name: string; value: string }[] | null
   type: "product"
 }

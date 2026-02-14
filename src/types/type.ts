@@ -154,6 +154,7 @@ export interface CartContextType {
   subtotal: number
   discountAmount: number
   shipping: number
+  calculateItemTotal: (item: CartItem) => number
 }
 
 export interface CartProviderProps {

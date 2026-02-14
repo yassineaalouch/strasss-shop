@@ -272,7 +272,8 @@ export default function CheckoutPage() {
     clearCart,
     applyCoupon,
     removeCoupon,
-    hasFreeShipping
+    hasFreeShipping,
+    calculateItemTotal
   } = useCartContext()
 
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -308,7 +309,17 @@ export default function CheckoutPage() {
             items: item.packItems || []
           }
         } else {
-          // Créer un OrderItem (produit)
+          // Créer un OrderItem (produit) avec lineTotal et discountLabel pour le détail commande admin
+          const lineTotal =
+            typeof calculateItemTotal === "function"
+              ? calculateItemTotal(item)
+              : item.price * item.quantity
+          let discountLabel: string | null = null
+          if (item.discount?.type === "BUY_X_GET_Y" && item.discount.buyQuantity && item.discount.getQuantity) {
+            discountLabel = `Achetez ${item.discount.buyQuantity}, obtenez ${item.discount.getQuantity} gratuit`
+          } else if (item.discount?.type === "PERCENTAGE" && item.discount.value != null) {
+            discountLabel = `Réduction ${item.discount.value}%`
+          }
           return {
             id: item.id,
             name: item.name,
@@ -316,6 +327,10 @@ export default function CheckoutPage() {
             price: item.price,
             image: item.image,
             discount: item.discount?.type || null,
+            lineTotal,
+            discountLabel,
+            buyQuantity: item.discount?.type === "BUY_X_GET_Y" ? item.discount.buyQuantity ?? null : null,
+            getQuantity: item.discount?.type === "BUY_X_GET_Y" ? item.discount.getQuantity ?? null : null,
             characteristic: item.characteristic || null,
             type: "product"
           }
