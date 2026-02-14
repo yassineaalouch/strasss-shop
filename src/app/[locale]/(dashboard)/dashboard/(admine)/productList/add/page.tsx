@@ -54,6 +54,8 @@ const AdminAddProduct: React.FC = () => {
   const [loadingCharacteristics, setLoadingCharacteristics] = useState(false)
   const [newValueInputs, setNewValueInputs] = useState<Record<number, { fr: string; ar: string }>>({})
   const [addingNewValue, setAddingNewValue] = useState<Record<number, boolean>>({})
+  // Pour la caractéristique couleur : associer une image produit à chaque valeur (clé = "charIndex-valueId", valeur = index dans la liste des images)
+  const [colorValueImage, setColorValueImage] = useState<Record<string, number>>({})
   // Charger les catégories
   // Ajoutez cette fonction dans useEffect
   const fetchCharacteristics = async () => {
@@ -262,14 +264,35 @@ const AdminAddProduct: React.FC = () => {
     }
   }
 
-  // Fonction pour transformer les données avant soumission
-  const transformCharacteristicsForSubmit = () => {
-    const characteristicList = selectedCharacteristics.map((char) => ({
-      name: char.characteristicId,
-      values: char.selectedValues.map((val) => val.name)
-    }))
-    console.log("characteristicList", characteristicList)
-    return characteristicList
+  // Liste des images produit (URLs existantes + préviews des fichiers) pour affichage
+  const getAllProductImageSources = (): string[] => {
+    return [...formData.images, ...imagePreviews]
+  }
+
+  const setColorValueImageIndex = (charIndex: number, valueId: string, imageIndex: number) => {
+    setColorValueImage((prev) => ({ ...prev, [`${charIndex}-${valueId}`]: imageIndex }))
+  }
+
+  // Fonction pour transformer les données avant soumission (imageUrls = liste finale des URLs après upload)
+  const transformCharacteristicsForSubmit = (imageUrls: string[]) => {
+    return selectedCharacteristics.map((char, charIndex) => {
+      const characteristic = characteristics.find((c) => c._id === char.characteristicId)
+      const isColor = characteristic && (isColorCharacteristic(characteristic.name.fr) || isColorCharacteristic(characteristic.name.ar))
+      return {
+        name: char.characteristicId,
+        values: char.selectedValues.map((val) => {
+          const base = { fr: val.name.fr, ar: val.name.ar }
+          if (isColor && val._id) {
+            const key = `${charIndex}-${val._id}`
+            const imgIndex = colorValueImage[key]
+            if (imgIndex != null && imageUrls[imgIndex]) {
+              return { ...base, imageUrl: imageUrls[imgIndex] }
+            }
+          }
+          return base
+        })
+      }
+    })
   }
   const fetchCategories = async () => {
     try {
@@ -430,7 +453,7 @@ const AdminAddProduct: React.FC = () => {
         images: imageUrls,
         category: formData.category,
         discount: formData.discount,
-        Characteristic: transformCharacteristicsForSubmit(),
+        Characteristic: transformCharacteristicsForSubmit(imageUrls),
         inStock: formData.inStock,
         quantity: formData.quantity,
         isNewProduct: formData.isNewProduct,
@@ -1021,6 +1044,69 @@ const AdminAddProduct: React.FC = () => {
                               Veuillez sélectionner au moins une valeur
                             </p>
                           )}
+
+                          {/* Pour la couleur : associer une image produit à chaque valeur */}
+                          {(() => {
+                            const currentChar = characteristics.find((c) => c._id === char.characteristicId)
+                            const isColorChar = currentChar && (isColorCharacteristic(currentChar.name.fr) || isColorCharacteristic(currentChar.name.ar))
+                            const productImages = getAllProductImageSources()
+                            if (!isColorChar || productImages.length === 0 || char.selectedValues.length === 0) return null
+                            return (
+                              <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                                <label className="block text-sm font-medium text-gray-700 mb-3">
+                                  Image associée à chaque couleur (parmi les images du produit)
+                                </label>
+                                <div className="space-y-3">
+                                  {char.selectedValues.map((value) => {
+                                    const isHexColor = isValidHexColor(value.name.fr)
+                                    const key = `${index}-${value._id}`
+                                    const selectedIndex = colorValueImage[key]
+                                    return (
+                                      <div key={value._id} className="flex flex-wrap items-center gap-3">
+                                        <div className="flex items-center gap-2 min-w-30">
+                                          {isHexColor ? (
+                                            <>
+                                              <div
+                                                className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm shrink-0"
+                                                style={{ backgroundColor: normalizeHexColor(value.name.fr) }}
+                                              />
+                                              <span className="text-xs font-mono">{normalizeHexColor(value.name.fr)}</span>
+                                            </>
+                                          ) : (
+                                            <span className="text-sm">{value.name.fr}</span>
+                                          )}
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                          {productImages.map((src, imgIndex) => (
+                                            <button
+                                              key={imgIndex}
+                                              type="button"
+                                              onClick={() => setColorValueImageIndex(index, value._id!, imgIndex)}
+                                              className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 shrink-0 ${
+                                                selectedIndex === imgIndex
+                                                  ? "border-blue-500 ring-2 ring-blue-200"
+                                                  : "border-gray-200 hover:border-gray-400"
+                                              }`}
+                                            >
+                                              <Image
+                                                src={src}
+                                                alt={`Image ${imgIndex + 1}`}
+                                                fill
+                                                className="object-cover"
+                                              />
+                                            </button>
+                                          ))}
+                                        </div>
+                                        {selectedIndex != null && (
+                                          <span className="text-xs text-gray-500">Image {selectedIndex + 1} sélectionnée</span>
+                                        )}
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )
+                          })()}
 
                           {/* Formulaire pour ajouter une nouvelle valeur */}
                           <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">

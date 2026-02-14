@@ -670,12 +670,22 @@ const ProductPage: React.FC = () => {
                             const charNameObj = "name" in char.name ? char.name.name : { fr: charName, ar: charName }
                             const isColor = isColorCharacteristic(charNameObj.fr) || isColorCharacteristic(charNameObj.ar)
                             const isHexColor = isColor && isValidHexColor(valueLabel)
-                            
+                            const colorImageUrl = value && "imageUrl" in value ? (value as { imageUrl?: string }).imageUrl : undefined
+
                             return (
                               <button
-                                key={value._id}
+                                key={value._id ?? valueLabel}
                                 type="button"
-                                onClick={() => handleCharacteristicSelect(charName, valueLabel)}
+                                onClick={() => {
+                                  handleCharacteristicSelect(charName, valueLabel)
+                                  // Changer l'image produit par l'image associée à cette couleur
+                                  if (isColor && colorImageUrl && product.images?.includes(colorImageUrl)) {
+                                    const idx = product.images.indexOf(colorImageUrl)
+                                    setSelectedImageIndex(idx)
+                                    setImageLoaded(false)
+                                    setImageError(false)
+                                  }
+                                }}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                                   isSelected
                                     ? "bg-firstColor text-white shadow-md scale-105"

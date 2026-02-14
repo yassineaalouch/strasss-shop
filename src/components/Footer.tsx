@@ -194,17 +194,17 @@ export default async function Footer() {
             </h3>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/conditions-vente" className="hover:text-white">
                   {t("customerService.salesConditions")}
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/politique-confidentialite" className="hover:text-white">
                   {t("customerService.deliveryPolicy")}
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/conditions-utilisation" className="hover:text-white">
                   {t("customerService.returnsExchanges")}
                 </Link>
               </li>

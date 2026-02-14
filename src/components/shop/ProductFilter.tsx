@@ -344,13 +344,13 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
                       )}
                     </button>
 
-                    {/* Contenu déroulant */}
+                    {/* Contenu déroulant : scrollable pour afficher toutes les valeurs (ex. toutes les couleurs) */}
                     <div
                       className={`transition-all duration-300 ease-in-out ${
                         openChar === char._id
-                          ? "max-h-60 opacity-100"
-                          : "max-h-0 opacity-0"
-                      } overflow-hidden`}
+                          ? "max-h-72 opacity-100 overflow-y-auto"
+                          : "max-h-0 opacity-0 overflow-hidden"
+                      }`}
                     >
                       <div className="p-3 space-y-2">
                         {char.values.map((val, j) => {

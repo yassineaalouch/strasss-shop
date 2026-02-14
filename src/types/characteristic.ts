@@ -14,6 +14,7 @@ export interface ProductCharacteristic {
     fr: string
     ar: string
     _id?: string
+    imageUrl?: string
   }>
 }
 

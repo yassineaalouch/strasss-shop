@@ -546,6 +546,9 @@ const AdminDiscountsManager: React.FC = () => {
                       Valeur
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Utilisations
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <button
                         onClick={() => handleSort("startDate")}
                         className="flex items-center hover:text-gray-700"
@@ -608,6 +611,21 @@ const AdminDiscountsManager: React.FC = () => {
                           {discount.type === "COUPON" &&
                             discount.value &&
                             `${discount.value} DH`}
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {discount.type === "COUPON" ? (
+                            <span>
+                              {discount.usageCount ?? 0}
+                              {discount.usageLimit != null && (
+                                <span className="text-gray-500"> / {discount.usageLimit}</span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
                         </div>
                       </td>
 
@@ -978,6 +996,21 @@ const AdminDiscountsManager: React.FC = () => {
               {/* Champs spécifiques aux coupons uniquement */}
               {formData.type === "COUPON" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre d&apos;utilisations (lecture seule)
+                    </label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={editingDiscount ? (editingDiscount.usageCount ?? 0) : 0}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                      aria-label="Nombre d'utilisations du coupon"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Nombre de fois que ce coupon a été utilisé
+                    </p>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Nombre d&apos;utilisation Limit <span className="text-red-500">*</span>

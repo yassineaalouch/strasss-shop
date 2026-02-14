@@ -72,7 +72,8 @@ const ProductSchema = new mongoose.Schema(
           values: [
             {
               fr: { type: String },
-              ar: { type: String }
+              ar: { type: String },
+              imageUrl: { type: String, required: false }
             }
           ]
         }

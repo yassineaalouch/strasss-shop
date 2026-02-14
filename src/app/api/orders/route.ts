@@ -168,19 +168,17 @@ export async function POST(request: NextRequest) {
     // Créer la nouvelle commande
     const newOrder = await Order.create(orderData)
 
-    // Si un coupon a été utilisé, décrémenter usageCount
+    // Si un coupon a été utilisé, incrémenter usageCount de façon atomique (pour que la limite d'utilisation diminue bien)
     if (couponDiscount) {
-      const newUsageCount = (couponDiscount.usageCount || 0) + 1
-      const updateData: { usageCount: number; isActive?: boolean } = {
-        usageCount: newUsageCount
+      const couponId = typeof couponDiscount._id === "string" ? couponDiscount._id : couponDiscount._id.toString()
+      const updatedDiscount = await Discount.findByIdAndUpdate(
+        couponId,
+        { $inc: { usageCount: 1 } },
+        { new: true, runValidators: false }
+      )
+      if (updatedDiscount && updatedDiscount.usageLimit != null && updatedDiscount.usageCount >= updatedDiscount.usageLimit) {
+        await Discount.findByIdAndUpdate(couponId, { isActive: false })
       }
-
-      // Si la limite est atteinte, désactiver le coupon
-      if (couponDiscount.usageLimit && newUsageCount >= couponDiscount.usageLimit) {
-        updateData.isActive = false
-      }
-
-      await Discount.findByIdAndUpdate(couponDiscount._id, updateData)
     }
 
     // await sendOrderEmail(newOrder)
