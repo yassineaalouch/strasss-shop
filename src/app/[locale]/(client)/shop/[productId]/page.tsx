@@ -143,6 +143,29 @@ const ProductPage: React.FC = () => {
     })
   }
 
+  // Image à afficher pour le panier/commande : celle associée à la couleur choisie si elle existe
+  const getProductImageForCart = (): string => {
+    if (!product?.images?.length) return "/No_Image_Available.jpg"
+    for (const [charName, selectedValue] of Object.entries(selectedCharacteristics)) {
+      const char = product.Characteristic?.find((c) => {
+        const nameObj = c.name && typeof c.name === "object" && "name" in c.name ? (c.name as { name?: { fr?: string; ar?: string } }).name : null
+        const fr = nameObj?.fr ?? ""
+        const ar = nameObj?.ar ?? ""
+        return fr === charName || ar === charName
+      })
+      if (!char?.values) continue
+      const isColor = char.name && typeof char.name === "object" && "name" in char.name
+        ? isColorCharacteristic((char.name as { name: { fr?: string; ar?: string } }).name?.fr ?? "") || isColorCharacteristic((char.name as { name: { fr?: string; ar?: string } }).name?.ar ?? "")
+        : false
+      if (!isColor) continue
+      const valueWithImage = char.values.find((v) => v?.fr === selectedValue || v?.ar === selectedValue) as { fr?: string; ar?: string; imageUrl?: string } | undefined
+      if (valueWithImage?.imageUrl && product.images.includes(valueWithImage.imageUrl)) {
+        return valueWithImage.imageUrl
+      }
+    }
+    return product.images[0]
+  }
+
   // Ajouter au panier
   const handleAddToCart = () => {
     if (!product) return
@@ -167,13 +190,16 @@ const ProductPage: React.FC = () => {
           }))
         : undefined
 
+      // Image : celle de la couleur choisie si disponible, sinon première image produit
+      const itemImage = getProductImageForCart()
+
       // Add product to cart with discount info and characteristics
       addItem(
         {
           id: product._id,
           name: product.name[locale],
           price: product.price,
-          image: product.images?.[0] ?? "/No_Image_Available.jpg",
+          image: itemImage,
           type: "product",
           discount: discount,
           characteristic: formattedCharacteristics,
