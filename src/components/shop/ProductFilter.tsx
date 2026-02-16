@@ -6,10 +6,10 @@ import { useTranslations, useLocale } from "next-intl"
 import axios from "axios"
 import { Category, CategoryTreeNode } from "@/types/category"
 import { ProductFilterProps } from "@/types/shopFilter"
-import { ICharacteristic } from "@/types/characteristic"
-import { ChevronDown, ChevronUp } from "lucide-react"
+// import { ICharacteristic } from "@/types/characteristic"
+// import { ChevronDown, ChevronUp } from "lucide-react"
 import { useToast } from "@/components/ui/Toast"
-import { isColorCharacteristic, normalizeHexColor, isValidHexColor } from "@/utils/colorCharacteristic"
+// import { isColorCharacteristic, normalizeHexColor, isValidHexColor } from "@/utils/colorCharacteristic"
 
 const ProductFilter: React.FC<ProductFilterProps> = ({
   filters,
@@ -23,22 +23,22 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   const [categories, setCategories] = useState<string[]>([])
   const [categoriesData, setCategoriesData] = useState<Category[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
-  const [characteristics, setCharacteristics] = useState<ICharacteristic[]>([])
-  const [openChar, setOpenChar] = useState<string | null>(null)
+  // const [characteristics, setCharacteristics] = useState<ICharacteristic[]>([])
+  // const [openChar, setOpenChar] = useState<string | null>(null)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
-  const toggleChar = (id: string) => {
-    setOpenChar((prev) => (prev === id ? null : id))
-  }
+  // const toggleChar = (id: string) => {
+  //   setOpenChar((prev) => (prev === id ? null : id))
+  // }
 
-  async function fetchCharacteristics() {
-    const res = await axios.get("/api/characteristics")
-    setCharacteristics(res.data)
-  }
+  // async function fetchCharacteristics() {
+  //   const res = await axios.get("/api/characteristics")
+  //   setCharacteristics(res.data)
+  // }
 
   useEffect(() => {
     fetchCategories()
-    fetchCharacteristics()
+    // fetchCharacteristics()
   }, [])
   //categorie
   const fetchCategories = async () => {
@@ -187,12 +187,12 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     return childNames.some((name) => filters.category.includes(name))
   }
 
-  const handleCharacteristicChange = (value: string) => {
-    const newValues = filters.characteristics.includes(value)
-      ? filters.characteristics.filter((v) => v !== value)
-      : [...filters.characteristics, value]
-    onFiltersChange({ ...filters, characteristics: newValues })
-  }
+  // const handleCharacteristicChange = (value: string) => {
+  //   const newValues = filters.characteristics.includes(value)
+  //     ? filters.characteristics.filter((v) => v !== value)
+  //     : [...filters.characteristics, value]
+  //   onFiltersChange({ ...filters, characteristics: newValues })
+  // }
 
   const clearAllFilters = () => {
     onFiltersChange({
@@ -315,90 +315,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
             </div>
           )}
 
-          {/* Caractéristiques */}
-          {characteristics.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold text-gray-700 mb-4 text-sm sm:text-base">
-                {t("sections.characteristics.title")}
-              </h3>
-
-              <div className="space-y-4">
-                {characteristics.map((char) => (
-                  <div
-                    key={char._id}
-                    className="border border-gray-200 rounded-lg overflow-hidden"
-                  >
-                    {/* Header de la caractéristique */}
-                    <button
-                      type="button"
-                      onClick={() => toggleChar(char._id)}
-                      className="w-full flex justify-between items-center px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      <span className="text-gray-800 font-medium">
-                        {char.name[locale]}
-                      </span>
-                      {openChar === char._id ? (
-                        <ChevronUp className="w-5 h-5 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-500" />
-                      )}
-                    </button>
-
-                    {/* Contenu déroulant : scrollable pour afficher toutes les valeurs (ex. toutes les couleurs) */}
-                    <div
-                      className={`transition-all duration-300 ease-in-out ${
-                        openChar === char._id
-                          ? "max-h-72 opacity-100 overflow-y-auto"
-                          : "max-h-0 opacity-0 overflow-hidden"
-                      }`}
-                    >
-                      <div className="p-3 space-y-2">
-                        {char.values.map((val, j) => {
-                          const label = val.name[locale]
-                          const isChecked =
-                            filters.characteristics.includes(label)
-                          const isColor = isColorCharacteristic(char.name.fr) || isColorCharacteristic(char.name.ar)
-                          const isHexColor = isColor && isValidHexColor(label)
-
-                          return (
-                            <label
-                              key={j}
-                              className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() =>
-                                  handleCharacteristicChange(label)
-                                }
-                                className="text-yellow-500 focus:ring-yellow-500 rounded"
-                              />
-                              {isHexColor ? (
-                                // Afficher la couleur visuellement
-                                <div className="flex items-center gap-2 flex-1">
-                                  <div
-                                    className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
-                                    style={{ backgroundColor: normalizeHexColor(label) }}
-                                  />
-                                  <span className="text-sm text-gray-700 font-mono">
-                                    {normalizeHexColor(label)}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-sm text-gray-700">
-                                  {label}
-                                </span>
-                              )}
-                            </label>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Filtrage par caractéristiques désactivé */}
 
           {/* Options */}
           <div className="mb-5">

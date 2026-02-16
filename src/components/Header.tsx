@@ -22,6 +22,18 @@ import { useCartContext } from "@/app/context/CartContext"
 import { useToast } from "@/components/ui/Toast"
 import { motion, AnimatePresence } from "framer-motion"
 
+interface NavCategory {
+  id: string
+  name: {
+    fr: string
+    ar: string
+  }
+  parentId?: string | null
+  isActive?: boolean
+  order?: number
+  children?: NavCategory[]
+}
+
 interface SiteInfo {
   email: string
   phone: string
@@ -39,6 +51,7 @@ const Header: React.FC = () => {
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null)
   const [hasPacks, setHasPacks] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [navCategories, setNavCategories] = useState<NavCategory[]>([])
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -47,6 +60,7 @@ const Header: React.FC = () => {
     setMounted(true)
     fetchSiteInfo()
     checkPacks()
+    fetchNavCategories()
   }, [])
 
   const fetchSiteInfo = async () => {
@@ -82,6 +96,49 @@ const Header: React.FC = () => {
     } catch (error) {
       // Erreur silencieuse - par défaut, on cache les packs
       setHasPacks(false)
+    }
+  }
+
+  const fetchNavCategories = async () => {
+    try {
+      const response = await fetch("/api/categories")
+      if (!response.ok) return
+
+      const data = await response.json()
+
+      if (data.success && Array.isArray(data.categories)) {
+        const all = data.categories as Array<{
+          _id: string
+          name: { fr: string; ar: string }
+          parentId?: string
+          isActive: boolean
+          order?: number
+          slug?: { fr: string; ar: string }
+        }>
+
+        // Construire l'arbre hiérarchique des catégories
+        const buildTree = (parentId?: string | null, level: number = 0): NavCategory[] => {
+          return all
+            .filter((cat) => (parentId ? cat.parentId === parentId : !cat.parentId))
+            .filter((cat) => cat.isActive)
+            .sort(
+              (a, b) => (a.order || 0) - (b.order || 0)
+            )
+            .map((cat) => ({
+              id: cat._id,
+              name: cat.name,
+              parentId: cat.parentId,
+              isActive: cat.isActive,
+              order: cat.order,
+              children: buildTree(cat._id, level + 1)
+            }))
+        }
+
+        const roots = buildTree(null)
+        setNavCategories(roots)
+      }
+    } catch {
+      // Erreur silencieuse - on ne bloque pas le header
     }
   }
 
@@ -221,13 +278,71 @@ const Header: React.FC = () => {
                   {t("navigation.home")}
                 </Link>
               </li>
-              <li>
+              {/* Shop avec mega-menu catégories au survol */}
+              <li className="relative group">
                 <Link
                   href="/shop"
                   className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
                 >
                   {t("navigation.shop")}
                 </Link>
+
+                {navCategories.length > 0 && (
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <div className="bg-white/95 backdrop-blur-xl text-gray-900 rounded-3xl shadow-[0_24px_80px_rgba(15,23,42,0.45)] border border-gray-100 px-8 py-6 min-w-[640px]">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <p className="text-[11px] tracking-[0.35em] uppercase text-gray-400">
+                            {t("navigation.shop")}
+                          </p>
+                          <p className="mt-1 text-lg font-semibold text-gray-900">
+                            {t("navigation.shopHighlight")}
+                          </p>
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          {navCategories.length}{" "}
+                          {locale === "fr" ? "catégories" : "أصناف"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-6">
+                        {navCategories.slice(0, 6).map((category) => (
+                          <div key={category.id} className="space-y-2">
+                            {/* Catégorie principale */}
+                            <Link
+                              href={`/shop?category=${encodeURIComponent(
+                                category.name[locale as "fr" | "ar"]
+                              )}`}
+                              className="block pb-1 border-b border-gray-100/80"
+                            >
+                              <span className="text-sm font-semibold tracking-wide text-gray-900 hover:text-firstColor transition-colors">
+                                {category.name[locale as "fr" | "ar"]}
+                              </span>
+                            </Link>
+
+                            {/* Sous-catégories directes */}
+                            {category.children && category.children.length > 0 && (
+                              <ul className="space-y-1.5">
+                                {category.children.slice(0, 5).map((child) => (
+                                  <li key={child.id}>
+                                    <Link
+                                      href={`/shop?category=${encodeURIComponent(
+                                        child.name[locale as "fr" | "ar"]
+                                      )}`}
+                                      className="block text-xs text-gray-500 hover:text-firstColor transition-colors leading-relaxed"
+                                    >
+                                      {child.name[locale as "fr" | "ar"]}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </li>
               {hasPacks && (
                 <li>

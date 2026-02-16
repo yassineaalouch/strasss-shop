@@ -558,7 +558,7 @@ const HomeVideoSection = async () => {
       return null
     }
 
-    const embedUrl = `https://www.youtube.com/embed/${videoId}`
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`
 
     return (
       <section className="py-12 bg-gray-50">
@@ -587,8 +587,11 @@ const HomeVideoSection = async () => {
           <div className="relative w-full max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl aspect-video bg-black">
             <video
               src={config.videoUrl}
-              controls
               className="w-full h-full object-cover"
+              controls
+              autoPlay
+              muted
+              playsInline
             />
           </div>
         </div>
