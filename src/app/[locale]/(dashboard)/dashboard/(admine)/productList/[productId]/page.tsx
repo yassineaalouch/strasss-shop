@@ -62,31 +62,40 @@ const AdminEditProduct: React.FC = () => {
   const [colorValueImage, setColorValueImage] = useState<Record<string, number>>({})
 
   // Fonction pour mapper les caractéristiques du produit vers le format selectedCharacteristics
+  // productChar.name peut être null si la caractéristique a été supprimée ou mal peuplée en base
   const mapProductCharacteristicsToSelected = (
     productChars: ProductCharacteristic[],
     allCharacteristics: ICharacteristic[]
   ): SelectedCharacteristic[] => {
-    console.log("productChars", productChars)
+    const charId = (pc: ProductCharacteristic) =>
+      (pc.name && typeof pc.name === "object" && "_id" in pc.name
+        ? (pc.name as { _id: string })._id
+        : null) ?? pc._id ?? null
+
     return productChars.map((productChar) => {
-      const characteristic = allCharacteristics.find(
-        (c) => c._id === productChar.name._id
-      )
+      const characteristicId = charId(productChar)
+      const characteristic = characteristicId
+        ? allCharacteristics.find((c) => c._id === characteristicId)
+        : null
 
       if (!characteristic) {
         return {
-          characteristicId: productChar.name._id,
+          characteristicId: characteristicId ?? "",
           characteristicName: { ar: "Non trouvé", fr: "Non trouvé" },
-          selectedValues: []
+          selectedValues: (productChar.values || []).map((v) => ({
+            _id: v._id,
+            name: { fr: v.fr ?? "", ar: v.ar ?? "" }
+          })) as ICharacteristicValue[]
         }
       }
 
       // Trouver les valeurs correspondantes dans la caractéristique
-      const selectedValues = productChar.values.map((productValue) => {
+      const selectedValues = (productChar.values || []).map((productValue) => {
         const foundValue = characteristic.values.find(
           (charValue) =>
             charValue._id === productValue._id ||
-            (charValue.name.fr === productValue.fr &&
-              charValue.name.ar === productValue.ar)
+            (charValue.name?.fr === productValue.fr &&
+              charValue.name?.ar === productValue.ar)
         )
 
         return (
@@ -101,7 +110,7 @@ const AdminEditProduct: React.FC = () => {
       })
 
       return {
-        characteristicId: productChar.name._id,
+        characteristicId,
         characteristicName: characteristic.name,
         selectedValues
       }

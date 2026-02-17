@@ -458,6 +458,7 @@ const ProductPage: React.FC = () => {
                       fill
                       className="object-cover"
                       priority
+                      loading="eager"
                       onLoad={() => setImageLoaded(true)}
                       onError={() => {
                         setImageError(true)
@@ -573,7 +574,7 @@ const ProductPage: React.FC = () => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
                   {product.name[locale]}
                 </h1>
-                {product.category && (
+                {product.category && product.category.name && (
                   <p className="text-gray-500 text-sm">
                     {locale === "fr" ? "Catégorie: " : "الفئة: "}
                     {product.category.name[locale]}
@@ -651,15 +652,16 @@ const ProductPage: React.FC = () => {
                 </p>
 
                 <div className="space-y-4">
-                  {product.Characteristic.map((char, index) => {
-                    const charName = "name" in char.name
-                      ? char.name?.name?.[locale] ?? "Caractéristique"
-                      : "Caractéristique"
+                  {product.Characteristic.filter((char) => char?.values?.length).map((char, index) => {
+                    const charName =
+                      char.name != null && typeof char.name === "object" && "name" in char.name
+                        ? (char.name as { name?: { fr?: string; ar?: string } }).name?.[locale] ?? "Caractéristique"
+                        : "Caractéristique"
                     const selectedValue = selectedCharacteristics[charName]
                     
                     return (
                       <div
-                        key={index}
+                        key={char._id ?? index}
                         className="flex flex-col gap-2"
                       >
                         {/* Nom de la caractéristique */}
@@ -674,7 +676,10 @@ const ProductPage: React.FC = () => {
                             const isSelected = selectedValue === valueLabel
                             
                             // Vérifier si c'est une caractéristique de couleur
-                            const charNameObj = "name" in char.name ? char.name.name : { fr: charName, ar: charName }
+                            const charNameObj =
+                              char.name != null && typeof char.name === "object" && "name" in char.name
+                                ? (char.name as { name?: { fr?: string; ar?: string } }).name
+                                : { fr: charName, ar: charName }
                             const isColor = isColorCharacteristic(charNameObj.fr) || isColorCharacteristic(charNameObj.ar)
                             const isHexColor = isColor && isValidHexColor(valueLabel)
                             const colorImageUrl = value && "imageUrl" in value ? (value as { imageUrl?: string }).imageUrl : undefined

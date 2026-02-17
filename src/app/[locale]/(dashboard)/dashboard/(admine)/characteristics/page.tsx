@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import axios from "axios"
-import { Trash2, Edit3, Save, X, Plus, Search, Filter } from "lucide-react"
+import { Trash2, Edit3, Save, X, Plus, Search, Filter, Eraser } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ICharacteristic } from "@/types/characteristic"
 import { useToast } from "@/components/ui/Toast"
@@ -22,6 +22,14 @@ export default function CharacteristicsPage() {
   const [isAddingNew, setIsAddingNew] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [isColorChar, setIsColorChar] = useState(false)
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean
+    id: string | null
+    name: string
+    productsCount: number
+    loading: boolean
+  }>({ open: false, id: null, name: "", productsCount: 0, loading: false })
+  const [cleanupLoading, setCleanupLoading] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -167,18 +175,62 @@ export default function CharacteristicsPage() {
   }
 
   // ----------------- Suppression -----------------
-  async function deleteCharacteristic(id?: string) {
-    if (
-      !id ||
-      !confirm("Êtes-vous sûr de vouloir supprimer cette caractéristique ?")
-    )
-      return
+  async function openDeleteConfirm(char: ICharacteristic) {
+    if (!char._id) return
+    setDeleteModal((m) => ({ ...m, open: true, id: char._id!, name: char.name?.fr || char.name?.ar || "Cette caractéristique", productsCount: -1, loading: true }))
+    try {
+      const { data } = await axios.get<{ productsCount: number }>(`/api/characteristics/${char._id}?productsCount=1`)
+      setDeleteModal((m) => ({ ...m, productsCount: data.productsCount ?? 0, loading: false }))
+    } catch {
+      setDeleteModal((m) => ({ ...m, productsCount: 0, loading: false }))
+    }
+  }
+
+  function closeDeleteModal() {
+    setDeleteModal({ open: false, id: null, name: "", productsCount: 0, loading: false })
+  }
+
+  async function confirmDeleteCharacteristic() {
+    const { id } = deleteModal
+    if (!id) return
+    setDeleteModal((m) => ({ ...m, loading: true }))
     try {
       await axios.delete(`/api/characteristics/${id}`)
       setCharacteristics(characteristics.filter((c) => c._id !== id))
+      closeDeleteModal()
       showToast("Caractéristique supprimée avec succès", "success")
     } catch (error) {
       showToast("Erreur lors de la suppression de la caractéristique", "error")
+      setDeleteModal((m) => ({ ...m, loading: false }))
+    }
+  }
+
+  async function cleanupProducts() {
+    if (
+      !confirm(
+        "Retirer des produits toutes les références aux caractéristiques déjà supprimées ? Les produits concernés seront mis à jour."
+      )
+    )
+      return
+    setCleanupLoading(true)
+    try {
+      const { data } = await axios.post<{
+        success: boolean
+        updated: number
+        totalProcessed: number
+      }>("/api/characteristics/cleanup")
+      if (data.updated === 0) {
+        showToast("Aucune référence orpheline trouvée. Tous les produits sont à jour.", "success")
+      } else {
+        showToast(
+          `${data.updated} produit(s) mis à jour : références orphelines supprimées.`,
+          "success"
+        )
+      }
+    } catch {
+      showToast("Erreur lors du nettoyage des produits", "error")
+    } finally {
+      setCleanupLoading(false)
     }
   }
 
@@ -196,13 +248,28 @@ export default function CharacteristicsPage() {
                 Gérez les caractéristiques de vos produits
               </p>
             </div>
-            <button
-              onClick={() => setIsAddingNew(true)}
-              className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Nouvelle Caractéristique
-            </button>
+            <div className="mt-4 sm:mt-0 flex flex-wrap gap-3">
+              <button
+                onClick={cleanupProducts}
+                disabled={cleanupLoading}
+                className="bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                title="Parcourt tous les produits et retire du tableau « Caractéristiques » les entrées qui pointent vers une caractéristique déjà supprimée (références orphelines). Utile après avoir supprimé des caractéristiques utilisées par des produits avant la mise en place de la suppression en cascade."
+              >
+                {cleanupLoading ? (
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Eraser className="w-4 h-4" />
+                )}
+                Nettoyer les produits
+              </button>
+              <button
+                onClick={() => setIsAddingNew(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Nouvelle Caractéristique
+              </button>
+            </div>
           </div>
         </div>
 
@@ -832,7 +899,7 @@ export default function CharacteristicsPage() {
                               </button>
 
                               <button
-                                onClick={() => deleteCharacteristic(char._id)}
+                                onClick={() => openDeleteConfirm(char)}
                                 className="text-red-600 hover:text-red-900 p-1 rounded transition-colors"
                                 title="Supprimer"
                               >
@@ -864,6 +931,68 @@ export default function CharacteristicsPage() {
             </div>
           )}
         </div>
+
+        {/* Modale de confirmation de suppression */}
+        <AnimatePresence>
+          {deleteModal.open && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+              onClick={closeDeleteModal}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Confirmer la suppression
+                </h3>
+                {deleteModal.loading && deleteModal.productsCount === -1 ? (
+                  <p className="text-gray-600 mb-4">Vérification des produits concernés...</p>
+                ) : (
+                  <p className="text-gray-600 mb-4">
+                    La caractéristique <strong>« {deleteModal.name} »</strong> est utilisée par{" "}
+                    <strong>{deleteModal.productsCount} produit(s)</strong>. Sa suppression
+                    entraînera son retrait du tableau des caractéristiques de tous ces produits.
+                    <br />
+                    <br />
+                    Souhaitez-vous continuer ?
+                  </p>
+                )}
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={closeDeleteModal}
+                    disabled={deleteModal.loading}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmDeleteCharacteristic}
+                    disabled={deleteModal.loading}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {deleteModal.loading && deleteModal.productsCount !== -1 ? (
+                      <>
+                        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Suppression...
+                      </>
+                    ) : (
+                      "Confirmer la suppression"
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
