@@ -29,13 +29,12 @@ export function RelatedProducts({
       try {
         setLoading(true)
         const response = await fetch(
-          `/api/products?category=${categoryId}&limit=12`
+          `/api/products?categoryId=${encodeURIComponent(categoryId)}&limit=12`
         )
         const data = await response.json()
 
         if (data.success) {
-          console.log("data", data)
-          // Filtrer pour exclure le produit actuel
+          // Filtrer pour exclure le produit actuel (même catégorie exacte ou sous-catégorie)
           const filtered = data.products.filter(
             (p: Product) => p._id !== currentProductId
           )

@@ -65,6 +65,9 @@ export async function GET(
     const limit = parseInt(searchParams.get("limit") || "12")
     const skip = (page - 1) * limit
 
+    // Filtre par ID de catégorie (ex: produits similaires) : catégorie exacte + sous-catégories
+    const categoryIdParam = searchParams.get("categoryId")
+
     // Construire la requête de filtrage
     const query: FilterQuery = {}
     const orConditions: Array<{ "name.fr"?: { $regex: string; $options: string } } | { "name.ar"?: { $regex: string; $options: string } } | { inStock?: boolean } | { quantity?: number }> = []
@@ -77,8 +80,29 @@ export async function GET(
       )
     }
 
-    // Filtre par catégories (client shop - multiple categories)
-    if (categories.length > 0) {
+    // Filtre par ID de catégorie (catégorie exacte + sous-catégories)
+    if (categoryIdParam && mongoose.Types.ObjectId.isValid(categoryIdParam)) {
+      const Category = mongoose.model("Category")
+      const rootId = new mongoose.Types.ObjectId(categoryIdParam)
+      const allCategoryIds: mongoose.Types.ObjectId[] = [rootId]
+
+      const getDescendantIds = async (parentId: mongoose.Types.ObjectId) => {
+        const children = await Category.find({ parentId }).select("_id").lean()
+        for (const child of children) {
+          allCategoryIds.push(child._id as mongoose.Types.ObjectId)
+          await getDescendantIds(child._id as mongoose.Types.ObjectId)
+        }
+      }
+      await getDescendantIds(rootId)
+
+      const uniqueIds = [...new Set(allCategoryIds.map((id) => id.toString()))].map(
+        (id) => new mongoose.Types.ObjectId(id)
+      )
+      query.category = { $in: uniqueIds }
+    }
+
+    // Filtre par catégories (client shop - multiple categories par nom)
+    if (categories.length > 0 && !categoryIdParam) {
       const Category = mongoose.model("Category")
       const categoryDocs = await Category.find({
         $or: [
@@ -86,11 +110,9 @@ export async function GET(
           { "name.ar": { $in: categories } }
         ]
       })
-      
-      // Récupérer tous les IDs de catégories (parents + enfants)
+
       const allCategoryIds: mongoose.Types.ObjectId[] = []
-      
-      // Fonction récursive pour obtenir tous les descendants d'une catégorie
+
       const getAllDescendantIds = async (categoryId: mongoose.Types.ObjectId) => {
         const children = await Category.find({ parentId: categoryId })
         for (const child of children) {
@@ -98,17 +120,16 @@ export async function GET(
           await getAllDescendantIds(child._id)
         }
       }
-      
-      // Pour chaque catégorie sélectionnée, ajouter son ID et tous ses descendants
+
       for (const categoryDoc of categoryDocs) {
         allCategoryIds.push(categoryDoc._id)
         await getAllDescendantIds(categoryDoc._id)
       }
-      
-      // Supprimer les doublons
-      const uniqueCategoryIds = [...new Set(allCategoryIds.map(id => id.toString()))]
-        .map(id => new mongoose.Types.ObjectId(id))
-      
+
+      const uniqueCategoryIds = [...new Set(allCategoryIds.map((id) => id.toString()))].map(
+        (id) => new mongoose.Types.ObjectId(id)
+      )
+
       if (uniqueCategoryIds.length > 0) {
         query.category = { $in: uniqueCategoryIds }
       }
