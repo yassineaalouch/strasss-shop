@@ -79,14 +79,14 @@ export default async function HeroSection() {
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight tracking-tight opacity-0 animate-[fadeInUp_0.8s_ease-out_0.3s_forwards]">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight opacity-0 animate-[fadeInUp_0.8s_ease-out_0.3s_forwards]">
               <span className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 bg-clip-text text-transparent">
                 {HeroSectionContent.title[locale as "fr" | "ar"]}
               </span>
             </h1>
 
             {/* Description */}
-            <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 leading-relaxed max-w-2xl mx-auto lg:mx-0 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.5s_forwards]">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-700 leading-relaxed max-w-2xl mx-auto lg:mx-0 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.5s_forwards]">
               {HeroSectionContent.description[locale as "fr" | "ar"]}
             </p>
 

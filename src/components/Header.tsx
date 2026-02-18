@@ -9,7 +9,9 @@ import {
   Store,
   Scissors,
   Package,
-  MessageCircle
+  MessageCircle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react"
 import { Link } from "@/i18n/navigation"
 import { useState, useEffect } from "react"
@@ -43,6 +45,44 @@ interface SiteInfo {
   }
 }
 
+/** Affiche une catégorie et récursivement toutes ses sous-catégories (tous niveaux). */
+function CategoryTreeItem({
+  category,
+  locale,
+  depth
+}: {
+  category: NavCategory
+  locale: "fr" | "ar"
+  depth: number
+}) {
+  const hasChildren = category.children && category.children.length > 0
+  const paddingLeft = depth > 0 ? `${depth * 12}px` : undefined
+
+  return (
+    <div style={paddingLeft ? { paddingLeft } : undefined} className="space-y-1">
+      <Link
+        href={`/shop?category=${encodeURIComponent(category.name[locale])}`}
+        className="block text-xs text-gray-500 hover:text-firstColor transition-colors leading-relaxed"
+      >
+        {category.name[locale]}
+      </Link>
+      {hasChildren && (
+        <ul className="space-y-1 mt-1 border-l border-gray-100 pl-3 ml-1">
+          {category.children!.map((child) => (
+            <li key={child.id}>
+              <CategoryTreeItem
+                category={child}
+                locale={locale}
+                depth={depth + 1}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 const Header: React.FC = () => {
   const t = useTranslations("Header")
   const locale = useLocale()
@@ -55,6 +95,7 @@ const Header: React.FC = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -273,7 +314,7 @@ const Header: React.FC = () => {
               <li>
                 <Link
                   href="/"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium text-base"
                 >
                   {t("navigation.home")}
                 </Link>
@@ -282,7 +323,7 @@ const Header: React.FC = () => {
               <li className="relative group">
                 <Link
                   href="/shop"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium text-base"
                 >
                   {t("navigation.shop")}
                 </Link>
@@ -295,9 +336,6 @@ const Header: React.FC = () => {
                           <p className="text-[11px] tracking-[0.35em] uppercase text-gray-400">
                             {t("navigation.shop")}
                           </p>
-                          <p className="mt-1 text-lg font-semibold text-gray-900">
-                            {t("navigation.shopHighlight")}
-                          </p>
                         </div>
                         <span className="text-xs text-gray-400">
                           {navCategories.length}{" "}
@@ -305,40 +343,70 @@ const Header: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-6">
-                        {navCategories.slice(0, 6).map((category) => (
-                          <div key={category.id} className="space-y-2">
-                            {/* Catégorie principale */}
-                            <Link
-                              href={`/shop?category=${encodeURIComponent(
-                                category.name[locale as "fr" | "ar"]
-                              )}`}
-                              className="block pb-1 border-b border-gray-100/80"
-                            >
-                              <span className="text-sm font-semibold tracking-wide text-gray-900 hover:text-firstColor transition-colors">
-                                {category.name[locale as "fr" | "ar"]}
-                              </span>
-                            </Link>
+                      <div className="grid grid-cols-3 gap-6 max-h-[70vh] overflow-y-auto">
+                        {navCategories.map((category) => {
+                          const isExpanded = expandedCategoryId === category.id
+                          const hasChildren = category.children && category.children.length > 0
+                          return (
+                            <div key={category.id} className="space-y-2">
+                              {/* Catégorie principale : clic pour afficher les sous-catégories */}
+                              <div className="flex items-center gap-1 pb-1 border-b border-gray-100/80">
+                                {hasChildren ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedCategoryId((id) =>
+                                        id === category.id ? null : category.id
+                                      )
+                                    }
+                                    className="flex items-center gap-1 w-full text-left text-sm font-semibold tracking-wide text-gray-900 hover:text-firstColor transition-colors"
+                                  >
+                                    <span>{category.name[locale as "fr" | "ar"]}</span>
+                                    {isExpanded ? (
+                                      <ChevronUp className="w-4 h-4 shrink-0" />
+                                    ) : (
+                                      <ChevronDown className="w-4 h-4 shrink-0" />
+                                    )}
+                                  </button>
+                                ) : (
+                                  <Link
+                                    href={`/shop?category=${encodeURIComponent(
+                                      category.name[locale as "fr" | "ar"]
+                                    )}`}
+                                    className="text-sm font-semibold tracking-wide text-gray-900 hover:text-firstColor transition-colors"
+                                  >
+                                    {category.name[locale as "fr" | "ar"]}
+                                  </Link>
+                                )}
+                              </div>
 
-                            {/* Sous-catégories directes */}
-                            {category.children && category.children.length > 0 && (
-                              <ul className="space-y-1.5">
-                                {category.children.slice(0, 5).map((child) => (
-                                  <li key={child.id}>
+                              {/* Sous-catégories (tous niveaux) : affichées au clic sur le parent */}
+                              {hasChildren && isExpanded && (
+                                <ul className="space-y-1.5 pt-1">
+                                  <li>
                                     <Link
                                       href={`/shop?category=${encodeURIComponent(
-                                        child.name[locale as "fr" | "ar"]
+                                        category.name[locale as "fr" | "ar"]
                                       )}`}
-                                      className="block text-xs text-gray-500 hover:text-firstColor transition-colors leading-relaxed"
+                                      className="block text-xs text-firstColor hover:underline font-medium"
                                     >
-                                      {child.name[locale as "fr" | "ar"]}
+                                      {locale === "fr" ? "Voir tout" : "عرض الكل"}
                                     </Link>
                                   </li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        ))}
+                                  {category.children!.map((child) => (
+                                    <li key={child.id} className="pl-0">
+                                      <CategoryTreeItem
+                                        category={child}
+                                        locale={locale as "fr" | "ar"}
+                                        depth={0}
+                                      />
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
@@ -348,16 +416,16 @@ const Header: React.FC = () => {
                 <li>
                   <Link
                     href="/packs"
-                    className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
-                  >
-                    {t("navigation.packages")}
+className="hover:text-secondColor transition-colors duration-200 font-medium text-base"
+                    >
+                      {t("navigation.packages")}
                   </Link>
                 </li>
               )}
               <li>
                 <Link
                   href="/contact"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium text-sm"
+                  className="hover:text-secondColor transition-colors duration-200 font-medium text-base"
                 >
                   {t("navigation.contact")}
                 </Link>
