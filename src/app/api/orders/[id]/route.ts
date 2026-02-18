@@ -5,6 +5,7 @@ import Order from "@/models/Order"
 import Product from "@/models/Product"
 import ProductPack from "@/models/ProductPack"
 import { sendLowStockEmail } from "@/lib/nodemailer"
+import { getLowStockThreshold } from "@/lib/getLowStockThreshold"
 
 // Types pour la mise à jour
 type OrderStatus =
@@ -62,7 +63,7 @@ async function checkAndSendLowStockAlert(
   oldQuantity: number
 ): Promise<void> {
   try {
-    const LOW_STOCK_THRESHOLD = 15
+    const lowStockThreshold = await getLowStockThreshold()
     const product = await Product.findById(productId)
     
     if (!product) {
@@ -76,8 +77,8 @@ async function checkAndSendLowStockAlert(
     // 2. L'ancienne quantité était >= au seuil (pour éviter les emails en double)
     if (
       currentQuantity > 0 &&
-      currentQuantity < LOW_STOCK_THRESHOLD &&
-      oldQuantity >= LOW_STOCK_THRESHOLD
+      currentQuantity < lowStockThreshold &&
+      oldQuantity >= lowStockThreshold
     ) {
       try {
         await sendLowStockEmail({

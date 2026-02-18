@@ -587,7 +587,7 @@ const HomeVideoSection = async () => {
           <div className="relative w-full max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl aspect-video bg-black">
             <video
               src={config.videoUrl}
-              className="w-full h-full object-cover"
+              className="w-full h-full"
               controls
               autoPlay
               muted

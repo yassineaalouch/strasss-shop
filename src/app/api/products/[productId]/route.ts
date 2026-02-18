@@ -8,6 +8,7 @@ import "@/models/Discount";
 import { ProductRequestBody } from "@/types/product"
 import mongoose from "mongoose"
 import { sendLowStockEmail } from "@/lib/nodemailer"
+import { getLowStockThreshold } from "@/lib/getLowStockThreshold"
 import { updateHomePageCategoryCountByCategoryId } from "@/lib/updateHomePageCategoryCount"
 import { deleteMultipleFilesFromS3 } from "@/lib/s3"
 
@@ -299,11 +300,11 @@ export async function PUT(
     }
 
     // Vérifier le stock bas après la mise à jour
-    const LOW_STOCK_THRESHOLD = 15
+    const lowStockThreshold = await getLowStockThreshold()
     if (
       newQuantity > 0 &&
-      newQuantity < LOW_STOCK_THRESHOLD &&
-      oldQuantity >= LOW_STOCK_THRESHOLD
+      newQuantity < lowStockThreshold &&
+      oldQuantity >= lowStockThreshold
     ) {
       try {
         await sendLowStockEmail({

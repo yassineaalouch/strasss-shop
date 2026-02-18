@@ -1,6 +1,7 @@
 // models/Product.ts
 import mongoose from "mongoose"
 import { sendLowStockEmail } from "@/lib/nodemailer"
+import { getLowStockThreshold } from "@/lib/getLowStockThreshold"
 
 const ProductSchema = new mongoose.Schema(
   {
@@ -150,13 +151,13 @@ ProductSchema.pre("save", async function (next) {
       // @ts-ignore - accès direct aux propriétés du document Mongoose
       this.inStock = this.quantity > 0
 
-      const LOW_STOCK_THRESHOLD = 15
+      const lowStockThreshold = await getLowStockThreshold()
 
       // @ts-ignore - accès direct aux propriétés du document Mongoose
       const currentQuantity: number = this.quantity ?? 0
 
       // Si le stock passe en dessous du seuil, envoyer un email à l'admin
-      if (currentQuantity > 0 && currentQuantity < LOW_STOCK_THRESHOLD) {
+      if (currentQuantity > 0 && currentQuantity < lowStockThreshold) {
         try {
           await sendLowStockEmail({
             // @ts-ignore

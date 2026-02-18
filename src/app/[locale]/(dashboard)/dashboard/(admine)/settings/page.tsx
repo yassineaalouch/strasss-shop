@@ -536,7 +536,7 @@
 
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import axios from "axios"
 import {
   Eye,
@@ -548,7 +548,8 @@ import {
   CheckCircle,
   AlertCircle,
   Cloud,
-  Settings
+  Settings,
+  Package
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -580,6 +581,13 @@ export default function ChangeCredentialsForm() {
   const [corsSuccess, setCorsSuccess] = useState("")
   const [corsError, setCorsError] = useState("")
 
+  // Seuil de stock bas (paramètres)
+  const [lowStockThreshold, setLowStockThreshold] = useState<number>(15)
+  const [stockSettingsLoading, setStockSettingsLoading] = useState(true)
+  const [stockSettingsSaving, setStockSettingsSaving] = useState(false)
+  const [stockSettingsSuccess, setStockSettingsSuccess] = useState("")
+  const [stockSettingsError, setStockSettingsError] = useState("")
+
   const passwordStrength: PasswordStrength = {
     length: password.length >= 6,
     uppercase: /[A-Z]/.test(password),
@@ -599,6 +607,47 @@ export default function ChangeCredentialsForm() {
     4: "bg-blue-500",
     5: "bg-green-500"
   }[strengthScore]
+
+  // Charger le seuil de stock au montage
+  useEffect(() => {
+    axios
+      .get("/api/settings")
+      .then((res) => {
+        if (res.data?.success && res.data?.settings?.lowStockThreshold != null) {
+          setLowStockThreshold(Number(res.data.settings.lowStockThreshold))
+        }
+      })
+      .catch(() => {})
+      .finally(() => setStockSettingsLoading(false))
+  }, [])
+
+  const handleSaveStockThreshold = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStockSettingsError("")
+    setStockSettingsSuccess("")
+    const value = Math.floor(Number(lowStockThreshold))
+    if (Number.isNaN(value) || value < 1 || value > 1000) {
+      setStockSettingsError("Le seuil doit être un nombre entre 1 et 1000.")
+      return
+    }
+    setStockSettingsSaving(true)
+    try {
+      const res = await axios.patch("/api/settings", { lowStockThreshold: value })
+      if (res.data?.success) {
+        setLowStockThreshold(res.data.settings?.lowStockThreshold ?? value)
+        setStockSettingsSuccess("Seuil de stock bas enregistré.")
+      } else {
+        setStockSettingsError(res.data?.message || "Erreur lors de l'enregistrement.")
+      }
+    } catch (err: unknown) {
+      const msg = axios.isAxiosError(err) && err.response?.data?.message
+        ? err.response.data.message
+        : "Erreur serveur."
+      setStockSettingsError(msg)
+    } finally {
+      setStockSettingsSaving(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -633,8 +682,6 @@ export default function ChangeCredentialsForm() {
       setLoading(false)
       return
     }
-    console.log("canSubmit", canSubmit)
-    console.log("isPasswordStrong", isPasswordStrong)
     // Validation de la force du mot de passe
     if (!isPasswordStrong || !canSubmit) {
       setError({
@@ -717,6 +764,78 @@ export default function ChangeCredentialsForm() {
           <p className="text-gray-600 text-lg">
             Modifiez les identifiants d&apos;accès à l&apos;administration
           </p>
+        </motion.div>
+
+        {/* Paramètres de stock */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-8"
+        >
+          <div className="bg-gray-100 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <Package className="w-6 h-6" />
+              <h2 className="text-xl font-semibold">
+                Paramètres de stock
+              </h2>
+            </div>
+          </div>
+          <div className="p-6">
+            {stockSettingsLoading ? (
+              <div className="flex items-center justify-center py-6 text-gray-500">
+                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <form onSubmit={handleSaveStockThreshold} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Seuil de stock faible
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    En dessous de cette quantité, un email d&apos;alerte est envoyé à l&apos;administrateur (ex. 15).
+                  </p>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={lowStockThreshold}
+                    onChange={(e) => setLowStockThreshold(e.target.value === "" ? 15 : Number(e.target.value))}
+                    className="w-full max-w-xs p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                {stockSettingsError && (
+                  <p className="text-sm text-red-600 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {stockSettingsError}
+                  </p>
+                )}
+                {stockSettingsSuccess && (
+                  <p className="text-sm text-green-600 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    {stockSettingsSuccess}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={stockSettingsSaving}
+                  className="bg-amber-600 hover:bg-amber-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-all flex items-center gap-2"
+                >
+                  {stockSettingsSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Enregistrer le seuil
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
         </motion.div>
 
         {/* Main Card */}
