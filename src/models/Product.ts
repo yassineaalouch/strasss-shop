@@ -2,6 +2,7 @@
 import mongoose from "mongoose"
 import { sendLowStockEmail } from "@/lib/nodemailer"
 import { getLowStockThreshold } from "@/lib/getLowStockThreshold"
+import { getMainImage } from "@/lib/getMainImage"
 
 const ProductSchema = new mongoose.Schema(
   {
@@ -48,6 +49,12 @@ const ProductSchema = new mongoose.Schema(
         },
         message: "Au moins une image est requise"
       }
+    },
+    /** Index de l'image principale (affichée en premier dans le shop). Défaut 0. */
+    mainImageIndex: {
+      type: Number,
+      default: 0,
+      min: 0
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -167,7 +174,7 @@ ProductSchema.pre("save", async function (next) {
             // @ts-ignore
             nameAr: this.name?.ar,
             // @ts-ignore
-            image: Array.isArray(this.images) && this.images.length > 0 ? this.images[0] : undefined,
+            image: getMainImage(this),
             quantity: currentQuantity
           })
         } catch (emailError) {

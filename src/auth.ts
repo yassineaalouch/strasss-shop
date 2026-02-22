@@ -15,7 +15,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         try {
           if (!credentials?.username || !credentials?.password) {
-            console.log("Missing credentials")
             return null
           }
 
@@ -36,7 +35,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               role: "admin"
             })
             await newAdmin.save()
-            console.log("New admin created:", newAdmin.name)
             return {
               id: newAdmin._id.toString(),
               name: newAdmin.name,
@@ -50,12 +48,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             admin.password
           )
 
-          console.log("Login attempt:", {
-            username: credentials.username,
-            isUsernameMatch,
-            isPasswordValid
-          })
-
           if (isUsernameMatch && isPasswordValid) {
             return {
               id: admin._id.toString(),
@@ -64,7 +56,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
           }
           
-          console.log("Invalid credentials")
           return null
         } catch (error) {
           console.error("Authorize error:", error)

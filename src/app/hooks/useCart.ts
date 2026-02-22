@@ -230,7 +230,6 @@ export const useCart = () => {
       }
 
       const discount = result.discount
-      console.log("discount data", discount)
       // Vérifier le montant minimum d'achat
       const currentSubtotal = cartItems.reduce(
         (sum, item) => sum + calculateItemTotal(item),

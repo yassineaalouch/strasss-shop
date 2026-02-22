@@ -16,6 +16,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useCartContext } from "@/app/context/CartContext"
 import { useToast } from "@/components/ui/Toast"
 import { Product } from "@/types/product"
+import { getMainImage } from "@/lib/getMainImage"
 import { ShareMenu } from "@/components/ShareMenu"
 
 // Type flexible pour les produits retournés par l'API
@@ -321,7 +322,7 @@ export function PackDetails({ pack }: PackDetailsProps) {
                           quantity: item.quantity,
                           price: data.product.price,
                           image:
-                            data.product.images?.[0] ??
+                            getMainImage(data.product) ??
                             "/No_Image_Available.jpg"
                         }
                       } catch (error) {
@@ -466,7 +467,7 @@ function PackProductCard({ item, index }: { item: PackItem; index: number }) {
         >
           {product.images && product.images.length > 0 && !imageError ? (
             <Image
-              src={product.images[0]}
+              src={getMainImage(product) ?? product.images[0]}
               alt={product.name[locale]}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-110"

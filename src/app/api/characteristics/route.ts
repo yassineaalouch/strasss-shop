@@ -13,7 +13,6 @@ export async function POST(req: Request) {
   await connectToDatabase()
   const body = await req.json()
   body._id = new mongoose.Types.ObjectId()
-  console.log("body", body)
 
   const characteristic = await Characteristic.create(body)
   return NextResponse.json(characteristic)

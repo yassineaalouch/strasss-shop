@@ -52,15 +52,12 @@ const SocialMediaCard: React.FC = () => {
         }
         
         const result = await response.json()
-        console.log("Données récupérées de l'API:", result)
-
         if (result.success && result.data?.socialLinks) {
           // Filtrer et trier
           const activeLinks = result.data.socialLinks
             .filter((link: SocialLink) => link.isActive)
             .sort((a: SocialLink, b: SocialLink) => a.order - b.order)
           
-          console.log("Liens sociaux actifs:", activeLinks)
           setSocialMediaLinks(activeLinks)
         } else {
           console.warn("Aucun lien social trouvé ou données invalides:", result)

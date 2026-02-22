@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/components/ui/Toast"
 import Image from "next/image"
 import { Product } from "@/types/product"
+import { getMainImage } from "@/lib/getMainImage"
 import { ProductPack } from "@/types/pack"
 import {
   CreateOrderModalProps,
@@ -99,7 +100,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           name: product.name.fr,
           type: "product",
           price: product.price,
-          image: product.images?.[0] ?? "/No_Image_Available.jpg",
+          image: getMainImage(product) ?? "/No_Image_Available.jpg",
           quantity: 1
         }
         setSelectedItems((prev) => [...prev, newItem])
@@ -550,7 +551,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                             <div className="flex items-center gap-3 flex-1">
                               <div className="relative w-12 h-12 bg-gray-200 rounded-lg overflow-hidden">
                                 <Image
-                                  src={product.images?.[0] ?? "/No_Image_Available.jpg"}
+                                  src={getMainImage(product) ?? "/No_Image_Available.jpg"}
                                   alt={product.name.fr}
                                   fill
                                   className="object-cover"

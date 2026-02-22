@@ -37,6 +37,7 @@ const AdminEditProduct: React.FC = () => {
     price: 0,
     originalPrice: undefined,
     images: [],
+    mainImageIndex: 0,
     isNewProduct: false,
     isOnSale: false,
     category: "",
@@ -157,7 +158,6 @@ const AdminEditProduct: React.FC = () => {
   const fetchProduct = async () => {
     try {
       const response = await axios.get(`/api/products/${productId}?forDashboard=true`)
-      console.log("response", response)
       if (response.data.success) {
         const product = response.data.product
         setInitialImages(product.images || [])
@@ -173,6 +173,10 @@ const AdminEditProduct: React.FC = () => {
           price: product.price || 0,
           originalPrice: product.originalPrice || undefined,
           images: product.images || [],
+          mainImageIndex: Math.min(
+            product.mainImageIndex ?? 0,
+            Math.max(0, (product.images?.length ?? 1) - 1)
+          ),
           isNewProduct: product.isNewProduct || false,
           isOnSale: product.isOnSale || false,
           category: product.category?._id || "",
@@ -222,7 +226,6 @@ const AdminEditProduct: React.FC = () => {
       formData.Characteristic.length > 0 &&
       characteristics.length > 0
     ) {
-      console.log("formData.Characteristic", formData.Characteristic)
       const mappedCharacteristics = mapProductCharacteristicsToSelected(
         formData.Characteristic,
         characteristics
@@ -582,10 +585,16 @@ const AdminEditProduct: React.FC = () => {
 
   // Supprimer une image avant upload
   const handleRemoveNewImage = (index: number) => {
+    const globalIndex = formData.images.length + index
     setImageFiles((prev) => prev.filter((_, i) => i !== index))
     setImagePreviews((prev) => prev.filter((_, i) => i !== index))
-
-    // Libérer l'URL de prévisualisation
+    setFormData((prev) => {
+      const main = prev.mainImageIndex ?? 0
+      let newMain = main
+      if (globalIndex < main) newMain = Math.max(0, main - 1)
+      else if (globalIndex === main) newMain = Math.min(0, (prev.images?.length ?? 0) - 1)
+      return newMain !== main ? { ...prev, mainImageIndex: newMain } : prev
+    })
     URL.revokeObjectURL(imagePreviews[index])
   }
 
@@ -621,7 +630,6 @@ const AdminEditProduct: React.FC = () => {
         await axios.delete("/api/delete", {
           data: { fileName }
         })
-        console.log(`Image ${fileName} supprimée de S3`)
       }
     } catch (error) {
       // Erreur silencieuse - ne pas bloquer le processus si la suppression échoue
@@ -638,11 +646,17 @@ const AdminEditProduct: React.FC = () => {
       await deleteImageFromS3(imageToRemove)
     }
 
-    // Supprimer l'image du formulaire
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }))
+    setFormData((prev) => {
+      const newImages = prev.images.filter((_, i) => i !== index)
+      let newMain = prev.mainImageIndex ?? 0
+      if (index < newMain) newMain = Math.max(0, newMain - 1)
+      else if (index === newMain) newMain = Math.max(0, Math.min(0, newImages.length - 1))
+      return {
+        ...prev,
+        images: newImages,
+        mainImageIndex: newMain
+      }
+    })
   }
 
   const validateForm = (): boolean => {
@@ -690,12 +704,20 @@ const AdminEditProduct: React.FC = () => {
         await deleteImageFromS3(deletedImage)
       }
 
+      const mainIdx = Math.max(
+        0,
+        Math.min(
+          Number(formData.mainImageIndex) || 0,
+          Math.max(0, imageUrls.length - 1)
+        )
+      )
       const productData = {
         name: formData.name,
         description: formData.description,
         price: formData.price,
         originalPrice: formData.originalPrice,
         images: imageUrls,
+        mainImageIndex: mainIdx,
         category: formData.category,
         discount: formData.discount,
         Characteristic: transformCharacteristicsForSubmit(imageUrls),
@@ -704,8 +726,6 @@ const AdminEditProduct: React.FC = () => {
         isNewProduct: formData.isNewProduct,
         isOnSale: formData.isOnSale
       }
-
-      console.log("Données envoyées:", productData)
 
       const response = await axios.put(
         `/api/products/${productId}`,
@@ -1054,9 +1074,13 @@ const AdminEditProduct: React.FC = () => {
                       <div className="relative h-48">
                         <Image
                           src={
-                            imagePreviews[0] ||
-                            formData.images[0] ||
-                            "/No_Image_Available.jpg"
+                            (() => {
+                              const idx = formData.mainImageIndex ?? 0
+                              if (idx < formData.images.length)
+                                return formData.images[idx]
+                              const previewIdx = idx - formData.images.length
+                              return imagePreviews[previewIdx] ?? formData.images[0] ?? imagePreviews[0] ?? "/No_Image_Available.jpg"
+                            })()
                           }
                           alt={formData.name[previewMode]}
                           fill
@@ -1171,7 +1195,14 @@ const AdminEditProduct: React.FC = () => {
                               key={`existing-${index}`}
                               className="relative group"
                             >
-                              <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100 border-2 border-green-200">
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => !isSubmitting && setFormData((prev) => ({ ...prev, mainImageIndex: index }))}
+                                onKeyDown={(e) => e.key === "Enter" && !isSubmitting && setFormData((prev) => ({ ...prev, mainImageIndex: index }))}
+                                className={`aspect-square relative rounded-lg overflow-hidden bg-gray-100 border-2 cursor-pointer ${formData.mainImageIndex === index ? "border-amber-500 ring-2 ring-amber-400" : "border-green-200 hover:border-green-400"}`}
+                                title="Cliquer pour définir comme image principale"
+                              >
                                 <Image
                                   src={image || "/No_Image_Available.jpg"}
                                   alt={`Image existante ${index + 1}`}
@@ -1180,7 +1211,7 @@ const AdminEditProduct: React.FC = () => {
                                 />
                                 <button
                                   type="button"
-                                  onClick={() => removeExistingImage(index)}
+                                  onClick={(e) => { e.stopPropagation(); removeExistingImage(index) }}
                                   className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                   disabled={isSubmitting}
                                 >
@@ -1188,7 +1219,7 @@ const AdminEditProduct: React.FC = () => {
                                 </button>
                               </div>
                               <p className="text-xs text-gray-500 mt-1 text-center truncate">
-                                Image {index + 1}
+                                {formData.mainImageIndex === index ? "Image principale" : `Image ${index + 1}`}
                               </p>
                             </div>
                           ))}
@@ -1203,12 +1234,21 @@ const AdminEditProduct: React.FC = () => {
                           Nouvelles images à uploader ({imagePreviews.length})
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {imagePreviews.map((src, index) => (
+                          {imagePreviews.map((src, index) => {
+                            const globalIndex = formData.images.length + index
+                            return (
                             <div
                               key={`new-${index}`}
                               className="relative group"
                             >
-                              <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100 border-2 border-blue-200">
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => !isSubmitting && !uploadingImages && setFormData((prev) => ({ ...prev, mainImageIndex: globalIndex }))}
+                                onKeyDown={(e) => e.key === "Enter" && !isSubmitting && !uploadingImages && setFormData((prev) => ({ ...prev, mainImageIndex: globalIndex }))}
+                                className={`aspect-square relative rounded-lg overflow-hidden bg-gray-100 border-2 cursor-pointer ${formData.mainImageIndex === globalIndex ? "border-amber-500 ring-2 ring-amber-400" : "border-blue-200 hover:border-blue-400"}`}
+                                title="Cliquer pour définir comme image principale"
+                              >
                                 <Image
                                   src={src}
                                   alt={`Nouvelle image ${index + 1}`}
@@ -1217,7 +1257,7 @@ const AdminEditProduct: React.FC = () => {
                                 />
                                 <button
                                   type="button"
-                                  onClick={() => handleRemoveNewImage(index)}
+                                  onClick={(e) => { e.stopPropagation(); handleRemoveNewImage(index) }}
                                   className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                   disabled={isSubmitting || uploadingImages}
                                 >
@@ -1225,11 +1265,10 @@ const AdminEditProduct: React.FC = () => {
                                 </button>
                               </div>
                               <p className="text-xs text-gray-500 mt-1 text-center truncate">
-                                {imageFiles[index]?.name ||
-                                  `Nouvelle ${index + 1}`}
+                                {formData.mainImageIndex === globalIndex ? "Image principale" : imageFiles[index]?.name || `Nouvelle ${index + 1}`}
                               </p>
                             </div>
-                          ))}
+                          )})}
                         </div>
                       </div>
                     )}

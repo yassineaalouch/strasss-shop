@@ -192,13 +192,6 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Debug: afficher les données à mettre à jour
-    console.log("Données à mettre à jour dans MongoDB:", {
-      ...updateData,
-      imageDesktop: updateData.imageDesktop ? "présente" : "absente",
-      imageMobile: updateData.imageMobile ? "présente" : "absente"
-    })
-
     // Mettre à jour ou créer
     const banner = await PromoBanner.findOneAndUpdate(
       { singleton: "promo_banner" },
@@ -209,11 +202,6 @@ export async function PUT(request: NextRequest) {
         runValidators: true
       }
     )
-
-    console.log("Bannière sauvegardée:", {
-      imageDesktop: banner.imageDesktop || "absente",
-      imageMobile: banner.imageMobile || "absente"
-    })
 
     return NextResponse.json(
       {

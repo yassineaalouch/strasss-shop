@@ -34,7 +34,6 @@ export async function connectToDatabase(): Promise<Mongoose> {
         dbName: "strass-shop" // optionnel si déjà dans l’URI
       })
       .then((mongoose) => {
-        console.log("✅Connected to MongoDB")
         return mongoose
       })
   }

@@ -26,12 +26,14 @@ const AdminAddProduct: React.FC = () => {
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [loadingDiscounts, setLoadingDiscounts] = useState(true)
 
+  const [mainImageIndex, setMainImageIndex] = useState(0)
   const [formData, setFormData] = useState<ProductFormData>({
     name: { ar: "", fr: "" },
     description: { ar: "", fr: "" },
     price: 0,
     originalPrice: undefined,
     images: [],
+    mainImageIndex: 0,
     isNewProduct: false,
     isOnSale: false,
     category: "",
@@ -383,8 +385,11 @@ const AdminAddProduct: React.FC = () => {
   const handleRemoveImage = (index: number) => {
     setImageFiles((prev) => prev.filter((_, i) => i !== index))
     setImagePreviews((prev) => prev.filter((_, i) => i !== index))
-
-    // Libérer l'URL de prévisualisation
+    setMainImageIndex((prev) => {
+      if (index < prev) return Math.max(0, prev - 1)
+      if (index === prev) return Math.min(0, Math.max(0, imagePreviews.length - 2))
+      return prev
+    })
     URL.revokeObjectURL(imagePreviews[index])
   }
 
@@ -445,12 +450,17 @@ const AdminAddProduct: React.FC = () => {
         imageUrls = [...imageUrls, ...uploadedUrls]
       }
 
+      const mainIdx =
+        typeof mainImageIndex === "number" && mainImageIndex >= 0
+          ? Math.min(mainImageIndex, imageUrls.length - 1)
+          : 0
       const productData = {
         name: formData.name,
         description: formData.description,
         price: formData.price,
         originalPrice: formData.originalPrice,
         images: imageUrls,
+        mainImageIndex: mainIdx,
         category: formData.category,
         discount: formData.discount,
         Characteristic: transformCharacteristicsForSubmit(imageUrls),
@@ -776,7 +786,7 @@ const AdminAddProduct: React.FC = () => {
                       imagePreviews.length > 0) && (
                       <div className="relative h-48">
                         <Image
-                          src={imagePreviews[0] || formData.images[0]}
+                          src={imagePreviews[mainImageIndex] || imagePreviews[0] || formData.images[0] || "/No_Image_Available.jpg"}
                           alt={formData.name[previewMode]}
                           fill
                           className="object-cover"
@@ -881,7 +891,14 @@ const AdminAddProduct: React.FC = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {imagePreviews.map((src, index) => (
                       <div key={index} className="relative group">
-                        <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100">
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => !isSubmitting && !uploadingImages && setMainImageIndex(index)}
+                          onKeyDown={(e) => e.key === "Enter" && !isSubmitting && !uploadingImages && setMainImageIndex(index)}
+                          className={`aspect-square relative rounded-lg overflow-hidden bg-gray-100 border-2 cursor-pointer ${mainImageIndex === index ? "border-amber-500 ring-2 ring-amber-400" : "border-gray-200 hover:border-gray-400"}`}
+                          title="Cliquer pour définir comme image principale"
+                        >
                           <Image
                             src={src}
                             alt={`preview-${index}`}
@@ -890,7 +907,7 @@ const AdminAddProduct: React.FC = () => {
                           />
                           <button
                             type="button"
-                            onClick={() => handleRemoveImage(index)}
+                            onClick={(e) => { e.stopPropagation(); handleRemoveImage(index) }}
                             className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                             disabled={isSubmitting || uploadingImages}
                           >
@@ -898,7 +915,7 @@ const AdminAddProduct: React.FC = () => {
                           </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-1 text-center truncate">
-                          {imageFiles[index]?.name || `Image ${index + 1}`}
+                          {mainImageIndex === index ? "Image principale" : imageFiles[index]?.name || `Image ${index + 1}`}
                         </p>
                       </div>
                     ))}

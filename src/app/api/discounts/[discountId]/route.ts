@@ -423,7 +423,6 @@ export async function PATCH(
     await connectToDatabase()
 
     const { isActive } = await request.json()
-    console.log("discountId", discountId)
     if (!mongoose.Types.ObjectId.isValid(discountId)) {
       return NextResponse.json(
         { success: false, message: "ID invalide" },

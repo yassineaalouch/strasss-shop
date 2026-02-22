@@ -26,6 +26,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { Product, ProductFilterState, ProductSortState } from "@/types/product"
+import { getMainImage } from "@/lib/getMainImage"
 import { Category } from "@/types/category"
 import { Discount } from "@/types/discount"
 import { ManagementCard } from "@/components/dashboard/ManagementCard"
@@ -124,15 +125,12 @@ const AdminProductsTable: React.FC = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get("/api/categories")
-      console.log("Categories API response:", response.data)
       if (response.data.success) {
         const allCategories = response.data.categories || []
-        console.log("All categories from API:", allCategories)
         // Filter categories that have names (required for display)
         const validCategories = allCategories.filter(
           (cat: Category) => cat && cat.name && (cat.name.fr || cat.name.ar)
         )
-        console.log("Valid categories after filtering:", validCategories)
         setCategories(validCategories)
       } else {
         showToast(response.data.message || "Erreur lors du chargement des catégories", "error")
@@ -153,15 +151,12 @@ const AdminProductsTable: React.FC = () => {
   const fetchDiscounts = async () => {
     try {
       const response = await axios.get("/api/discounts")
-      console.log("Discounts API response:", response.data)
       if (response.data.success) {
         const allDiscounts = response.data.discounts || []
-        console.log("All discounts from API:", allDiscounts)
         // Filter discounts that have names (required for display)
         const validDiscounts = allDiscounts.filter(
           (discount: Discount) => discount && discount.name && (discount.name.fr || discount.name.ar)
         )
-        console.log("Valid discounts after filtering:", validDiscounts)
         setDiscounts(validDiscounts)
       } else {
         showToast(response.data.message || "Erreur lors du chargement des promotions", "error")
@@ -622,9 +617,9 @@ const AdminProductsTable: React.FC = () => {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                        {product.images && product.images[0] ? (
+                        {product.images && (getMainImage(product) ?? product.images[0]) ? (
                           <Image
-                            src={product.images[0]}
+                            src={getMainImage(product) ?? product.images[0]}
                             alt={product.name[currentLanguage]}
                             width={100}
                             height={100}

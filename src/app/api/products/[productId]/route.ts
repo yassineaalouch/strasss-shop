@@ -9,6 +9,7 @@ import { ProductRequestBody } from "@/types/product"
 import mongoose from "mongoose"
 import { sendLowStockEmail } from "@/lib/nodemailer"
 import { getLowStockThreshold } from "@/lib/getLowStockThreshold"
+import { getMainImage } from "@/lib/getMainImage"
 import { updateHomePageCategoryCountByCategoryId } from "@/lib/updateHomePageCategoryCount"
 import { deleteMultipleFilesFromS3 } from "@/lib/s3"
 
@@ -129,7 +130,6 @@ export async function GET(
       Product.findByIdAndUpdate(product._id, { isNewProduct: false }).catch(console.error)
     }
 
-    console.log("product product", product)
     return NextResponse.json(
       {
         success: true,
@@ -140,6 +140,7 @@ export async function GET(
           price: product.price,
           originalPrice: finalOriginalPrice,
           images: product.images,
+          mainImageIndex: product.mainImageIndex ?? 0,
           category: product.category ?? null,
           discount: validDiscount,
           // category: product.category ? product.category.toString() : null,
@@ -193,6 +194,7 @@ export async function PUT(
       price,
       originalPrice,
       images,
+      mainImageIndex,
       category,
       discount,
       Characteristic,
@@ -201,7 +203,6 @@ export async function PUT(
       isNewProduct,
       isOnSale
     } = body
-    console.log("product.discount", discount)
 
     // Validation des données
     if (!name?.fr || !name?.ar) {
@@ -262,6 +263,18 @@ export async function PUT(
       url.replace(/\+/g, '%2B')
     )
 
+    // Accepter mainImageIndex en number ou string (ex: envoyé depuis le formulaire)
+    const mainImageIndexNum =
+      typeof mainImageIndex === "number"
+        ? mainImageIndex
+        : typeof mainImageIndex === "string"
+          ? parseInt(mainImageIndex, 10)
+          : 0
+    const safeMainImageIndex =
+      !Number.isNaN(mainImageIndexNum) && mainImageIndexNum >= 0
+        ? Math.min(mainImageIndexNum, Math.max(0, normalizedImages.length - 1))
+        : 0
+
     // Mettre à jour le produit
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -277,6 +290,7 @@ export async function PUT(
         price,
         originalPrice,
         images: normalizedImages,
+        mainImageIndex: safeMainImageIndex,
         category: mongoose.Types.ObjectId.isValid(category)
           ? new mongoose.Types.ObjectId(category)
           : null,
@@ -311,9 +325,7 @@ export async function PUT(
           id: updatedProduct._id?.toString() ?? "",
           nameFr: updatedProduct.name?.fr ?? "Produit sans nom",
           nameAr: updatedProduct.name?.ar,
-          image: Array.isArray(updatedProduct.images) && updatedProduct.images.length > 0
-            ? updatedProduct.images[0]
-            : undefined,
+          image: getMainImage(updatedProduct),
           quantity: newQuantity
         })
       } catch (emailError) {
@@ -361,6 +373,7 @@ export async function PUT(
           price: updatedProduct.price,
           originalPrice: updatedProduct.originalPrice,
           images: updatedProduct.images,
+          mainImageIndex: updatedProduct.mainImageIndex ?? 0,
           category: updatedProduct.category
             ? updatedProduct.category.toString()
             : "",
@@ -439,9 +452,7 @@ export async function DELETE(
     // Supprimer toutes les images du produit de S3
     if (productImages.length > 0) {
       try {
-        console.log(`Suppression de ${productImages.length} image(s) de S3 pour le produit ${productId}...`)
         await deleteMultipleFilesFromS3(productImages)
-        console.log(`Toutes les images du produit ${productId} ont été supprimées de S3`)
       } catch (error) {
         console.error(
           `Erreur lors de la suppression des images de S3 pour le produit ${productId}:`,

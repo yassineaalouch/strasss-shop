@@ -6,6 +6,7 @@ import Product from "@/models/Product"
 import ProductPack from "@/models/ProductPack"
 import { sendLowStockEmail } from "@/lib/nodemailer"
 import { getLowStockThreshold } from "@/lib/getLowStockThreshold"
+import { getMainImage } from "@/lib/getMainImage"
 
 // Types pour la mise à jour
 type OrderStatus =
@@ -85,9 +86,7 @@ async function checkAndSendLowStockAlert(
           id: product._id?.toString() ?? "",
           nameFr: product.name?.fr ?? "Produit sans nom",
           nameAr: product.name?.ar,
-          image: Array.isArray(product.images) && product.images.length > 0 
-            ? product.images[0] 
-            : undefined,
+          image: getMainImage(product),
           quantity: currentQuantity
         })
       } catch (emailError) {

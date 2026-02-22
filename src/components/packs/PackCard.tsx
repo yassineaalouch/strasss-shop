@@ -2,6 +2,7 @@
 
 import { Link } from "@/i18n/navigation"
 import Image from "next/image"
+import { getMainImage } from "@/lib/getMainImage"
 import { ShoppingCart, Package, Percent, ArrowRight } from "lucide-react"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
@@ -76,7 +77,7 @@ export function PackCard({ pack }: PackCardProps) {
             name: data.product.name[locale],
             quantity: item.quantity,
             price: data.product.price,
-            image: data.product.images?.[0] ?? "/No_Image_Available.jpg"
+            image: getMainImage(data.product) ?? "/No_Image_Available.jpg"
           }
         } catch (error) {
           // Erreur silencieuse pour éviter de spammer les toasts

@@ -21,6 +21,8 @@ export interface Product {
   price: number
   originalPrice?: number
   images: string[]
+  /** Index de l'image principale (affichée en premier). Défaut 0. */
+  mainImageIndex?: number
   category?: Category
   discount?: Discount
   Characteristic?: ProductCharacteristic[]
@@ -39,6 +41,7 @@ export interface ProductFormData {
   price: number
   originalPrice?: number
   images: string[]
+  mainImageIndex?: number
   category: string
   discount: string
   Characteristic?: ProductCharacteristic[]
@@ -54,6 +57,7 @@ export interface ProductRequestBody {
   price: number
   originalPrice?: number
   images: string[]
+  mainImageIndex?: number
   category: Types.ObjectId | string
   discount: Types.ObjectId | string
   Characteristic?: ProductCharacteristic[]

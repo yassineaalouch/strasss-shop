@@ -35,6 +35,7 @@ import { useToast } from "@/components/ui/Toast"
 import Image from "next/image"
 import axios from "axios"
 import { Product } from "@/types/product"
+import { getMainImage } from "@/lib/getMainImage"
 import { Category } from "@/types/category"
 import { SiteInfo } from "@/types/site-info"
 import {
@@ -870,7 +871,6 @@ export default function HomePageContentPage() {
       const response = await fetch("/api/product-packs")
       const data = await response.json()
       if (data.success) {
-        console.log("packs: ", data.data)
         setAllPacks(data.data || [])
       } else {
         showToast(
@@ -1041,14 +1041,10 @@ export default function HomePageContentPage() {
 
       try {
         if (bannerImageDesktopFile) {
-          console.log("Upload image desktop...")
           imageDesktopUrl = await uploadBannerImageToS3(bannerImageDesktopFile)
-          console.log("Image desktop uploadée:", imageDesktopUrl)
         }
         if (bannerImageMobileFile) {
-          console.log("Upload image mobile...")
           imageMobileUrl = await uploadBannerImageToS3(bannerImageMobileFile)
-          console.log("Image mobile uploadée:", imageMobileUrl)
         }
       } catch (uploadError) {
         console.error("Erreur lors de l'upload des images:", uploadError)
@@ -1080,13 +1076,6 @@ export default function HomePageContentPage() {
       if (imageMobileUrl && imageMobileUrl.trim() !== "") {
         bannerData.imageMobile = imageMobileUrl.trim()
       }
-
-      // Debug: afficher les données envoyées
-      console.log("Données bannière envoyées:", {
-        ...bannerData,
-        imageDesktop: bannerData.imageDesktop ? "présente" : "absente",
-        imageMobile: bannerData.imageMobile ? "présente" : "absente"
-      })
 
       // Ajouter titre et description si présents
       if (promoBanner.title && (promoBanner.title.fr || promoBanner.title.ar)) {
@@ -2152,7 +2141,7 @@ export default function HomePageContentPage() {
                       <div className="flex items-start gap-4">
                         <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                           <Image
-                            src={product.images[0] || "/No_Image_Available.jpg"}
+                            src={getMainImage(product) || "/No_Image_Available.jpg"}
                             alt={product.name.fr}
                             fill
                             className="object-cover"
@@ -2210,7 +2199,7 @@ export default function HomePageContentPage() {
                             <div className="relative w-12 h-12 rounded-lg overflow-hidden">
                               <Image
                                 src={
-                                  product.images[0] || "/No_Image_Available.jpg"
+                                  getMainImage(product) || "/No_Image_Available.jpg"
                                 }
                                 alt={product.name.fr}
                                 fill
@@ -2532,10 +2521,10 @@ export default function HomePageContentPage() {
                               }`}
                             >
                               <div className="flex items-center gap-3">
-                              {item.images && item.images[0] && <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                              {item.images && getMainImage(item) && <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                                   <Image
                                     src={
-                                      (item.images && item.images[0]) ||
+                                      getMainImage(item) ||
                                       item.image ||
                                       "/No_Image_Available.jpg"
                                     }

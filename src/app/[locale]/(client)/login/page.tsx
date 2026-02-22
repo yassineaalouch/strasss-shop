@@ -223,20 +223,12 @@ const AdminLoginPage: React.FC = () => {
     setIsLoading(true)
 
     try {
-      console.log("Attempting login with:", { username: formData.username })
-      
       // 🔐 Appel NextAuth avec redirect: false pour gérer manuellement
       const result = await signIn("credentials", {
         redirect: false,
         username: formData.username,
         password: formData.password
       })
-
-      console.log("SignIn result (full):", JSON.stringify(result, null, 2))
-      console.log("SignIn result type:", typeof result)
-      console.log("SignIn result.error:", result?.error)
-      console.log("SignIn result.ok:", result?.ok)
-      console.log("SignIn result.url:", result?.url)
 
       // Dans NextAuth v5, la réponse peut être undefined, un objet avec error, ou un objet avec ok/url
       if (result?.error) {
@@ -263,7 +255,6 @@ const AdminLoginPage: React.FC = () => {
         window.location.href = "/fr/dashboard"
       } else {
         // ✅ Connexion réussie (pas d'erreur) → redirection vers le dashboard
-        console.log("Login successful, redirecting...")
         setLoginAttempts(0)
         setErrors({})
         

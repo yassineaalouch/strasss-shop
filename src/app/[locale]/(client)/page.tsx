@@ -71,7 +71,6 @@ const CategoriesSection = async () => {
 
   // Récupérer les catégories depuis la base de données
   const dbCategories = await getHomePageCategories()
-console.log("dbCategories", dbCategories)
   // Fallback si aucune catégorie en DB
   const fallbackCategories: CategoriesHomPageSection[] = [
     {

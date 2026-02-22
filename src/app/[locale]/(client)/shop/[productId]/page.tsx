@@ -19,6 +19,7 @@ import {
   X
 } from "lucide-react"
 import { Product } from "@/types/product"
+import { getMainImage } from "@/lib/getMainImage"
 import { RelatedProducts } from "@/components/shop/Relatedproducts"
 import { useCartContext } from "@/app/context/CartContext"
 import { ShareMenu } from "@/components/ShareMenu"
@@ -72,15 +73,18 @@ const ProductPage: React.FC = () => {
         if (response.data.success) {
           const productData = response.data.product
           setProduct(productData)
-          setSelectedImageIndex(0)
+          setSelectedImageIndex(
+            Math.min(
+              Math.max(0, productData.mainImageIndex ?? 0),
+              (productData.images?.length ?? 1) - 1
+            )
+          )
           setImageLoaded(false)
           setImageError(false)
           setIsZoomActive(false)
-          console.log("productData", productData)
           // Charger les détails de la catégorie
           if (productData.category) {
             // fetchCategory(productData.category)
-            console.log("productData.category", productData.category)
           }
         } else {
           setError("Produit non trouvé")
@@ -171,7 +175,7 @@ const ProductPage: React.FC = () => {
       // pour qu'elle soit la même dans le panier, checkout et détail commande admin
       const itemImage =
         product.images[selectedImageIndex] ??
-        product.images[0] ??
+        getMainImage(product) ??
         "/No_Image_Available.jpg"
 
       // Add product to cart with discount info and characteristics
@@ -589,7 +593,7 @@ const ProductPage: React.FC = () => {
                     url={typeof window !== "undefined" ? window.location.href : ""}
                     title={product.name[locale]}
                     description={product.description?.[locale]}
-                    image={product.images?.[0]}
+                    image={getMainImage(product)}
                   />
                 )}
               </div>

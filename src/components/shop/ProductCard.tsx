@@ -16,6 +16,7 @@ import {
   Shield
 } from "lucide-react"
 import { ProductCardProps } from "@/types/type"
+import { getMainImage } from "@/lib/getMainImage"
 import { motion, AnimatePresence } from "framer-motion"
 import { isColorCharacteristic, normalizeHexColor, isValidHexColor } from "@/utils/colorCharacteristic"
 import { Link } from "@/i18n/navigation"
@@ -53,7 +54,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         id: product._id,
         name: product.name[locale],
         price: product.price,
-        image: product.images?.[0] ?? "/No_Image_Available.jpg",
+        image: getMainImage(product) ?? "/No_Image_Available.jpg",
         type: "product",
         discount: discount,
         maxQuantity: product.quantity // Stocker la quantité maximale disponible
@@ -103,7 +104,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       id: product._id,
       name: product.name[locale],
       price: product.price,
-      image: product.images?.[0] ?? "/No_Image_Available.jpg",
+      image: getMainImage(product) ?? "/No_Image_Available.jpg",
       characteristic: formattedCharacteristics,
       type: "product",
       discount: discount,
@@ -201,7 +202,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               >
                 <Link href={`/shop/${product._id}`}>
                   <Image
-                    src={product.images?.[0] ?? "/No_Image_Available.jpg"}
+                    src={getMainImage(product) ?? "/No_Image_Available.jpg"}
                     alt={product.name[locale]}
                     fill
                     sizes="(max-width: 1024px) 100vw, 300px"
@@ -511,7 +512,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               className="relative h-full w-full"
             >
               <Image
-                src={product.images?.[0] ?? "/No_Image_Available.jpg"}
+                src={getMainImage(product) ?? "/No_Image_Available.jpg"}
                 alt={product.name[locale]}
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

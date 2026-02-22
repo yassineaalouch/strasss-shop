@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { Product } from "@/types/product"
+import { getMainImage } from "@/lib/getMainImage"
 import { PackFormData, ProductPack, SelectedPackItem } from "@/types/pack"
 import { ManagementCard } from "@/components/dashboard/ManagementCard"
 import { useToast } from "@/components/ui/Toast"
@@ -217,7 +218,6 @@ const AdminPackCreator: React.FC = () => {
     if (isFromS3) {
       // Marquer l'image pour suppression future lors de la sauvegarde
       setImagesToDelete((prev) => [...prev, imageToRemove])
-      console.log(`Image marquée pour suppression: ${imageToRemove}`)
     }
 
     // Supprimer l'image du formulaire immédiatement (UI seulement)
@@ -259,7 +259,6 @@ const AdminPackCreator: React.FC = () => {
           data: { fileName }
         })
         if (response.data.success) {
-          console.log(`Image ${fileName} supprimée de S3`)
           return true
         } else {
           console.warn(
@@ -335,7 +334,6 @@ const AdminPackCreator: React.FC = () => {
 
       // Supprimer les images de S3 - UNIQUEMENT lors de la sauvegarde
       if (imagesToDelete.length > 0) {
-        console.log(`Suppression de ${imagesToDelete.length} images de S3...`)
         for (const deletedImage of imagesToDelete) {
           try {
             await deleteImageFromS3(deletedImage)
@@ -1077,9 +1075,9 @@ const AdminPackCreator: React.FC = () => {
                         >
                           <div className="flex items-center space-x-3 flex-1">
                             <div className="relative w-12 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                              {product.images && product.images[0] ? (
+                              {product.images && getMainImage(product) ? (
                                 <Image
-                                  src={product.images[0]}
+                                  src={getMainImage(product)!}
                                   alt={product.name[currentLanguage]}
                                   width={100}
                                   height={100}
@@ -1191,9 +1189,9 @@ const AdminPackCreator: React.FC = () => {
                         >
                           <div className="flex items-center space-x-3 flex-1">
                             <div className="relative w-12 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                              {item.product.images && item.product.images[0] ? (
+                              {item.product.images && getMainImage(item.product) ? (
                                 <Image
-                                  src={item.product.images[0]}
+                                  src={getMainImage(item.product)!}
                                   alt={item.product.name[currentLanguage]}
                                   width={100}
                                   height={100}

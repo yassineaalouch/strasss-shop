@@ -146,7 +146,6 @@ export async function POST(
     const slugFr = await generateUniqueSlug(name.fr, "fr")
     const slugAr = await generateUniqueSlug(name.ar, "ar")
     
-    console.log("Generated slugs:", { slugFr, slugAr })
     
     // Vérifier une dernière fois que les slugs sont vraiment uniques avant création
     const finalCheckFr = await Category.findOne({ "slug.fr": slugFr })
@@ -161,7 +160,6 @@ export async function POST(
       const random = Math.random().toString(36).substring(2, 9)
       finalSlugFr = finalCheckFr ? `${slugFr}-${timestamp}-${random}` : slugFr
       finalSlugAr = finalCheckAr ? `${slugAr}-${timestamp}-${random}` : slugAr
-      console.log("Conflict detected, using safe slugs:", { finalSlugFr, finalSlugAr })
     }
     
     // Créer la nouvelle catégorie avec les slugs garantis uniques
@@ -184,7 +182,6 @@ export async function POST(
       }
     })
     
-    console.log("Category created with slugs:", { fr: newCategory.slug.fr, ar: newCategory.slug.ar })
 
     return NextResponse.json(
       {

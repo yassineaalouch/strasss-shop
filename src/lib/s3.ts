@@ -115,7 +115,6 @@ export async function deleteMultipleFilesFromS3(imageUrls: string[]): Promise<vo
       const fileName = extractFileNameFromS3Url(imageUrl)
       if (fileName) {
         await deleteFileFromS3(fileName)
-        console.log(`Image supprimée de S3: ${fileName}`)
       } else {
         console.warn(`Impossible d'extraire le nom de fichier depuis l'URL: ${imageUrl}`)
       }

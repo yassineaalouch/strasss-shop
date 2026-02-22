@@ -50,7 +50,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearchResults, setShowSearchResults] = useState(false)
-  console.log("currentPath", currentPath)
 
   // Navigation items (exemple)
   const navigationItems: NavigationItem[] = [

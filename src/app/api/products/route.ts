@@ -371,6 +371,7 @@ export async function GET(
             price: product.price,
             originalPrice: finalOriginalPrice,
             images: product.images,
+            mainImageIndex: product.mainImageIndex ?? 0,
             category: product.category,
             discount: validDiscount,
             Characteristic: product.Characteristic,
@@ -424,6 +425,7 @@ export async function POST(
       price,
       originalPrice,
       images,
+      mainImageIndex,
       category,
       discount,
       Characteristic,
@@ -486,6 +488,10 @@ export async function POST(
       price,
       originalPrice,
       images: normalizedImages,
+      mainImageIndex:
+        typeof mainImageIndex === "number" && mainImageIndex >= 0
+          ? Math.min(mainImageIndex, normalizedImages.length - 1)
+          : 0,
       category: mongoose.Types.ObjectId.isValid(category) ? category : null,
       discount: mongoose.Types.ObjectId.isValid(discount) ? discount : null,
       Characteristic: Characteristic,
@@ -518,6 +524,7 @@ export async function POST(
           price: newProduct.price,
           originalPrice: newProduct.originalPrice,
           images: newProduct.images,
+          mainImageIndex: newProduct.mainImageIndex ?? 0,
           category: newProduct.category ? newProduct.category.toString() : "",
           discount: newProduct.discount ? newProduct.discount.toString() : "",
           Characteristic: newProduct.Characteristic,
