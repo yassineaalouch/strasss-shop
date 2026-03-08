@@ -81,45 +81,45 @@
   },
   "ConditionsUtilisationPage": {
     "title": "Conditions d'Utilisation",
-    "lastUpdated": "15 janvier 2025",
+    "lastUpdated": "8 mars 2025",
     "section1": {
       "title": "1. Objet et Champ d'Application",
-      "paragraph1": "Les présentes conditions générales d'utilisation (CGU) ont pour objet de définir les modalités et conditions dans lesquelles les utilisateurs peuvent accéder et utiliser le site web",
-      "website": "www.accessoires-couture.fr",
-      "company": ", édité par la société Accessoires Couture Premium.",
-      "paragraph2": "L'accès au site implique l'acceptation pleine et entière des présentes conditions générales d'utilisation. Ces dernières constituent un contrat entre l'utilisateur et Accessoires Couture Premium."
+      "paragraph1": "Les présentes conditions générales d'utilisation (CGU) ont pour objet de définir les modalités et conditions dans lesquelles les utilisateurs peuvent accéder et utiliser le site de vente en ligne dédié à la couture et aux accessoires de couture",
+      "website": "Strass Shop",
+      "company": ", édité par Strass Shop, spécialiste des fournitures et accessoires de couture au Maroc.",
+      "paragraph2": "L'accès au site implique l'acceptation pleine et entière des présentes conditions générales d'utilisation. Ces dernières constituent un contrat entre l'utilisateur et Strass Shop."
     },
     "section2": {
       "title": "2. Mentions Légales",
       "editor": {
         "title": "Éditeur du site :",
-        "companyName": "Accessoires Couture Premium",
-        "legalForm": "SARL au capital de 50 000 MAD",
-        "siret": "SIRET : 123 456 789 00012",
-        "ape": "Code APE : 4751Z"
+        "companyName": "Strass Shop",
+        "legalForm": "Commerce spécialisé en couture et accessoires de couture",
+        "siret": "Meknès, Maroc",
+        "ape": "Mercerie et fournitures de couture"
       },
       "contact": {
         "title": "Coordonnées :",
-        "address": "123 Rue de la Couture",
-        "customerAddress": "75001 Paris, France",
-        "phone": "Tél : 01 23 45 67 89",
-        "email": "Email : contact@accessoires-couture.fr"
+        "address": "Rue 4, numéro 2",
+        "customerAddress": "Quartier El Bassatine, Meknès, Maroc",
+        "phone": "Tél : +212 670366581",
+        "email": "Email : Denon_taha@hotmail.fr"
       }
     },
     "section3": {
       "title": "3. Accès au Site et Services",
-      "paragraph1": "Le site est accessible 24h/24, 7j/7, sauf cas de force majeure, maintenance programmée ou panne. Accessoires Couture Premium met tout en œuvre pour offrir aux utilisateurs un accès continu au site, mais ne saurait être tenu responsable de tout dommage résultant d'une indisponibilité du site.",
+      "paragraph1": "Le site est accessible 24h/24, 7j/7, sauf cas de force majeure, maintenance programmée ou panne. Strass Shop met tout en œuvre pour offrir aux utilisateurs un accès continu au site de vente d'accessoires de couture, mais ne saurait être tenu responsable de tout dommage résultant d'une indisponibilité du site.",
       "subtitle": "3.1 Conditions d'accès",
       "conditions": {
-        "access": "L'accès au site est gratuit pour la consultation",
-        "account": "Certaines fonctionnalités nécessitent la création d'un compte utilisateur",
-        "truthfulness": "L'utilisateur garantit la véracité des informations fournies",
-        "uniqueAccount": "Un seul compte par personne physique est autorisé"
+        "access": "L'accès au site est gratuit pour la consultation et la commande",
+        "account": "Strass Shop ne propose pas de compte utilisateur : les commandes se font via le formulaire de checkout sans création de compte",
+        "truthfulness": "L'utilisateur garantit la véracité des informations fournies lors de la commande",
+        "uniqueAccount": "Aucune inscription ni connexion n'est requise pour passer commande"
       }
     },
     "section4": {
       "title": "4. Propriété Intellectuelle",
-      "paragraph1": "L'ensemble des contenus présents sur le site (textes, images, vidéos, logos, graphismes, etc.) est protégé par les droits de propriété intellectuelle et appartient exclusivement à Accessoires Couture Premium ou à ses partenaires.",
+      "paragraph1": "L'ensemble des contenus présents sur le site (textes, images, vidéos, logos, graphismes, descriptions de produits de couture et accessoires, etc.) est protégé par les droits de propriété intellectuelle et appartient exclusivement à Strass Shop ou à ses partenaires.",
       "warning": "⚠️ Interdictions :",
       "prohibitions": {
         "reproduction": "Reproduction, représentation ou diffusion sans autorisation",
@@ -140,22 +140,22 @@
       },
       "liability": {
         "title": "5.2 Limitation de responsabilité",
-        "content": "Accessoires Couture Premium ne saurait être tenu responsable des dommages directs ou indirects causés au matériel de l'utilisateur lors de l'accès au site, résultant de l'utilisation d'un matériel non adapté ou de l'apparition d'un bug ou d'une incompatibilité."
+        "content": "Strass Shop ne saurait être tenu responsable des dommages directs ou indirects causés au matériel de l'utilisateur lors de l'accès au site, résultant de l'utilisation d'un matériel non adapté ou de l'apparition d'un bug ou d'une incompatibilité."
       }
     },
     "section6": {
       "title": "6. Protection des Données Personnelles",
-      "paragraph1": "Conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés, les informations personnelles collectées font l'objet d'un traitement destiné à gérer votre compte client et vos commandes.",
+      "paragraph1": "Conformément à la loi n° 09-08 relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel au Maroc, les informations personnelles collectées sur notre site de vente d'accessoires de couture font l'objet d'un traitement destiné à gérer votre compte client et vos commandes.",
       "paragraph2": "Pour plus d'informations, consultez notre",
       "privacyPolicyLink": "Politique de Confidentialité"
     },
     "section7": {
       "title": "7. Modification des CGU",
-      "content": "Accessoires Couture Premium se réserve le droit de modifier à tout moment les présentes conditions générales d'utilisation. Les modifications prennent effet dès leur publication sur le site. Il appartient à l'utilisateur de consulter régulièrement la dernière version."
+      "content": "Strass Shop se réserve le droit de modifier à tout moment les présentes conditions générales d'utilisation du site dédié à la couture et aux accessoires de couture. Les modifications prennent effet dès leur publication sur le site. Il appartient à l'utilisateur de consulter régulièrement la dernière version."
     },
     "section8": {
       "title": "8. Droit Applicable et Juridiction",
-      "content": "Les présentes conditions générales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents."
+      "content": "Les présentes conditions générales sont soumises au droit marocain. En cas de litige relatif à l'utilisation du site ou aux achats d'accessoires de couture, les tribunaux compétents du Maroc seront seuls compétents."
     }
   },
   "LegalLayout": {
@@ -174,25 +174,25 @@
   },
   "ConditionsVentePage": {
     "metadata": {
-      "title": "Conditions de Vente | Accessoires de Couture Premium",
-      "description": "Découvrez nos conditions générales de vente pour l'achat d'accessoires de couture en ligne."
+      "title": "Conditions de Vente | Strass Shop - Couture & Accessoires de Couture",
+      "description": "Conditions générales de vente pour l'achat de fournitures et accessoires de couture en ligne au Maroc."
     },
     "title": "Conditions Générales de Vente",
-    "lastUpdated": "15 janvier 2025",
+    "lastUpdated": "8 mars 2025",
     "section1": {
       "title": "1. Champ d'Application",
-      "content": "Les présentes conditions générales de vente (CGV) s'appliquent à toutes les commandes passées sur le site www.accessoires-couture.fr par des consommateurs ou professionnels. Elles régissent les relations contractuelles entre Accessoires Couture Premium et ses clients."
+      "content": "Les présentes conditions générales de vente (CGV) s'appliquent à toutes les commandes passées sur le site Strass Shop, portant sur des produits de couture et accessoires de couture (fils, aiguilles, ciseaux, mercerie, etc.), par des consommateurs ou professionnels. Elles régissent les relations contractuelles entre Strass Shop et ses clients."
     },
     "section2": {
       "title": "2. Produits et Prix",
       "productDescription": {
         "title": "2.1 Description des produits",
-        "content": "Les produits proposés sont ceux qui figurent dans le catalogue publié sur le site. Les photographies et descriptifs sont les plus fidèles possibles mais n'engagent pas la responsabilité de la société en cas de légères différences."
+        "content": "Les produits proposés (accessoires de couture, fournitures de mercerie, fils, aiguilles, ciseaux, machines et matériel de couture) sont ceux qui figurent dans le catalogue publié sur le site. Les photographies et descriptifs sont les plus fidèles possibles mais n'engagent pas la responsabilité de Strass Shop en cas de légères différences."
       },
       "pricing": {
         "title": "2.2 Prix",
-        "eurosTTC": "Les prix sont indiqués en euros TTC",
-        "tva": "Ils incluent la TVA française au taux en vigueur",
+        "eurosTTC": "Les prix sont indiqués en dirhams marocains (MAD)",
+        "tva": "Ils sont tels qu'affichés au moment de la commande",
         "modification": "Les prix peuvent être modifiés à tout moment mais s'appliquent au moment de la commande",
         "shipping": "Les frais de livraison sont en supplément et indiqués avant validation"
       }
@@ -203,120 +203,120 @@
         "title": "3.1 Processus de commande",
         "step1": "Sélection des produits et ajout au panier",
         "step2": "Vérification du contenu du panier",
-        "step3": "Identification ou création de compte client",
-        "step4": "Choix du mode de livraison",
-        "step5": "Choix du mode de paiement",
+        "step3": "Saisie des informations de livraison (formulaire de commande, sans création de compte)",
+        "step4": "Choix du mode de livraison (standard par défaut ; express possible sur demande lors de la confirmation)",
+        "step5": "Choix du mode de paiement (paiement à la livraison ou virement pour les grandes commandes)",
         "step6": "Validation de la commande après acceptation des CGV"
       },
       "paymentMethods": {
         "title": "3.2 Moyens de paiement acceptés",
-        "securePayments": "✅ Paiements sécurisés",
-        "creditCards": "Cartes bancaires (Visa, Mastercard, CB)",
-        "paypal": "PayPal",
-        "bankTransfer": "Virement bancaire (sur devis)",
-        "check": "Chèque (France uniquement)",
-        "security": "🔒 Sécurité",
-        "securityDescription": "Tous les paiements sont sécurisés par cryptage SSL. Nous ne conservons aucune donnée bancaire."
+        "securePayments": "✅ Moyens de paiement",
+        "creditCards": "Paiement à la livraison (cash on delivery)",
+        "paypal": "Virement bancaire (pour les grandes commandes uniquement, afin d'éviter les annulations abusives)",
+        "bankTransfer": "",
+        "check": "",
+        "security": "🔒 Important",
+        "securityDescription": "Aucun paiement par carte bancaire n'est proposé sur le site. Seuls le paiement à la livraison et le virement bancaire (grandes commandes) sont acceptés."
       }
     },
     "section4": {
       "title": "4. Livraison",
       "deliveryZones": {
         "title": "4.1 Zones de livraison",
-        "content": "Nous livrons en France métropolitaine, Corse et DOM-TOM."
+        "content": "Nous livrons vos accessoires de couture sur tout le territoire marocain."
       },
       "deliveryTable": {
-        "title": "4.2 Délais et tarifs",
+        "title": "4.2 Délais et tarifs (en MAD)",
         "tableHeaders": {
           "method": "Mode de livraison",
           "delay": "Délai",
           "price": "Tarif"
         },
-        "colissimo": "Colissimo",
-        "chronopost": "Chronopost Express",
-        "pointRelais": "Point Relais",
+        "colissimo": "Livraison standard",
+        "chronopost": "Livraison express",
+        "pointRelais": "Point relais / Enlèvement",
         "delay23days": "2-3 jours ouvrés",
-        "delay24h": "24h",
+        "delay24h": "24-48h",
         "delay35days": "3-5 jours ouvrés",
-        "freeShippingNote": "*Livraison gratuite dès {threshold} MAD d'achat en Colissimo"
+        "priceStandard": "30 MAD",
+        "priceExpress": "60 MAD",
+        "priceRelais": "30 MAD",
+        "freeShippingNote": "*Livraison gratuite dès {threshold} MAD d'achat",
+        "defaultDeliveryNote": "Par défaut, le type de livraison est la livraison standard. Lors de la confirmation de commande, le client peut demander la livraison express."
       }
     },
     "section5": {
-      "title": "5. Droit de Rétractation",
-      "legalDelay": "📋 Délai légal : 14 jours",
-      "legalDescription": "Conformément à l'article L221-18 du Code de la consommation, vous disposez d'un délai de 14 jours à compter de la réception de votre commande pour exercer votre droit de rétractation.",
+      "title": "5. Retours et Réclamations",
+      "legalDelay": "📋 Pas de droit de retour après paiement",
+      "legalDescription": "Le client n'a pas le droit de retour après avoir payé. Il doit vérifier attentivement sa commande avant le paiement. En cas de défaut constaté après réception, il peut formuler une réclamation auprès du service réclamation.",
       "returnConditions": {
-        "title": "5.1 Conditions de retour",
-        "originalPackaging": "Produits dans leur emballage d'origine",
-        "unused": "Produits non utilisés et en parfait état",
-        "labelsIncluded": "Étiquettes et accessoires inclus",
-        "form": "Formulaire de rétractation complété (optionnel)"
+        "title": "5.1 Service de réclamation",
+        "originalPackaging": "Vérifier soigneusement la commande avant de payer (contenu, quantités, articles).",
+        "unused": "En cas de défaut constaté après livraison, contacter le service réclamation aux coordonnées ci-dessous.",
+        "labelsIncluded": "Email : Denon_taha@hotmail.fr",
+        "form": "Téléphone : +212 670366581"
       }
     },
     "section6": {
       "title": "6. Garanties et Service Après-Vente",
       "legalWarranty": {
-        "title": "6.1 Garantie légale de conformité",
-        "content": "Tous nos produits bénéficient de la garantie légale de conformité (articles L217-4 et suivants du Code de la consommation) et de la garantie légale des vices cachés (articles 1641 et suivants du Code civil)."
+        "title": "6.1 Garantie et conformité",
+        "content": "Tous nos produits de couture et accessoires (fils, aiguilles, ciseaux, mercerie, etc.) sont garantis conformes à leur description. En cas de défaut ou de non-conformité, Strass Shop s'engage à remplacer le produit ou à rembourser le client selon les dispositions en vigueur."
       },
       "customerService": {
         "title": "6.2 Service client",
-        "intro": "Notre équipe est à votre disposition :",
-        "email": "Par email : support@accessoires-couture.fr",
-        "phone": "Par téléphone : 01 23 45 67 89 (9h-18h, lun-ven)",
+        "intro": "Notre équipe est à votre disposition pour toute question sur nos accessoires de couture :",
+        "email": "Par email : Denon_taha@hotmail.fr",
+        "phone": "Par téléphone : +212 670366581 (Lun-Sam)",
         "responseTime": "Délai de réponse : 48h maximum"
       }
     },
     "section7": {
       "title": "7. Responsabilité et Force Majeure",
-      "content": "La responsabilité d'Accessoires Couture Premium ne saurait être engagée en cas de force majeure ou de circonstances indépendantes de sa volonté. Sont considérés comme cas de force majeure les événements imprévisibles, irrésistibles et extérieurs aux parties."
+      "content": "La responsabilité de Strass Shop ne saurait être engagée en cas de force majeure ou de circonstances indépendantes de sa volonté (retard de livraison des fournitures, rupture de stock, etc.). Sont considérés comme cas de force majeure les événements imprévisibles, irrésistibles et extérieurs aux parties."
     }
   },
   "PolitiqueConfidentialitePage": {
     "title": "Politique de Confidentialité",
-    "lastUpdated": "15 janvier 2025",
+    "lastUpdated": "8 mars 2025",
     "intro": {
       "title": "🔒 Votre vie privée est importante",
-      "description": "Cette politique explique comment nous collectons, utilisons et protégeons vos données personnelles conformément au RGPD et à la loi Informatique et Libertés."
+      "description": "Cette politique explique comment Strass Shop collecte, utilise et protège vos données personnelles dans le cadre de la vente d'accessoires de couture en ligne, conformément à la loi marocaine n° 09-08 relative à la protection des données à caractère personnel."
     },
     "section1": {
       "title": "1. Responsable du Traitement",
       "label": "Responsable du traitement :",
-      "companyName": "Accessoires Couture Premium",
-      "address": "123 Rue de la Couture, 75001 Paris",
-      "email": "Email : dpo@accessoires-couture.fr",
-      "phone": "Téléphone : 01 23 45 67 89"
+      "companyName": "Strass Shop",
+      "address": "Rue 4, numéro 2, Quartier El Bassatine",
+      "email": "Email : Denon_taha@hotmail.fr",
+      "phone": "Téléphone : +212 670366581"
     },
     "section2": {
       "title": "2. Données Collectées",
       "identification": {
-        "title": "2.1 Données d'identification",
+        "title": "2.1 Données du formulaire de commande (checkout)",
         "name": "Nom, prénom",
         "email": "Adresse email",
         "customerPhone": "Numéro de téléphone",
-        "postalAddress": "Adresse postale",
-        "birthDate": "Date de naissance (facultative)"
+        "postalAddress": "Adresse postale"
       },
       "navigation": {
-        "title": "2.2 Données de navigation",
-        "ipAddress": "Adresse IP",
-        "browserType": "Type de navigateur et appareil",
-        "pagesVisited": "Pages visitées et temps de navigation",
-        "cookies": "Cookies et technologies similaires"
+        "title": "2.2 Ce que nous ne collectons pas",
+        "noCollection": "Strass Shop ne collecte que les données saisies dans le formulaire de commande. Nous ne collectons pas l'adresse IP, la date de naissance, ni aucune donnée de navigation à des fins d'identification."
       },
       "commercial": {
-        "title": "2.3 Données commerciales",
-        "orderHistory": "Historique des commandes",
-        "productPreferences": "Préférences produits",
-        "shoppingCart": "Panier d'achat",
-        "reviews": "Avis et commentaires"
+        "title": "2.3 Données liées à la commande",
+        "orderHistory": "Contenu et montant de la commande passée (articles, quantités)",
+        "productPreferences": "",
+        "shoppingCart": "",
+        "reviews": ""
       }
     },
     "section3": {
       "title": "3. Finalités du Traitement",
       "necessary": {
         "title": "✅ Traitements nécessaires",
-        "orderManagement": "Gestion des commandes",
+        "orderManagement": "Gestion des commandes d'accessoires de couture",
         "productDelivery": "Livraison des produits",
         "billing": "Facturation et comptabilité",
         "customerService": "Service client",
@@ -324,8 +324,8 @@
       },
       "consent": {
         "title": "📧 Avec votre consentement",
-        "newsletter": "Newsletter et promotions",
-        "recommendations": "Recommandations personnalisées",
+        "newsletter": "Newsletter et offres sur la couture",
+        "recommendations": "Recommandations personnalisées (nouveautés, packs)",
         "marketing": "Études marketing",
         "advertisingCookies": "Cookies publicitaires",
         "socialNetworks": "Réseaux sociaux"
@@ -370,10 +370,10 @@
       "intro": "Nous ne vendons jamais vos données personnelles. Nous pouvons les partager uniquement dans les cas suivants :",
       "serviceProviders": {
         "title": "6.1 Prestataires de services",
-        "carriers": "Transporteurs : La Poste, Chronopost, DPD",
-        "payment": "Paiement : Stripe, PayPal",
-        "email": "Email : Mailchimp, SendGrid",
-        "hosting": "Hébergement : OVH (France)"
+        "carriers": "Transporteurs : pour la livraison de vos commandes d'accessoires de couture",
+        "payment": "Paiement : prestataires de paiement sécurisé",
+        "email": "Email : envoi des confirmations et suivi de commande",
+        "hosting": "Hébergement : hébergeur du site"
       },
       "legalObligations": {
         "title": "6.2 Obligations légales",
@@ -439,21 +439,17 @@
       "exercise": {
         "title": "📧 Comment exercer vos droits ?",
         "intro": "Pour exercer l'un de ces droits, contactez-nous :",
-        "email": "Email : dpo@accessoires-couture.fr",
-        "mail": "Courrier : DPO, 123 Rue de la Couture, 75001 Paris",
+        "email": "Email : Denon_taha@hotmail.fr",
+        "mail": "Courrier : Strass Shop, Rue 4 n°2, Quartier El Bassatine, Meknès",
         "responseTime": "Délai de réponse : 1 mois maximum"
       }
     },
     "section9": {
       "title": "9. Transferts Internationaux",
-      "intro": "Vos données sont principalement traitées en France. Certains de nos prestataires peuvent être situés hors de l'Union européenne. Dans ce cas, nous nous assurons que :",
+      "intro": "Vos données sont principalement traitées au Maroc. Certains de nos prestataires (paiement, hébergement) peuvent être situés à l'étranger. Dans ce cas, nous nous assurons que :",
       "adequateLevel": "Le niveau de protection est adéquat (décision d'adéquation de la Commission européenne)",
       "appropriateGuarantees": "Des garanties appropriées sont mises en place (clauses contractuelles types)",
       "explicitConsent": "Votre consentement explicite est obtenu si nécessaire"
-    },
-    "section10": {
-      "title": "10. Mineurs",
-      "content": "Notre site ne s'adresse pas aux mineurs de moins de 16 ans. Nous ne collectons pas sciemment de données personnelles de mineurs de moins de 16 ans sans le consentement des parents ou tuteurs légaux."
     },
     "section11": {
       "title": "11. Modifications",
@@ -464,11 +460,11 @@
       "authority": {
         "title": "🛡️ Autorité de contrôle",
         "intro": "Si vous estimez que vos droits ne sont pas respectés, vous pouvez déposer une réclamation auprès de :",
-        "name": "CNIL (Commission Nationale de l'Informatique et des Libertés)",
-        "address": "3 Place de Fontenoy, TSA 80715",
-        "customerAddress": "75334 Paris Cedex 07",
-        "phone": "Tél : 01 53 73 22 22",
-        "website": "Site web : www.cnil.fr"
+        "name": "CNDP (Commission Nationale de Contrôle de la Protection des Données à Caractère Personnel)",
+        "address": "Avenue Mohammed V",
+        "customerAddress": "Rabat, Maroc",
+        "phone": "Tél : +212 5 37 77 88 99",
+        "website": "Site web : www.cndp.ma"
       }
     }
   },

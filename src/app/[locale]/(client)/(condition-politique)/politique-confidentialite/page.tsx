@@ -53,27 +53,31 @@ export default function PolitiqueConfidentialitePage() {
               <li>{t("section2.identification.email")}</li>
               <li>{t("section2.identification.customerPhone")}</li>
               <li>{t("section2.identification.postalAddress")}</li>
-              <li>{t("section2.identification.birthDate")}</li>
             </ul>
 
             <h3 className="font-semibold text-gray-800 mb-2">
               {t("section2.navigation.title")}
             </h3>
-            <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
-              <li>{t("section2.navigation.ipAddress")}</li>
-              <li>{t("section2.navigation.browserType")}</li>
-              <li>{t("section2.navigation.pagesVisited")}</li>
-              <li>{t("section2.navigation.cookies")}</li>
-            </ul>
+            <p className="ml-4 mb-4 text-gray-600">
+              {t("section2.navigation.noCollection")}
+            </p>
 
             <h3 className="font-semibold text-gray-800 mb-2">
               {t("section2.commercial.title")}
             </h3>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>{t("section2.commercial.orderHistory")}</li>
-              <li>{t("section2.commercial.productPreferences")}</li>
-              <li>{t("section2.commercial.shoppingCart")}</li>
-              <li>{t("section2.commercial.reviews")}</li>
+              {t("section2.commercial.orderHistory") && (
+                <li>{t("section2.commercial.orderHistory")}</li>
+              )}
+              {t("section2.commercial.productPreferences") && (
+                <li>{t("section2.commercial.productPreferences")}</li>
+              )}
+              {t("section2.commercial.shoppingCart") && (
+                <li>{t("section2.commercial.shoppingCart")}</li>
+              )}
+              {t("section2.commercial.reviews") && (
+                <li>{t("section2.commercial.reviews")}</li>
+              )}
             </ul>
           </div>
         </section>
@@ -437,16 +441,6 @@ export default function PolitiqueConfidentialitePage() {
               <li>{t("section9.appropriateGuarantees")}</li>
               <li>{t("section9.explicitConsent")}</li>
             </ul>
-          </div>
-        </section>
-
-        {/* Section 10 */}
-        <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-firstColor pl-4">
-            {t("section10.title")}
-          </h2>
-          <div className="prose text-gray-600 leading-relaxed">
-            <p>{t("section10.content")}</p>
           </div>
         </section>
 

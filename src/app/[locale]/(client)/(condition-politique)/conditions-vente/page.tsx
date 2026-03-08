@@ -71,10 +71,18 @@ export default function ConditionsVentePage() {
                   {t("section3.paymentMethods.securePayments")}
                 </h4>
                 <ul className="list-disc list-inside space-y-1 text-green-700">
-                  <li>{t("section3.paymentMethods.creditCards")}</li>
-                  <li>{t("section3.paymentMethods.paypal")}</li>
-                  <li>{t("section3.paymentMethods.bankTransfer")}</li>
-                  <li>{t("section3.paymentMethods.check")}</li>
+                  {t("section3.paymentMethods.creditCards") && (
+                    <li>{t("section3.paymentMethods.creditCards")}</li>
+                  )}
+                  {t("section3.paymentMethods.paypal") && (
+                    <li>{t("section3.paymentMethods.paypal")}</li>
+                  )}
+                  {t("section3.paymentMethods.bankTransfer") && (
+                    <li>{t("section3.paymentMethods.bankTransfer")}</li>
+                  )}
+                  {t("section3.paymentMethods.check") && (
+                    <li>{t("section3.paymentMethods.check")}</li>
+                  )}
                 </ul>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg">
@@ -126,7 +134,9 @@ export default function ConditionsVentePage() {
                     <td className="px-4 py-3">
                       {t("section4.deliveryTable.delay23days")}
                     </td>
-                    <td className="px-4 py-3">6,90€</td>
+                    <td className="px-4 py-3">
+                      {t("section4.deliveryTable.priceStandard")}
+                    </td>
                   </tr>
                   <tr className="border-t bg-gray-50">
                     <td className="px-4 py-3">
@@ -135,7 +145,9 @@ export default function ConditionsVentePage() {
                     <td className="px-4 py-3">
                       {t("section4.deliveryTable.delay24h")}
                     </td>
-                    <td className="px-4 py-3">14,90€</td>
+                    <td className="px-4 py-3">
+                      {t("section4.deliveryTable.priceExpress")}
+                    </td>
                   </tr>
                   <tr className="border-t">
                     <td className="px-4 py-3">
@@ -144,7 +156,9 @@ export default function ConditionsVentePage() {
                     <td className="px-4 py-3">
                       {t("section4.deliveryTable.delay35days")}
                     </td>
-                    <td className="px-4 py-3">4,90€</td>
+                    <td className="px-4 py-3">
+                      {t("section4.deliveryTable.priceRelais")}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -153,6 +167,9 @@ export default function ConditionsVentePage() {
               {t("section4.deliveryTable.freeShippingNote", {
                 threshold: FREE_SHIPPING_THRESHOLD
               })}
+            </p>
+            <p className="mt-2 text-sm text-gray-600 bg-orange-50 p-3 rounded-lg">
+              {t("section4.deliveryTable.defaultDeliveryNote")}
             </p>
           </div>
         </section>
@@ -163,22 +180,26 @@ export default function ConditionsVentePage() {
             {t("section5.title")}
           </h2>
           <div className="prose text-gray-600 leading-relaxed">
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-              <h3 className="font-semibold text-blue-800 mb-2">
+            <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-4">
+              <h3 className="font-semibold text-amber-800 mb-2">
                 {t("section5.legalDelay")}
               </h3>
-              <p className="text-blue-700">{t("section5.legalDescription")}</p>
+              <p className="text-amber-700">{t("section5.legalDescription")}</p>
             </div>
 
             <h3 className="font-semibold text-gray-800 mb-2">
               {t("section5.returnConditions.title")}
             </h3>
-            <ul className="list-disc list-inside space-y-2 ml-4">
+            <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
               <li>{t("section5.returnConditions.originalPackaging")}</li>
               <li>{t("section5.returnConditions.unused")}</li>
-              <li>{t("section5.returnConditions.labelsIncluded")}</li>
-              <li>{t("section5.returnConditions.form")}</li>
             </ul>
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <p className="font-semibold text-gray-800 mb-1">
+                {t("section5.returnConditions.labelsIncluded")}
+              </p>
+              <p className="text-gray-700">{t("section5.returnConditions.form")}</p>
+            </div>
           </div>
         </section>
 
