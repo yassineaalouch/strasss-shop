@@ -67,8 +67,8 @@ const AdminProductsTable: React.FC = () => {
   })
 
   const [sort, setSort] = useState<ProductSortState>({
-    field: "name",
-    direction: "asc"
+    field: "updatedAt",
+    direction: "desc"
   })
 
   // Charger les produits avec filtres et pagination

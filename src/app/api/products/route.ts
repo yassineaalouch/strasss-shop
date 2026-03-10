@@ -255,6 +255,9 @@ export async function GET(
         case "createdAt":
           sortOptions = { createdAt: sortDirection === "desc" ? -1 : 1 }
           break
+        case "updatedAt":
+          sortOptions = { updatedAt: sortDirection === "desc" ? -1 : 1 }
+          break
         default:
           sortOptions = { createdAt: -1 }
       }

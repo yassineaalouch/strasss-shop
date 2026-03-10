@@ -92,6 +92,7 @@ export interface ProductSortState {
     | "rating"
     | "category"
     | "createdAt"
+    | "updatedAt"
     | "discount"
   direction: "asc" | "desc"
 }
