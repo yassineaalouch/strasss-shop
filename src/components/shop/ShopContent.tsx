@@ -2,7 +2,7 @@
 
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import ProductCard from "./ProductCard"
 import ProductFilter from "./ProductFilter"
@@ -23,6 +23,17 @@ const ShopContent: React.FC<ShopContentProps> = ({
   const [sortBy, setSortBy] = useState(initialSortBy)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+
+  // Quand on change de catégorie via l'URL (menu du header, liens, pagination, etc.),
+  // les props `initialFilters` / `initialSortBy` sont mises à jour par la page serveur.
+  // On synchronise donc l'état local avec ces nouvelles valeurs.
+  useEffect(() => {
+    setFilters(initialFilters)
+  }, [initialFilters])
+
+  useEffect(() => {
+    setSortBy(initialSortBy)
+  }, [initialSortBy])
 
   // Fonction pour construire l'URL avec les paramètres
   const buildUrl = (

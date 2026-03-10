@@ -38,8 +38,13 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams
 
     // Paramètres de filtrage (client shop)
-    const categories = searchParams.getAll("category")
-    const characteristics = searchParams.getAll("characteristics")
+    // Normaliser les espaces dans les query params ("+" ou "%20")
+    const categories = searchParams
+      .getAll("category")
+      .map((value) => value.replace(/\+/g, " "))
+    const characteristics = searchParams
+      .getAll("characteristics")
+      .map((value) => value.replace(/\+/g, " "))
     const minPrice = searchParams.get("minPrice")
     const maxPrice = searchParams.get("maxPrice")
     const inStock = searchParams.get("inStock")
