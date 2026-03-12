@@ -58,6 +58,9 @@ const AdminAddProduct: React.FC = () => {
   const [addingNewValue, setAddingNewValue] = useState<Record<number, boolean>>({})
   // Pour la caractéristique couleur : associer une image produit à chaque valeur (clé = "charIndex-valueId", valeur = index dans la liste des images)
   const [colorValueImage, setColorValueImage] = useState<Record<string, number>>({})
+  // États texte pour l'affichage des prix (garder la virgule telle que tapée)
+  const [priceText, setPriceText] = useState("")
+  const [originalPriceText, setOriginalPriceText] = useState("")
   // Charger les catégories
   // Ajoutez cette fonction dans useEffect
   const fetchCharacteristics = async () => {
@@ -341,6 +344,34 @@ const AdminAddProduct: React.FC = () => {
     }
   }
 
+  // Champs prix saisis en texte mais convertis en float (autoriser seulement float)
+  const handlePriceTextChange = (raw: string) => {
+    // Autoriser uniquement chiffres + au plus une virgule ou un point
+    if (!/^\d*[.,]?\d*$/.test(raw)) return
+    setPriceText(raw)
+
+    const normalized = raw.replace(",", ".")
+    if (normalized === "") {
+      handleInputChange("price", 0)
+      return
+    }
+    handleInputChange("price", parseFloat(normalized) || 0)
+  }
+
+  const handleOriginalPriceTextChange = (raw: string) => {
+    if (!/^\d*[.,]?\d*$/.test(raw)) return
+    setOriginalPriceText(raw)
+
+    const normalized = raw.replace(",", ".")
+    if (normalized === "") {
+      handleInputChange("originalPrice", undefined)
+      // Si le prix original est supprimé, retirer aussi tout discount lié
+      handleInputChange("discount", "")
+      return
+    }
+    handleInputChange("originalPrice", parseFloat(normalized) || 0)
+  }
+
   const handleNameChange = (lang: "ar" | "fr", value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -579,15 +610,10 @@ const AdminAddProduct: React.FC = () => {
                       Prix (MAD) *
                     </label>
                     <input
-                      type="number"
-                      value={formData.price === 0 ? "" : formData.price}
-                      onChange={(e) => {
-                        const raw = e.target.value
-                        handleInputChange(
-                          "price",
-                          raw === "" ? 0 : parseFloat(raw) || 0
-                        )
-                      }}
+                      type="text"
+                      inputMode="decimal"
+                      value={priceText}
+                      onChange={(e) => handlePriceTextChange(e.target.value)}
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors.price ? "border-red-500" : "border-gray-300"
                       }`}
@@ -608,16 +634,10 @@ const AdminAddProduct: React.FC = () => {
                       Prix original (MAD)
                     </label>
                     <input
-                      type="number"
-                      value={formData.originalPrice || ""}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "originalPrice",
-                          e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined
-                        )
-                      }
+                      type="text"
+                      inputMode="decimal"
+                      value={originalPriceText}
+                      onChange={(e) => handleOriginalPriceTextChange(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       min="0"
                       step="0.01"

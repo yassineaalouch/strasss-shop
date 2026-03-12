@@ -483,6 +483,17 @@ export async function POST(
       url.replace(/\+/g, '%2B')
     )
 
+    // Si aucun prix original valide, il ne doit pas y avoir de discount ni de promotion
+    const hasValidOriginalPrice =
+      typeof originalPrice === "number" && originalPrice > 0
+    // IMPORTANT : utiliser null (et pas undefined) pour bien écraser l'ancienne valeur en base
+    const finalOriginalPrice = hasValidOriginalPrice ? originalPrice : null
+    const finalDiscount =
+      hasValidOriginalPrice && mongoose.Types.ObjectId.isValid(discount)
+        ? discount
+        : null
+    const finalIsOnSale = hasValidOriginalPrice ? !!isOnSale : false
+
     // Créer le nouveau produit
     const newProduct = await Product.create({
       name: {
@@ -494,19 +505,19 @@ export async function POST(
         ar: description.ar.trim()
       },
       price,
-      originalPrice,
+      originalPrice: finalOriginalPrice,
       images: normalizedImages,
       mainImageIndex:
         typeof mainImageIndex === "number" && mainImageIndex >= 0
           ? Math.min(mainImageIndex, normalizedImages.length - 1)
           : 0,
       category: mongoose.Types.ObjectId.isValid(category) ? category : null,
-      discount: mongoose.Types.ObjectId.isValid(discount) ? discount : null,
+      discount: finalDiscount,
       Characteristic: Characteristic,
       inStock: inStock !== undefined ? inStock : quantity > 0,
       quantity: quantity || 0,
       isNewProduct: isNewProduct || false,
-      isOnSale: isOnSale || false
+      isOnSale: finalIsOnSale
     })
 
     // Mettre à jour le productCount des HomePageCategory si le produit a une catégorie

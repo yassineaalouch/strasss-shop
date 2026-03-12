@@ -275,6 +275,17 @@ export async function PUT(
         ? Math.min(mainImageIndexNum, Math.max(0, normalizedImages.length - 1))
         : 0
 
+    // Si aucun prix original valide, supprimer également le discount et la promo
+    const hasValidOriginalPrice =
+      typeof originalPrice === "number" && originalPrice > 0
+    // IMPORTANT : utiliser null (et pas undefined) pour écraser l'ancienne valeur
+    const finalOriginalPrice = hasValidOriginalPrice ? originalPrice : null
+    const finalDiscount =
+      hasValidOriginalPrice && mongoose.Types.ObjectId.isValid(discount)
+        ? new mongoose.Types.ObjectId(discount)
+        : null
+    const finalIsOnSale = hasValidOriginalPrice ? !!isOnSale : false
+
     // Mettre à jour le produit
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -288,20 +299,18 @@ export async function PUT(
           ar: description.ar.trim()
         },
         price,
-        originalPrice,
+        originalPrice: finalOriginalPrice,
         images: normalizedImages,
         mainImageIndex: safeMainImageIndex,
         category: mongoose.Types.ObjectId.isValid(category)
           ? new mongoose.Types.ObjectId(category)
           : null,
-        discount: mongoose.Types.ObjectId.isValid(discount)
-          ? new mongoose.Types.ObjectId(discount)
-          : null,
+        discount: finalDiscount,
         Characteristic: Characteristic,
         inStock: inStock !== undefined ? inStock : quantity > 0,
         quantity: quantity || 0,
         isNewProduct: isNewProduct || false,
-        isOnSale: isOnSale || false
+        isOnSale: finalIsOnSale
       },
       { new: true, runValidators: true }
     )

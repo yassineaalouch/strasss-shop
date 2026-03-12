@@ -28,7 +28,8 @@ import {
   createDiscount,
   updateDiscount,
   deleteDiscount,
-  toggleDiscount
+  toggleDiscount,
+  getDiscountUsage
 } from "@/app/api/discounts"
 import { Discount, DiscountFormData } from "@/types/discount"
 import { useToast } from "@/components/ui/Toast"
@@ -53,6 +54,11 @@ const AdminDiscountsManager: React.FC = () => {
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null)
   const [currentLanguage, setCurrentLanguage] = useState<"fr" | "ar">("fr")
   const [showFilters, setShowFilters] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Discount | null>(null)
+  const [deleteUsage, setDeleteUsage] = useState<{ productsCount: number } | null>(
+    null
+  )
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false)
   const fetchDiscounts = async () => {
     try {
       const data = await getDiscounts()
@@ -328,14 +334,62 @@ const AdminDiscountsManager: React.FC = () => {
     setIsCreating(true)
   }
 
-  const handleDeleteDiscount = async (id: string) => {
-    if (!confirm("Êtes-vous sûr ?")) return
+  const handleDeleteDiscount = async (discount: Discount) => {
+    // Pour les PERCENTAGE et BUY_X_GET_Y, on affiche une pop-up avancée
+    if (discount.type === "PERCENTAGE" || discount.type === "BUY_X_GET_Y") {
+      try {
+        setDeleteTarget(discount)
+        setDeleteUsage(null)
+        setIsDeleteLoading(true)
+        const usage = await getDiscountUsage(discount._id)
+        setDeleteUsage(usage)
+      } catch (err) {
+        showToast(
+          "Erreur lors du calcul des produits liés à cette promotion",
+          "error"
+        )
+        setDeleteTarget(null)
+        setDeleteUsage(null)
+      } finally {
+        setIsDeleteLoading(false)
+      }
+      return
+    }
+
+    // Pour les autres types (COUPON), on garde la confirmation simple
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette promotion ?")) return
     try {
-      await deleteDiscount(id)
-      setDiscounts((prev) => prev.filter((d) => d._id !== id))
+      await deleteDiscount(discount._id)
+      setDiscounts((prev) => prev.filter((d) => d._id !== discount._id))
       showToast("Promotion supprimée avec succès", "success")
     } catch (err) {
       showToast("Erreur lors de la suppression", "error")
+    }
+  }
+
+  const handleConfirmDeleteDiscount = async () => {
+    if (!deleteTarget) return
+    try {
+      const res = await deleteDiscount(deleteTarget._id)
+      setDiscounts((prev) => prev.filter((d) => d._id !== deleteTarget._id))
+
+      const count =
+        typeof res.affectedProducts === "number"
+          ? res.affectedProducts
+          : deleteUsage?.productsCount ?? 0
+
+      showToast(
+        count > 0
+          ? `Promotion supprimée et retirée de ${count} produit(s)`
+          : "Promotion supprimée avec succès",
+        "success"
+      )
+    } catch (err) {
+      showToast("Erreur lors de la suppression", "error")
+    } finally {
+      setDeleteTarget(null)
+      setDeleteUsage(null)
+      setIsDeleteLoading(false)
     }
   }
 
@@ -670,7 +724,7 @@ const AdminDiscountsManager: React.FC = () => {
                             <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeleteDiscount(discount._id)}
+                            onClick={() => handleDeleteDiscount(discount)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                             title="Supprimer"
                           >
@@ -1179,6 +1233,64 @@ const AdminDiscountsManager: React.FC = () => {
                 <Save className="mr-2" size={16} />
                 {editingDiscount ? "Modifier" : "Créer"} la Promotion
               </button>
+            </div>
+          </div>
+        )}
+        {/* Modal de confirmation de suppression pour les promotions appliquées aux produits */}
+        {deleteTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Supprimer la promotion ?
+              </h2>
+              <p className="text-sm text-gray-700 mb-3">
+                La promotion{" "}
+                <span className="font-semibold">
+                  {deleteTarget.name[currentLanguage]}
+                </span>{" "}
+                est de type{" "}
+                <span className="font-semibold">
+                  {getTypeText(deleteTarget.type)}
+                </span>
+                .
+              </p>
+              <p className="text-sm text-gray-700 mb-3">
+                {isDeleteLoading ? (
+                  "Calcul du nombre de produits impactés..."
+                ) : (
+                  <>
+                    Cette promotion est actuellement appliquée à{" "}
+                    <span className="font-semibold">
+                      {deleteUsage?.productsCount ?? 0}
+                    </span>{" "}
+                    produit(s). Si vous continuez, elle sera retirée de{" "}
+                    tous ces produits avant d'être supprimée du tableau des
+                    promotions.
+                  </>
+                )}
+              </p>
+              <p className="text-sm text-red-600 mb-5">
+                Cette action est irréversible.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setDeleteTarget(null)
+                    setDeleteUsage(null)
+                    setIsDeleteLoading(false)
+                  }}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleConfirmDeleteDiscount}
+                  disabled={isDeleteLoading}
+                  className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  Confirmer la suppression
+                </button>
+              </div>
             </div>
           </div>
         )}

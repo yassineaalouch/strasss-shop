@@ -61,6 +61,9 @@ const AdminEditProduct: React.FC = () => {
   const [addingNewValue, setAddingNewValue] = useState<Record<number, boolean>>({})
   // Pour la caractéristique couleur : associer une image produit à chaque valeur (clé = "charIndex-valueId", valeur = index dans la liste des images)
   const [colorValueImage, setColorValueImage] = useState<Record<string, number>>({})
+  // États texte pour l'affichage des prix (permet de garder la virgule)
+  const [priceText, setPriceText] = useState("")
+  const [originalPriceText, setOriginalPriceText] = useState("")
 
   // Fonction pour mapper les caractéristiques du produit vers le format selectedCharacteristics
   // productChar.name peut être null si la caractéristique a été supprimée ou mal peuplée en base
@@ -185,6 +188,15 @@ const AdminEditProduct: React.FC = () => {
           inStock: product.inStock ?? true,
           quantity: product.quantity || 0
         })
+        // Initialiser les champs texte des prix avec une virgule comme séparateur
+        setPriceText(
+          product.price ? String(product.price).replace(".", ",") : ""
+        )
+        setOriginalPriceText(
+          product.originalPrice
+            ? String(product.originalPrice).replace(".", ",")
+            : ""
+        )
         // Mapper les caractéristiques du produit vers selectedCharacteristics
         if (product.Characteristic && product.Characteristic.length > 0) {
           const mappedCharacteristics = mapProductCharacteristicsToSelected(
@@ -521,16 +533,13 @@ const AdminEditProduct: React.FC = () => {
           const selectedDiscount = discounts.find((d) => d._id === discountId)
           
           if (selectedDiscount && selectedDiscount.type === "PERCENTAGE" && selectedDiscount.value) {
-            // Calculer le prix original : originalPrice = price / (1 - discount.value / 100)
             const discountPercentage = selectedDiscount.value
             const calculatedOriginalPrice = currentPrice / (1 - discountPercentage / 100)
-            updated.originalPrice = Math.round(calculatedOriginalPrice * 100) / 100 // Arrondir à 2 décimales
+            updated.originalPrice = Math.round(calculatedOriginalPrice * 100) / 100
           } else if (field === "discount" && !discountId) {
-            // Si le discount est supprimé, réinitialiser le prix original
             updated.originalPrice = undefined
           }
         } else if (field === "discount" && !discountId) {
-          // Si le discount est supprimé, réinitialiser le prix original
           updated.originalPrice = undefined
         }
       }
@@ -541,6 +550,34 @@ const AdminEditProduct: React.FC = () => {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
+  }
+
+  // Champs prix saisis en texte, autoriser seulement les floats
+  const handlePriceTextChange = (raw: string) => {
+    if (!/^\d*[.,]?\d*$/.test(raw)) return
+    setPriceText(raw)
+
+    const normalized = raw.replace(",", ".")
+    if (normalized === "") {
+      handleInputChange("price", 0)
+      return
+    }
+    handleInputChange("price", parseFloat(normalized) || 0)
+  }
+
+  const handleOriginalPriceTextChange = (raw: string) => {
+    if (!/^\d*[.,]?\d*$/.test(raw)) return
+    setOriginalPriceText(raw)
+
+    const normalized = raw.replace(",", ".")
+    if (normalized === "") {
+      handleInputChange("originalPrice", undefined)
+      // Si l'admin retire le prix original, retirer aussi la promotion liée
+      handleInputChange("discount", "")
+      handleInputChange("isOnSale", false)
+      return
+    }
+    handleInputChange("originalPrice", parseFloat(normalized) || 0)
   }
 
   const handleNameChange = (lang: "ar" | "fr", value: string) => {
@@ -854,14 +891,10 @@ const AdminEditProduct: React.FC = () => {
                       Prix (MAD) *
                     </label>
                     <input
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "price",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
+                      type="text"
+                      inputMode="decimal"
+                      value={priceText}
+                      onChange={(e) => handlePriceTextChange(e.target.value)}
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors.price ? "border-red-500" : "border-gray-300"
                       }`}
@@ -886,16 +919,10 @@ const AdminEditProduct: React.FC = () => {
                       )}
                     </label>
                     <input
-                      type="number"
-                      value={formData.originalPrice || ""}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "originalPrice",
-                          e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined
-                        )
-                      }
+                      type="text"
+                      inputMode="decimal"
+                      value={originalPriceText}
+                      onChange={(e) => handleOriginalPriceTextChange(e.target.value)}
                       className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         formData.discount && discounts.find((d) => d._id === formData.discount)?.type === "PERCENTAGE"
                           ? "bg-gray-50 cursor-not-allowed"

@@ -40,9 +40,16 @@ export const updateDiscount = async (
 
 export const deleteDiscount = async (
   id: string
-): Promise<{ success: boolean }> => {
+): Promise<{ success: boolean; affectedProducts?: number }> => {
   const res = await axios.delete(`${API_BASE}/${id}`)
   return res.data
+}
+
+export const getDiscountUsage = async (
+  id: string
+): Promise<{ productsCount: number }> => {
+  const res = await axios.get(`${API_BASE}/${id}?withUsage=true`)
+  return res.data.usage || { productsCount: 0 }
 }
 
 export const toggleDiscount = async (

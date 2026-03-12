@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import Discount from "@/models/Discount"
+import Product from "@/models/Product"
 import { DiscountRequestBody, Discount as DiscountType } from "@/types/discount"
 import mongoose from "mongoose"
 
@@ -44,8 +45,6 @@ export async function GET(
     }
 
     const discount = await Discount.findById(discountId)
-      .populate("Category", "name")
-      .populate("Product", "name")
 
     if (!discount) {
       return NextResponse.json(
@@ -73,8 +72,19 @@ export async function GET(
       updatedAt: discount.updatedAt.toISOString()
     }
 
+    // Optionnel : renvoyer combien de produits utilisent ce discount
+    const searchParams = request.nextUrl.searchParams
+    let productsCount: number | undefined = undefined
+    if (searchParams.get("withUsage") === "true") {
+      productsCount = await Product.countDocuments({ discount: discountId })
+    }
+
     return NextResponse.json(
-      { success: true, discount: discountData },
+      {
+        success: true,
+        discount: discountData,
+        usage: productsCount !== undefined ? { productsCount } : undefined
+      },
       { status: 200 }
     )
   } catch (error: unknown) {
@@ -393,15 +403,47 @@ export async function DELETE(
       )
     }
 
-    const deletedDiscount = await Discount.findByIdAndDelete(discountId)
-    if (!deletedDiscount)
+    // Récupérer la promotion pour connaître son type
+    const existingDiscount = await Discount.findById(discountId)
+    if (!existingDiscount) {
       return NextResponse.json(
         { success: false, message: "Promotion introuvable" },
         { status: 404 }
       )
+    }
+
+    // Compter les produits qui utilisent ce discount
+    const productsUsing = await Product.countDocuments({ discount: discountId })
+
+    // Supprimer la référence au discount (et éventuellement le prix barré) dans tous les produits concernés
+    if (productsUsing > 0) {
+      if (
+        existingDiscount.type === "PERCENTAGE" ||
+        existingDiscount.type === "BUY_X_GET_Y"
+      ) {
+        await Product.updateMany(
+          { discount: discountId },
+          {
+            $unset: { discount: "", originalPrice: "" },
+            $set: { isOnSale: false }
+          }
+        )
+      } else {
+        await Product.updateMany(
+          { discount: discountId },
+          { $unset: { discount: "" } }
+        )
+      }
+    }
+
+    const deletedDiscount = await Discount.findByIdAndDelete(discountId)
 
     return NextResponse.json(
-      { success: true, message: "Promotion supprimée avec succès" },
+      {
+        success: true,
+        message: "Promotion supprimée avec succès",
+        affectedProducts: productsUsing
+      },
       { status: 200 }
     )
   } catch (error: unknown) {
