@@ -99,6 +99,32 @@ export const useCart = () => {
     return JSON.stringify(sortedA) === JSON.stringify(sortedB)
   }
 
+  const isSameCartVariant = (
+    cartItem: CartItem,
+    item: Omit<CartItem, "quantity">
+  ): boolean => {
+    // Clé forte si disponible
+    if (cartItem.variantKey && item.variantKey) {
+      return cartItem.variantKey === item.variantKey
+    }
+
+    // Fallback rétro-compatible : id + image + caractéristiques
+    return (
+      cartItem.id === item.id &&
+      cartItem.type !== "pack" &&
+      cartItem.image === item.image &&
+      areCharacteristicsEqual(
+        cartItem.characteristic || [],
+        item.characteristic || []
+      )
+    )
+  }
+
+  const getProductTotalQuantity = (items: CartItem[], productId: string): number =>
+    items
+      .filter((cartItem) => cartItem.type !== "pack" && cartItem.id === productId)
+      .reduce((sum, cartItem) => sum + cartItem.quantity, 0)
+
   // ➕ Ajouter un article (en prenant en compte les caractéristiques)
   const addItem = (item: Omit<CartItem, "quantity">, quantity: number = 1) => {
     setCartItems((currentItems) => {
@@ -124,27 +150,23 @@ export const useCart = () => {
 
       // Pour les produits normaux
       const existingItem = currentItems.find(
-        (cartItem) =>
-          cartItem.id === item.id &&
-          cartItem.type !== "pack" &&
-          areCharacteristicsEqual(
-            cartItem.characteristic || [],
-            item.characteristic || []
-          )
+        (cartItem) => cartItem.type !== "pack" && isSameCartVariant(cartItem, item)
       )
 
+      const productTotal = getProductTotalQuantity(currentItems, item.id)
+      const maxAllowedForProduct = item.maxQuantity ?? Infinity
+      const availableForProduct = Math.max(0, maxAllowedForProduct - productTotal)
+
       if (existingItem) {
+        const quantityToAdd = Math.min(quantity, availableForProduct)
+        if (quantityToAdd <= 0) return currentItems
+
         return currentItems.map((cartItem) =>
-          cartItem.id === existingItem.id &&
-          cartItem.type !== "pack" &&
-          areCharacteristicsEqual(
-            cartItem.characteristic || [],
-            item.characteristic || []
-          )
+          cartItem.type !== "pack" && isSameCartVariant(cartItem, item)
             ? {
                 ...cartItem,
                 quantity: Math.min(
-                  cartItem.quantity + quantity,
+                  cartItem.quantity + quantityToAdd,
                   item.maxQuantity ?? Infinity
                 )
               }
@@ -152,11 +174,14 @@ export const useCart = () => {
         )
       }
 
+      const quantityToAdd = Math.min(quantity, availableForProduct)
+      if (quantityToAdd <= 0) return currentItems
+
       return [
         ...currentItems,
         {
           ...item,
-          quantity: Math.min(quantity, item.maxQuantity ?? Infinity),
+          quantity: Math.min(quantityToAdd, item.maxQuantity ?? Infinity),
           type: item.type || "product"
         }
       ]
@@ -170,22 +195,34 @@ export const useCart = () => {
       return
     }
 
-    // Pour les produits, vérifier la limite de quantité maximale
-    if (item.type !== "pack" && item.maxQuantity !== undefined) {
-      quantity = Math.min(quantity, item.maxQuantity)
-    }
+    setCartItems((currentItems) => {
+      const isTargetItem = (cartItem: CartItem) =>
+        cartItem.variantKey && item.variantKey
+          ? cartItem.variantKey === item.variantKey
+          : cartItem.id === item.id &&
+            cartItem.image === item.image &&
+            areCharacteristicsEqual(
+              cartItem.characteristic || [],
+              item.characteristic || []
+            )
 
-    setCartItems((currentItems) =>
-      currentItems.map((cartItem) =>
-        cartItem.id === item.id &&
-        areCharacteristicsEqual(
-          cartItem.characteristic || [],
-          item.characteristic || []
-        )
-          ? { ...cartItem, quantity }
-          : cartItem
+      // Pour les produits, appliquer une limite globale (toutes variantes confondues)
+      if (item.type !== "pack" && item.maxQuantity !== undefined) {
+        const otherVariantsTotal = currentItems
+          .filter(
+            (cartItem) =>
+              cartItem.type !== "pack" &&
+              cartItem.id === item.id &&
+              !isTargetItem(cartItem)
+          )
+          .reduce((sum, cartItem) => sum + cartItem.quantity, 0)
+        quantity = Math.min(quantity, Math.max(0, item.maxQuantity - otherVariantsTotal))
+      }
+
+      return currentItems.map((cartItem) =>
+        isTargetItem(cartItem) ? { ...cartItem, quantity } : cartItem
       )
-    )
+    })
   }
 
   // ❌ Supprimer un article spécifique (avec caractéristiques)
@@ -194,11 +231,14 @@ export const useCart = () => {
       currentItems.filter(
         (cartItem) =>
           !(
-            cartItem.id === item.id &&
-            areCharacteristicsEqual(
-              cartItem.characteristic || [],
-              item.characteristic || []
-            )
+            (cartItem.variantKey && item.variantKey
+              ? cartItem.variantKey === item.variantKey
+              : cartItem.id === item.id &&
+                cartItem.image === item.image &&
+                areCharacteristicsEqual(
+                  cartItem.characteristic || [],
+                  item.characteristic || []
+                ))
           )
       )
     )

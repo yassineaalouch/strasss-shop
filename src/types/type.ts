@@ -163,6 +163,8 @@ export interface CartProviderProps {
 
 export interface CartItem {
   id: string
+  // Clé de variante (ex: produit + image + options) pour éviter toute confusion de ligne
+  variantKey?: string
   name: string
   price: number
   quantity: number

@@ -823,7 +823,8 @@
       "outOfStock": "نفد المخزون",
       "viewDetails": "عرض التفاصيل",
       "productId": "معرف المنتج:",
-      "quantity": "الكمية:"
+      "quantity": "الكمية:",
+      "quantityApproximate": "الكمية تقريبية"
     }
   },
   "404": {
@@ -832,6 +833,11 @@
     "description": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
     "button": {
       "home": "العودة للرئيسية"
+    }
+  },
+  "ProductPage": {
+    "details": {
+      "quantityApproximate": "الكمية تقريبية"
     }
   },
   "ShopPage": {

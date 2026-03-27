@@ -815,7 +815,8 @@
       "outOfStock": "Rupture de stock",
       "viewDetails": "Voir détails",
       "productId": "Produit ID:",
-      "quantity": "Quantité:"
+      "quantity": "Quantité:",
+      "quantityApproximate": "quantité approximative"
     }
   },
   "404": {
@@ -824,6 +825,11 @@
     "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
     "button": {
       "home": "Retour à l'accueil"
+    }
+  },
+  "ProductPage": {
+    "details": {
+      "quantityApproximate": "quantité approximative"
     }
   },
   "ShopPage": {

@@ -1,8 +1,8 @@
 
 "use client"
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import Image from "next/image"
 import axios from "axios"
 import {
@@ -29,11 +29,13 @@ const ProductPage: React.FC = () => {
   const { productId } = useParams()
   const router = useRouter()
   const locale = useLocale() as "fr" | "ar"
+  const tDetails = useTranslations("ProductPage.details")
   const { addItem, cartItems, updateQuantity, removeItem } = useCartContext()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const selectedImageIndexRef = useRef(0)
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
@@ -48,12 +50,82 @@ const ProductPage: React.FC = () => {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
 
-  // Check if product is in cart and get cart quantity
-  const cartItem = product
-    ? cartItems.find((item) => item.id === product._id && item.type !== "pack")
-    : null
-  const cartQuantity = cartItem?.quantity || 0
-  const isInCart = cartQuantity > 0
+  // Helpers de comparaison pour identifier une variante panier
+  const areCharacteristicsEqual = (
+    a: { name: string; value: string }[] = [],
+    b: { name: string; value: string }[] = []
+  ) => {
+    if (a.length !== b.length) return false
+    const sortFn = (x: { name: string; value: string }) =>
+      `${x.name}:${x.value}`.toLowerCase()
+    const sortedA = [...a].sort((x, y) => sortFn(x).localeCompare(sortFn(y)))
+    const sortedB = [...b].sort((x, y) => sortFn(x).localeCompare(sortFn(y)))
+    return JSON.stringify(sortedA) === JSON.stringify(sortedB)
+  }
+
+  const selectedVariantCharacteristics =
+    Object.keys(selectedCharacteristics).length > 0
+      ? Object.entries(selectedCharacteristics).map(([name, value]) => ({
+          name,
+          value
+        }))
+      : []
+
+  const productCartItems = product
+    ? cartItems.filter((item) => item.id === product._id && item.type !== "pack")
+    : []
+
+  const quantityByImage = productCartItems.reduce<Record<string, number>>(
+    (acc, item) => {
+      acc[item.image] = (acc[item.image] || 0) + item.quantity
+      return acc
+    },
+    {}
+  )
+
+  const selectedImage = product?.images[selectedImageIndex] || ""
+  const selectedImageCartQuantity = selectedImage
+    ? quantityByImage[selectedImage] || 0
+    : 0
+  const totalInCartForProduct = productCartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  )
+  const remainingAvailableForProduct = product
+    ? Math.max(0, product.quantity - totalInCartForProduct)
+    : 0
+
+  // Ligne exacte (même image + mêmes caractéristiques)
+  const selectedVariantCartItem =
+    selectedImage && product
+      ? productCartItems.find(
+          (item) =>
+            item.image === selectedImage &&
+            areCharacteristicsEqual(
+              item.characteristic || [],
+              selectedVariantCharacteristics
+            )
+        ) || null
+      : null
+  const selectedVariantQuantity = selectedVariantCartItem?.quantity || 0
+  const maxQuantityForSelectedVariant = product
+    ? selectedVariantQuantity + remainingAvailableForProduct
+    : selectedVariantQuantity
+
+  const orderedImages = product
+    ? [...product.images].sort((a, b) => {
+        const diff = (quantityByImage[b] || 0) - (quantityByImage[a] || 0)
+        if (diff !== 0) return diff
+        return product.images.indexOf(a) - product.images.indexOf(b)
+      })
+    : []
+
+  const selectImageIndex = (nextIndex: number) => {
+    selectedImageIndexRef.current = nextIndex
+    setSelectedImageIndex(nextIndex)
+    setImageLoaded(false)
+    setImageError(false)
+  }
 
   // Calculate discount percentage
   const discountPercentage =
@@ -74,10 +146,14 @@ const ProductPage: React.FC = () => {
           const productData = response.data.product
           setProduct(productData)
           setSelectedImageIndex(
-            Math.min(
-              Math.max(0, productData.mainImageIndex ?? 0),
-              (productData.images?.length ?? 1) - 1
-            )
+            (() => {
+              const initialIndex = Math.min(
+                Math.max(0, productData.mainImageIndex ?? 0),
+                (productData.images?.length ?? 1) - 1
+              )
+              selectedImageIndexRef.current = initialIndex
+              return initialIndex
+            })()
           )
           setImageLoaded(false)
           setImageError(false)
@@ -104,23 +180,21 @@ const ProductPage: React.FC = () => {
   // Navigation des images
   const nextImage = () => {
     if (product && product.images.length > 0) {
-      setSelectedImageIndex((prev) =>
-        prev === product.images.length - 1 ? 0 : prev + 1
-      )
-      // Reset image loaded state when changing image
-      setImageLoaded(false)
-      setImageError(false)
+      const nextIndex =
+        selectedImageIndexRef.current === product.images.length - 1
+          ? 0
+          : selectedImageIndexRef.current + 1
+      selectImageIndex(nextIndex)
     }
   }
 
   const prevImage = () => {
     if (product && product.images.length > 0) {
-      setSelectedImageIndex((prev) =>
-        prev === 0 ? product.images.length - 1 : prev - 1
-      )
-      // Reset image loaded state when changing image
-      setImageLoaded(false)
-      setImageError(false)
+      const prevIndex =
+        selectedImageIndexRef.current === 0
+          ? product.images.length - 1
+          : selectedImageIndexRef.current - 1
+      selectImageIndex(prevIndex)
     }
   }
 
@@ -173,10 +247,22 @@ const ProductPage: React.FC = () => {
 
       // Image : exactement celle affichée à l'écran (que le client voit avant d'ajouter au panier)
       // pour qu'elle soit la même dans le panier, checkout et détail commande admin
+      const selectedIndex = selectedImageIndexRef.current
       const itemImage =
-        product.images[selectedImageIndex] ??
+        product.images[selectedIndex] ??
         getMainImage(product) ??
         "/No_Image_Available.jpg"
+
+      // Clé de variante robuste: produit + index image + caractéristiques triées
+      const sortedCharacteristicKey = formattedCharacteristics
+        ? [...formattedCharacteristics]
+            .sort((a, b) =>
+              `${a.name}:${a.value}`.localeCompare(`${b.name}:${b.value}`)
+            )
+            .map((x) => `${x.name}:${x.value}`)
+            .join("|")
+        : ""
+      const variantKey = `${product._id}::img:${selectedIndex}::opts:${sortedCharacteristicKey}`
 
       // Add product to cart with discount info and characteristics
       addItem(
@@ -185,12 +271,13 @@ const ProductPage: React.FC = () => {
           name: product.name[locale],
           price: product.price,
           image: itemImage,
+          variantKey,
           type: "product",
           discount: discount,
           characteristic: formattedCharacteristics,
           maxQuantity: product.quantity // Stocker la quantité maximale disponible
         },
-        quantity
+        Math.min(quantity, remainingAvailableForProduct)
       )
 
       // Reset characteristics selection after adding to cart
@@ -544,28 +631,36 @@ const ProductPage: React.FC = () => {
             {/* Vignettes des images */}
             {product.images.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
-                {product.images.map((image, index) => (
+                {orderedImages.map((image) => {
+                  const originalIndex = product.images.indexOf(image)
+                  const selectedForImage = quantityByImage[image] || 0
+                  return (
                   <button
-                    key={index}
+                    key={image}
                     onClick={() => {
-                      setSelectedImageIndex(index)
-                      setImageLoaded(false)
-                      setImageError(false)
+                      selectImageIndex(originalIndex)
                     }}
                     className={`aspect-square relative rounded-lg overflow-hidden border-2 ${
-                      selectedImageIndex === index
+                      selectedImageIndex === originalIndex
                         ? "border-blue-500"
+                        : selectedForImage > 0
+                        ? "border-emerald-500"
                         : "border-gray-200"
                     }`}
                   >
                     <Image
                       src={image}
-                      alt={`${product.name[locale]} ${index + 1}`}
+                      alt={`${product.name[locale]} ${originalIndex + 1}`}
                       fill
                       className="object-cover"
                     />
+                    {selectedForImage > 0 && (
+                      <span className="absolute top-1 right-1 bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                        {selectedForImage}
+                      </span>
+                    )}
                   </button>
-                ))}
+                )})}
               </div>
             )}
           </div>
@@ -697,9 +792,7 @@ const ProductPage: React.FC = () => {
                                   // Changer l'image produit par l'image associée à cette couleur
                                   if (isColor && colorImageUrl && product.images?.includes(colorImageUrl)) {
                                     const idx = product.images.indexOf(colorImageUrl)
-                                    setSelectedImageIndex(idx)
-                                    setImageLoaded(false)
-                                    setImageError(false)
+                                    selectImageIndex(idx)
                                   }
                                 }}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
@@ -733,154 +826,214 @@ const ProductPage: React.FC = () => {
             )}
 
             {/* Quantité et Ajout au panier */}
-            <div className="border-t pt-6 space-y-4">
-              {isInCart ? (
-                /* Quantity Controller when in cart */
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-gray-700">
-                      {locale === "fr" ? "Quantité dans le panier" : "الكمية في السلة"}
-                    </span>
-                    <span className="text-sm text-green-600 font-medium">
-                      ✓ {locale === "fr" ? "Dans le panier" : "في السلة"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center border-2 border-firstColor rounded-lg bg-firstColor/10">
-                      <button
-                        onClick={() => {
-                          if (cartQuantity > 1) {
-                            updateQuantity(cartItem!, cartQuantity - 1)
-                          } else {
-                            removeItem(cartItem!)
-                          }
-                        }}
-                        className="px-4 py-3 hover:bg-firstColor/20 font-bold text-firstColor transition-colors"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        max={product.quantity}
-                        value={cartQuantity}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => {
-                          const newQuantity = parseInt(e.target.value) || 1
-                          let finalQuantity = Math.min(newQuantity, product.quantity)
-                          finalQuantity = Math.max(1, finalQuantity)
-                          updateQuantity(cartItem!, finalQuantity)
-                        }}
-                        onBlur={(e) => {
-                          const value = parseInt(e.target.value)
-                          if (isNaN(value) || value < 1) {
-                            updateQuantity(cartItem!, 1)
-                          }
-                        }}
-                        className="px-6 py-3 min-w-16 text-center font-bold text-lg text-firstColor border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-firstColor rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      />
-                      <button
-                        onClick={() => {
-                          if (cartQuantity < product.quantity) {
-                            updateQuantity(cartItem!, cartQuantity + 1)
-                          }
-                        }}
-                        disabled={cartQuantity >= product.quantity}
-                        className="px-4 py-3 hover:bg-firstColor/20 font-bold text-firstColor transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => removeItem(cartItem!)}
-                      className="px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-medium transition-colors border border-red-200"
-                    >
-                      {locale === "fr" ? "Retirer" : "إزالة"}
-                    </button>
-                  </div>
+            <div className="border-t pt-6">
+              <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 sm:p-5 space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="font-semibold text-gray-800 text-lg">
+                    {locale === "fr" ? "Quantité" : "الكمية"}
+                  </span>
                   <span className="text-sm text-gray-500">
-                    {product.quantity - cartQuantity} {locale === "fr" ? "disponibles restants" : "المتاحة المتبقية"}
+                    {product.quantity} {locale === "fr" ? "disponibles" : "متاح"}{" "}
+                    <span className="italic text-gray-400">
+                      ({tDetails("quantityApproximate")})
+                    </span>
                   </span>
                 </div>
-              ) : (
-                /* Add to Cart when not in cart */
-                <>
-                  <div className="flex items-center space-x-4">
-                    <span className="font-medium text-gray-700">
-                      {locale === "fr" ? "Quantité" : "الكمية"}
-                    </span>
-                    <div className="flex items-center border border-gray-300 rounded-lg">
-                      <button
-                        onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                        className="px-3 py-2 hover:bg-gray-100 disabled:opacity-50"
-                        disabled={quantity <= 1}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        max={product.quantity}
-                        value={quantity}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => {
-                          const newQuantity = parseInt(e.target.value) || 1
-                          let finalQuantity = Math.min(newQuantity, product.quantity)
-                          finalQuantity = Math.max(1, finalQuantity)
+
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center rounded-xl border border-firstColor/30 bg-firstColor/5 overflow-hidden">
+                    <button
+                      onClick={() => {
+                        if (selectedVariantCartItem) {
+                          if (selectedVariantQuantity > 1) {
+                            updateQuantity(
+                              selectedVariantCartItem,
+                              selectedVariantQuantity - 1
+                            )
+                          } else {
+                            removeItem(selectedVariantCartItem)
+                          }
+                        } else {
+                          setQuantity((prev) => Math.max(1, prev - 1))
+                        }
+                      }}
+                      className="w-12 h-12 grid place-items-center hover:bg-firstColor/10 text-firstColor text-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      disabled={
+                        selectedVariantCartItem
+                          ? selectedVariantQuantity <= 1
+                          : quantity <= 1
+                      }
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={
+                        selectedVariantCartItem
+                          ? Math.max(1, maxQuantityForSelectedVariant)
+                          : Math.max(1, remainingAvailableForProduct)
+                      }
+                      value={
+                        selectedVariantCartItem
+                          ? selectedVariantQuantity
+                          : quantity
+                      }
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => {
+                        const newQuantity = parseInt(e.target.value) || 1
+                        let finalQuantity = Math.min(
+                          newQuantity,
+                          selectedVariantCartItem
+                            ? maxQuantityForSelectedVariant
+                            : Math.max(1, remainingAvailableForProduct)
+                        )
+                        finalQuantity = Math.max(1, finalQuantity)
+                        if (selectedVariantCartItem) {
+                          updateQuantity(selectedVariantCartItem, finalQuantity)
+                        } else {
                           setQuantity(finalQuantity)
-                        }}
-                        onBlur={(e) => {
-                          const value = parseInt(e.target.value)
-                          if (isNaN(value) || value < 1) {
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const value = parseInt(e.target.value)
+                        if (isNaN(value) || value < 1) {
+                          if (selectedVariantCartItem) {
+                            updateQuantity(selectedVariantCartItem, 1)
+                          } else {
                             setQuantity(1)
                           }
-                        }}
-                        className="px-4 py-2 min-w-12 text-center border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-firstColor rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      />
-                      <button
-                        onClick={() => setQuantity((prev) => prev + 1)}
-                        className="px-3 py-2 hover:bg-gray-100 disabled:opacity-50"
-                        disabled={quantity >= product.quantity}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {product.quantity} {locale === "fr" ? "disponibles" : "متاح"}
-                    </span>
-                  </div>
-
-                  <div className="flex space-x-4">
+                        }
+                      }}
+                      className="w-24 h-12 text-center text-lg font-bold text-gray-800 border-0 bg-transparent focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                    />
                     <button
-                      onClick={handleAddToCart}
-                      disabled={!product.inStock || isAddingToCart}
-                      className={`flex-1 flex items-center justify-center py-3 px-6 rounded-lg font-medium ${
-                        product.inStock
-                          ? "bg-firstColor text-white hover:bg-secondColor"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
+                      onClick={() => {
+                        if (selectedVariantCartItem) {
+                          if (
+                            selectedVariantQuantity < maxQuantityForSelectedVariant
+                          ) {
+                            updateQuantity(
+                              selectedVariantCartItem,
+                              selectedVariantQuantity + 1
+                            )
+                          }
+                        } else {
+                          setQuantity((prev) =>
+                            Math.min(
+                              Math.max(1, remainingAvailableForProduct),
+                              prev + 1
+                            )
+                          )
+                        }
+                      }}
+                      className="w-12 h-12 grid place-items-center hover:bg-firstColor/10 text-firstColor text-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      disabled={
+                        selectedVariantCartItem
+                          ? selectedVariantQuantity >= maxQuantityForSelectedVariant
+                          : remainingAvailableForProduct <= 0 ||
+                            quantity >= remainingAvailableForProduct
+                      }
                     >
-                      {isAddingToCart ? (
-                        <>
-                          <Loader2 className="animate-spin mr-2" size={20} />
-                          {locale === "fr" ? "Ajout..." : "جاري الإضافة..."}
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart size={20} className="mr-2" />
-                          {product.inStock
-                            ? locale === "fr"
-                              ? "Ajouter au panier"
-                              : "أضف إلى السلة"
-                            : locale === "fr"
-                            ? "Rupture de stock"
-                            : "نفذت الكمية"}
-                        </>
-                      )}
+                      +
                     </button>
                   </div>
-                </>
-              )}
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 font-medium">
+                      {locale === "fr"
+                        ? `Image active: ${selectedImageCartQuantity}`
+                        : `الصورة الحالية: ${selectedImageCartQuantity}`}
+                    </span>
+                    <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 font-medium">
+                      {locale === "fr"
+                        ? `Total panier: ${totalInCartForProduct}`
+                        : `إجمالي السلة: ${totalInCartForProduct}`}
+                    </span>
+                  </div>
+                </div>
+
+                {Object.keys(quantityByImage).length > 0 && (
+                  <div className="pt-1">
+                    <p className="text-xs uppercase tracking-wide text-gray-400 mb-2">
+                      {locale === "fr"
+                        ? "Quantité par image"
+                        : "الكمية حسب الصورة"}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {orderedImages
+                        .filter((img) => (quantityByImage[img] || 0) > 0)
+                        .map((img) => (
+                          <button
+                            key={`qty-${img}`}
+                            type="button"
+                            onClick={() => selectImageIndex(product.images.indexOf(img))}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                              selectedImage === img
+                                ? "bg-firstColor text-white border-firstColor"
+                                : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                            }`}
+                          >
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                selectedImage === img ? "bg-white/90" : "bg-emerald-500"
+                              }`}
+                            />
+                            {quantityByImage[img]}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={
+                      !product.inStock ||
+                      isAddingToCart ||
+                      remainingAvailableForProduct <= 0
+                    }
+                    className={`flex-1 flex items-center justify-center py-3 px-6 rounded-xl font-semibold transition-all ${
+                      product.inStock
+                        ? remainingAvailableForProduct <= 0
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-firstColor text-white hover:bg-secondColor shadow-sm"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    {isAddingToCart ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2" size={20} />
+                        {locale === "fr" ? "Ajout..." : "جاري الإضافة..."}
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart size={20} className="mr-2" />
+                        {product.inStock
+                          ? locale === "fr"
+                            ? remainingAvailableForProduct <= 0
+                              ? "Quantité max atteinte"
+                              : "Ajouter au panier"
+                            : remainingAvailableForProduct <= 0
+                            ? "تم بلوغ الكمية القصوى"
+                            : "أضف إلى السلة"
+                          : locale === "fr"
+                          ? "Rupture de stock"
+                          : "نفذت الكمية"}
+                      </>
+                    )}
+                  </button>
+                  {selectedVariantCartItem && (
+                    <button
+                      onClick={() => removeItem(selectedVariantCartItem)}
+                      className="sm:w-auto px-5 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-medium transition-colors border border-red-200"
+                    >
+                      {locale === "fr" ? "Retirer cette variante" : "إزالة هذا الخيار"}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
