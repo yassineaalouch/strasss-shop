@@ -1,7 +1,7 @@
 // export default AdminOrdersTable
 "use client"
 
-import React, { useState, useMemo, useEffect } from "react"
+import React, { useState, useMemo, useEffect, useRef } from "react"
 import {
   ChevronDown,
   ChevronUp,
@@ -20,7 +20,8 @@ import {
   ChevronRight,
   Gift,
   Loader2,
-  Plus
+  Plus,
+  Trash2
 } from "lucide-react"
 import Image from "next/image"
 import {
@@ -47,6 +48,11 @@ const AdminOrdersTable: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([])
   const [totalOrders, setTotalOrders] = useState(0)
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false)
+  const [deleteMode, setDeleteMode] = useState(false)
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set())
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false)
+  const [isDeletingOrders, setIsDeletingOrders] = useState(false)
+  const headerSelectCheckboxRef = useRef<HTMLInputElement>(null)
 
   const [filters, setFilters] = useState<OrderFilterState>({
     search: "",
@@ -340,6 +346,86 @@ const AdminOrdersTable: React.FC = () => {
 
   const totalPages = Math.ceil(totalOrders / itemsPerPage)
 
+  const selectedCount = selectedOrderIds.size
+
+  const currentPageOrderIds = useMemo(
+    () => paginatedOrders.map((o) => o._id),
+    [paginatedOrders]
+  )
+
+  const allCurrentPageSelected =
+    currentPageOrderIds.length > 0 &&
+    currentPageOrderIds.every((id) => selectedOrderIds.has(id))
+
+  useEffect(() => {
+    const el = headerSelectCheckboxRef.current
+    if (!el) return
+    const onPage = currentPageOrderIds.filter((id) => selectedOrderIds.has(id)).length
+    el.indeterminate = onPage > 0 && onPage < currentPageOrderIds.length
+  }, [currentPageOrderIds, selectedOrderIds])
+
+  const toggleDeleteMode = () => {
+    setDeleteMode((prev) => {
+      const next = !prev
+      if (!next) {
+        setSelectedOrderIds(new Set())
+        setShowDeleteConfirmModal(false)
+      }
+      return next
+    })
+  }
+
+  const toggleSelectAllOnPage = () => {
+    setSelectedOrderIds((prev) => {
+      const next = new Set(prev)
+      if (allCurrentPageSelected) {
+        currentPageOrderIds.forEach((id) => next.delete(id))
+      } else {
+        currentPageOrderIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const toggleSelectOrder = (orderId: string) => {
+    setSelectedOrderIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(orderId)) next.delete(orderId)
+      else next.add(orderId)
+      return next
+    })
+  }
+
+  const executeDeleteSelectedOrders = async () => {
+    const ids = Array.from(selectedOrderIds)
+    if (ids.length === 0) return
+    try {
+      setIsDeletingOrders(true)
+      const response = await fetch("/api/orders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids })
+      })
+      const data = await response.json()
+      if (data.success) {
+        showToast(
+          data.message ||
+            `${data.deletedCount ?? ids.length} commande(s) supprimée(s)`,
+          "success"
+        )
+        setSelectedOrderIds(new Set())
+        setShowDeleteConfirmModal(false)
+        await fetchOrders()
+      } else {
+        showToast(data.message || "Échec de la suppression", "error")
+      }
+    } catch {
+      showToast("Erreur lors de la suppression des commandes", "error")
+    } finally {
+      setIsDeletingOrders(false)
+    }
+  }
+
   // Update page when filters change
   useEffect(() => {
     setCurrentPage(1)
@@ -609,6 +695,57 @@ const AdminOrdersTable: React.FC = () => {
 
   return (
     <>
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div
+            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-orders-title"
+          >
+            <h2
+              id="delete-orders-title"
+              className="text-lg font-semibold text-gray-900"
+            >
+              Confirmer la suppression
+            </h2>
+            <p className="text-sm text-gray-600">
+              Vous allez supprimer définitivement{" "}
+              <strong>{selectedCount}</strong> commande
+              {selectedCount > 1 ? "s" : ""} de la base de données. Cette action
+              est irréversible.
+            </p>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirmModal(false)}
+                disabled={isDeletingOrders}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={executeDeleteSelectedOrders}
+                disabled={isDeletingOrders || selectedCount === 0}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              >
+                {isDeletingOrders ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Suppression…
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={18} />
+                    Supprimer
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <CreateOrderModal
         isOpen={showCreateOrderModal}
         onClose={() => setShowCreateOrderModal(false)}
@@ -654,8 +791,50 @@ const AdminOrdersTable: React.FC = () => {
                   <Filter className="mr-2" size={16} />
                   Filtres
                 </button>
+                <button
+                  type="button"
+                  onClick={toggleDeleteMode}
+                  className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                    deleteMode
+                      ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      : "bg-red-600 text-white hover:bg-red-700"
+                  }`}
+                >
+                  <Trash2 className="mr-2" size={16} />
+                  {deleteMode ? "Annuler" : "Supprimer les commandes"}
+                </button>
+                {deleteMode && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={toggleSelectAllOnPage}
+                      disabled={paginatedOrders.length === 0}
+                      className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    >
+                      {allCurrentPageSelected
+                        ? "Désélectionner cette page"
+                        : "Tout sélectionner (cette page)"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirmModal(true)}
+                      disabled={selectedCount === 0}
+                      className="flex items-center px-4 py-2 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      <Trash2 className="mr-2" size={16} />
+                      Supprimer la sélection ({selectedCount})
+                    </button>
+                  </>
+                )}
               </div>
             </div>
+            {deleteMode && (
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
+                Mode suppression : cochez les commandes à retirer de la base, puis
+                validez. La sélection peut inclure plusieurs pages (les cases cochées
+                restent mémorisées en changeant de page).
+              </p>
+            )}
           </div>
 
           {/* Filtres */}
@@ -829,6 +1008,19 @@ const AdminOrdersTable: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  {deleteMode && (
+                    <th className="pl-4 pr-2 py-3 w-12 text-left">
+                      <input
+                        ref={headerSelectCheckboxRef}
+                        type="checkbox"
+                        checked={allCurrentPageSelected}
+                        onChange={toggleSelectAllOnPage}
+                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        title="Tout sélectionner sur cette page"
+                        aria-label="Tout sélectionner sur cette page"
+                      />
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       onClick={() => handleSort("orderNumber")}
@@ -894,6 +1086,17 @@ const AdminOrdersTable: React.FC = () => {
                     <React.Fragment key={order._id}>
                       {/* Ligne principale de la commande */}
                       <tr className="hover:bg-gray-50 transition-colors">
+                        {deleteMode && (
+                          <td className="pl-4 pr-2 py-4 whitespace-nowrap align-middle">
+                            <input
+                              type="checkbox"
+                              checked={selectedOrderIds.has(order._id)}
+                              onChange={() => toggleSelectOrder(order._id)}
+                              className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                              aria-label={`Sélectionner la commande ${order.orderNumber ?? order._id}`}
+                            />
+                          </td>
+                        )}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div>
@@ -986,7 +1189,7 @@ const AdminOrdersTable: React.FC = () => {
                       {/* Ligne des détails (déroulante) */}
                       {expandedOrders.has(order._id) && (
                         <tr>
-                          <td colSpan={7} className="px-0 py-0">
+                          <td colSpan={deleteMode ? 8 : 7} className="px-0 py-0">
                             <div className="bg-gray-50 border-l-4 border-blue-500">
                               <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Informations client */}

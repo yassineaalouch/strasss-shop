@@ -379,3 +379,47 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+/** Suppression en masse (dashboard admin) — body: { ids: string[] } */
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectToDatabase()
+
+    const body = await request.json()
+    const rawIds = body?.ids
+    if (!Array.isArray(rawIds) || rawIds.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Aucun identifiant de commande fourni" },
+        { status: 400 }
+      )
+    }
+
+    const objectIds = rawIds
+      .filter((id: unknown) => typeof id === "string" && mongoose.Types.ObjectId.isValid(id))
+      .map((id: string) => new mongoose.Types.ObjectId(id))
+
+    if (objectIds.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Identifiants invalides" },
+        { status: 400 }
+      )
+    }
+
+    const result = await Order.deleteMany({ _id: { $in: objectIds } })
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: `${result.deletedCount} commande(s) supprimée(s)`,
+        deletedCount: result.deletedCount
+      },
+      { status: 200 }
+    )
+  } catch (error: unknown) {
+    console.error("Erreur lors de la suppression des commandes:", error)
+    return NextResponse.json(
+      { success: false, message: "Erreur lors de la suppression des commandes" },
+      { status: 500 }
+    )
+  }
+}
