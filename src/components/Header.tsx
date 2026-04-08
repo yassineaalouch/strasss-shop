@@ -218,7 +218,7 @@ const Header: React.FC = () => {
       {/* Header fixe compact */}
       <div className="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
         {/* Top Bar - Plus compact */}
-        <div className="bg-firstColor text-white py-1 hidden sm:block">
+        <div className="bg-firstColor text-white py-1 block">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center text-xs">
               <div className="flex items-center space-x-4">
