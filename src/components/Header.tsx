@@ -220,8 +220,8 @@ const Header: React.FC = () => {
         {/* Top Bar - Plus compact */}
         <div className="bg-firstColor text-white py-1 block">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center text-xs">
-              <div className="flex items-center space-x-4">
+            <div className="flex justify-center sm:justify-between items-center text-xs">
+              <div className="hidden sm:flex items-center space-x-4">
                 <div className="flex items-center">
                   <Phone size={12} className="mr-1" />
                   <span>{siteInfo?.phone || t("contact.phone")}</span>
@@ -231,8 +231,8 @@ const Header: React.FC = () => {
                   <span>{siteInfo?.email || t("contact.email")}</span>
                 </div>
               </div>
-              <div>
-                <span>
+              <div className="w-full text-center sm:w-auto">
+                <span className="font-medium">
                   {t("freeShipping", { threshold: FREE_SHIPPING_THRESHOLD })}
                 </span>
               </div>{" "}
