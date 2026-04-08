@@ -7,5 +7,10 @@ export interface SiteInfo {
     fr: string
     ar: string
   }
+  /** Texte du bandeau défilant sous le header (desktop uniquement) */
+  headerTicker?: {
+    fr: string
+    ar: string
+  }
 }
 

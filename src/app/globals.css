@@ -72,6 +72,31 @@
   animation: fade-in-up 1s ease-out forwards;
 }
 
+/* Bandeau d’actualités : boucle continue (4 segments identiques → -25 % = 1 segment) */
+@keyframes header-ticker-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-25%, 0, 0);
+  }
+}
+
+.header-ticker-track {
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  gap: 0;
+  animation: header-ticker-marquee 20s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Français : défilement gauche → droite */
+.header-ticker-track--ltr {
+  animation-direction: reverse;
+}
+
 .delay-300 {
   animation-delay: 300ms;
 }

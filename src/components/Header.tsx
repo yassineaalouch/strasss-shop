@@ -23,6 +23,7 @@ import LanguageToggle from "./LanguageToggle"
 import { useCartContext } from "@/app/context/CartContext"
 import { useToast } from "@/components/ui/Toast"
 import { motion, AnimatePresence } from "framer-motion"
+import type { SiteInfo } from "@/types/site-info"
 
 interface NavCategory {
   id: string
@@ -34,15 +35,6 @@ interface NavCategory {
   isActive?: boolean
   order?: number
   children?: NavCategory[]
-}
-
-interface SiteInfo {
-  email: string
-  phone: string
-  location: {
-    fr: string
-    ar: string
-  }
 }
 
 /** Affiche une catégorie et récursivement toutes ses sous-catégories (tous niveaux). */
@@ -194,6 +186,11 @@ const Header: React.FC = () => {
   // Calcul du nombre total d'articles
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
+  const tickerFr = siteInfo?.headerTicker?.fr?.trim() ?? ""
+  const tickerAr = siteInfo?.headerTicker?.ar?.trim() ?? ""
+  const tickerText = locale === "ar" ? tickerAr : tickerFr
+  const showDesktopTicker = Boolean(tickerText)
+
   const menuItems = [
     { href: "/", label: t("navigation.home"), icon: Home },
     {
@@ -243,12 +240,12 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Header - Plus compact */}
+        {/* Ligne principale : logo | navigation (desktop) | actions */}
         <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between">
-            {/* Logo compact */}
-            <div className="flex items-center">
-              <div className="text-white rounded-lg mr-2 p-1">
+          <div className="flex items-center justify-between gap-3 lg:gap-6">
+            {/* Logo */}
+            <div className="flex items-center shrink-0 min-w-0">
+              <div className="text-white rounded-lg mr-2 p-1 shrink-0">
                 <Image
                   src="/logo.png"
                   alt="logo"
@@ -257,9 +254,9 @@ const Header: React.FC = () => {
                   className="object-cover rounded-lg animate-bounce"
                 />
               </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold font-lux text-gray-800">
-                    <span className="text-amber-600">STRASS</span> SHOP
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold font-lux text-gray-800 truncate">
+                  <span className="text-amber-600">STRASS</span> SHOP
                 </h1>
                 <p className="text-xs text-gray-400 hidden sm:block">
                   {t("tagline")}
@@ -267,14 +264,140 @@ const Header: React.FC = () => {
               </div>
             </div>
 
-            {/* Header Actions */}
-            <div className="flex items-center space-x-3">
-              {/* Language Selector */}
+            {/* Navigation desktop — entre logo et panier */}
+            <nav
+              className="hidden lg:flex flex-1 justify-center min-w-0 overflow-visible"
+              aria-label="Navigation principale"
+            >
+              <ul className="flex items-center gap-6 xl:gap-8 text-gray-800">
+                <li>
+                  <Link
+                    href="/"
+                    className="hover:text-firstColor transition-colors duration-200 font-medium text-base whitespace-nowrap"
+                  >
+                    {t("navigation.home")}
+                  </Link>
+                </li>
+                <li className="relative group">
+                  <Link
+                    href="/shop"
+                    className="hover:text-firstColor transition-colors duration-200 font-medium text-base whitespace-nowrap"
+                  >
+                    {t("navigation.shop")}
+                  </Link>
+
+                  {navCategories.length > 0 && (
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
+                      <div className="bg-white/95 backdrop-blur-xl text-gray-900 rounded-3xl shadow-[0_24px_80px_rgba(15,23,42,0.45)] border border-gray-100 px-8 py-6 min-w-[640px]">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <p className="text-[11px] tracking-[0.35em] uppercase text-gray-400">
+                              {t("navigation.shop")}
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-400">
+                            {navCategories.length}{" "}
+                            {locale === "fr" ? "catégories" : "أصناف"}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-6 max-h-[70vh] overflow-y-auto">
+                          {navCategories.map((category) => {
+                            const isExpanded = expandedCategoryId === category.id
+                            const hasChildren =
+                              category.children && category.children.length > 0
+                            return (
+                              <div key={category.id} className="space-y-2">
+                                <div className="flex items-center gap-1 pb-1 border-b border-gray-100/80">
+                                  {hasChildren ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setExpandedCategoryId((id) =>
+                                          id === category.id ? null : category.id
+                                        )
+                                      }
+                                      className="flex items-center gap-1 w-full text-left text-sm font-semibold tracking-wide text-gray-900 hover:text-firstColor transition-colors"
+                                    >
+                                      <span>
+                                        {category.name[locale as "fr" | "ar"]}
+                                      </span>
+                                      {isExpanded ? (
+                                        <ChevronUp className="w-4 h-4 shrink-0" />
+                                      ) : (
+                                        <ChevronDown className="w-4 h-4 shrink-0" />
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <Link
+                                      href={`/shop?category=${encodeURIComponent(
+                                        category.name[locale as "fr" | "ar"]
+                                      )}`}
+                                      className="text-sm font-semibold tracking-wide text-gray-900 hover:text-firstColor transition-colors"
+                                    >
+                                      {category.name[locale as "fr" | "ar"]}
+                                    </Link>
+                                  )}
+                                </div>
+
+                                {hasChildren && isExpanded && (
+                                  <ul className="space-y-1.5 pt-1">
+                                    <li>
+                                      <Link
+                                        href={`/shop?category=${encodeURIComponent(
+                                          category.name[locale as "fr" | "ar"]
+                                        )}`}
+                                        className="block text-xs text-firstColor hover:underline font-medium"
+                                      >
+                                        {locale === "fr" ? "Voir tout" : "عرض الكل"}
+                                      </Link>
+                                    </li>
+                                    {category.children!.map((child) => (
+                                      <li key={child.id} className="pl-0">
+                                        <CategoryTreeItem
+                                          category={child}
+                                          locale={locale as "fr" | "ar"}
+                                          depth={0}
+                                        />
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </li>
+                {hasPacks && (
+                  <li>
+                    <Link
+                      href="/packs"
+                      className="hover:text-firstColor transition-colors duration-200 font-medium text-base whitespace-nowrap"
+                    >
+                      {t("navigation.packages")}
+                    </Link>
+                  </li>
+                )}
+                <li>
+                  <Link
+                    href="/contact"
+                    className="hover:text-firstColor transition-colors duration-200 font-medium text-base whitespace-nowrap"
+                  >
+                    {t("navigation.contact")}
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+
+            {/* Actions */}
+            <div className="flex items-center space-x-3 shrink-0">
               <div className="relative hidden sm:block">
                 <LanguageToggle />
               </div>
 
-              {/* Shopping Cart */}
               <button
                 onClick={toggleCart}
                 className="flex items-center text-gray-700 hover:text-firstColor relative transition-colors duration-200"
@@ -289,7 +412,6 @@ const Header: React.FC = () => {
                 )}
               </button>
 
-              {/* Mobile Menu Button */}
               <button
                 onClick={toggleMenu}
                 className="lg:hidden p-2 text-gray-700 hover:text-firstColor relative z-[60] transition-all duration-300"
@@ -307,132 +429,43 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Desktop - Plus compact */}
-        <div className="bg-firstColor text-white py-2 hidden lg:block">
-          <div className="container mx-auto px-4">
-            <ul className="flex justify-center items-center space-x-8">
-              <li>
-                <Link
-                  href="/"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium text-base"
-                >
-                  {t("navigation.home")}
-                </Link>
-              </li>
-              {/* Shop avec mega-menu catégories au survol */}
-              <li className="relative group">
-                <Link
-                  href="/shop"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium text-base"
-                >
-                  {t("navigation.shop")}
-                </Link>
-
-                {navCategories.length > 0 && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    <div className="bg-white/95 backdrop-blur-xl text-gray-900 rounded-3xl shadow-[0_24px_80px_rgba(15,23,42,0.45)] border border-gray-100 px-8 py-6 min-w-[640px]">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <p className="text-[11px] tracking-[0.35em] uppercase text-gray-400">
-                            {t("navigation.shop")}
-                          </p>
-                        </div>
-                        <span className="text-xs text-gray-400">
-                          {navCategories.length}{" "}
-                          {locale === "fr" ? "catégories" : "أصناف"}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-6 max-h-[70vh] overflow-y-auto">
-                        {navCategories.map((category) => {
-                          const isExpanded = expandedCategoryId === category.id
-                          const hasChildren = category.children && category.children.length > 0
-                          return (
-                            <div key={category.id} className="space-y-2">
-                              {/* Catégorie principale : clic pour afficher les sous-catégories */}
-                              <div className="flex items-center gap-1 pb-1 border-b border-gray-100/80">
-                                {hasChildren ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setExpandedCategoryId((id) =>
-                                        id === category.id ? null : category.id
-                                      )
-                                    }
-                                    className="flex items-center gap-1 w-full text-left text-sm font-semibold tracking-wide text-gray-900 hover:text-firstColor transition-colors"
-                                  >
-                                    <span>{category.name[locale as "fr" | "ar"]}</span>
-                                    {isExpanded ? (
-                                      <ChevronUp className="w-4 h-4 shrink-0" />
-                                    ) : (
-                                      <ChevronDown className="w-4 h-4 shrink-0" />
-                                    )}
-                                  </button>
-                                ) : (
-                                  <Link
-                                    href={`/shop?category=${encodeURIComponent(
-                                      category.name[locale as "fr" | "ar"]
-                                    )}`}
-                                    className="text-sm font-semibold tracking-wide text-gray-900 hover:text-firstColor transition-colors"
-                                  >
-                                    {category.name[locale as "fr" | "ar"]}
-                                  </Link>
-                                )}
-                              </div>
-
-                              {/* Sous-catégories (tous niveaux) : affichées au clic sur le parent */}
-                              {hasChildren && isExpanded && (
-                                <ul className="space-y-1.5 pt-1">
-                                  <li>
-                                    <Link
-                                      href={`/shop?category=${encodeURIComponent(
-                                        category.name[locale as "fr" | "ar"]
-                                      )}`}
-                                      className="block text-xs text-firstColor hover:underline font-medium"
-                                    >
-                                      {locale === "fr" ? "Voir tout" : "عرض الكل"}
-                                    </Link>
-                                  </li>
-                                  {category.children!.map((child) => (
-                                    <li key={child.id} className="pl-0">
-                                      <CategoryTreeItem
-                                        category={child}
-                                        locale={locale as "fr" | "ar"}
-                                        depth={0}
-                                      />
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </li>
-              {hasPacks && (
-                <li>
-                  <Link
-                    href="/packs"
-className="hover:text-secondColor transition-colors duration-200 font-medium text-base"
+        {/* Bandeau défilant (desktop uniquement, masqué si aucun texte) */}
+        {showDesktopTicker && (
+          <div
+            className="hidden lg:block bg-firstColor text-white py-2 overflow-hidden border-t border-amber-500/30"
+            aria-live="polite"
+          >
+            <div className="relative w-full overflow-hidden">
+              <div
+                className={`header-ticker-track ${
+                  locale === "fr" ? "header-ticker-track--ltr" : ""
+                }`}
+              >
+                {/* 4 segments strictement identiques : le déplacement de -25 % recolle au pixel près */}
+                {[0, 1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="flex shrink-0 items-center"
+                    {...(i > 0 ? { "aria-hidden": true as const } : {})}
+                  >
+                    <span
+                      className="whitespace-nowrap pl-10 pr-5 text-sm font-medium"
+                      dir={locale === "ar" ? "rtl" : "ltr"}
                     >
-                      {t("navigation.packages")}
-                  </Link>
-                </li>
-              )}
-              <li>
-                <Link
-                  href="/contact"
-                  className="hover:text-secondColor transition-colors duration-200 font-medium text-base"
-                >
-                  {t("navigation.contact")}
-                </Link>
-              </li>
-            </ul>
+                      {tickerText}
+                    </span>
+                    <span
+                      className="shrink-0 px-5 text-sm font-medium text-white/45 select-none"
+                      aria-hidden
+                    >
+                      ·
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Sidebar Mobile - Design moderne et compact */}
@@ -563,8 +596,10 @@ className="hover:text-secondColor transition-colors duration-200 font-medium tex
         )}
       </AnimatePresence>
 
-      {/* Spacer plus petit pour compenser le header fixe */}
-      <div className="h-20 sm:h-24"></div>
+      {/* Compense le header fixe (hauteur plus grande si bandeau desktop) */}
+      <div
+        className={`h-20 sm:h-24 ${showDesktopTicker ? "lg:h-[8.75rem]" : "lg:h-28"}`}
+      />
 
       {/* Side Cart */}
       <SideCart

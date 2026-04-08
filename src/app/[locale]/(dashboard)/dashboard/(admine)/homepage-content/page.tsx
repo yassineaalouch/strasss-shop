@@ -167,7 +167,8 @@ export default function HomePageContentPage() {
   const [siteInfo, setSiteInfo] = useState<SiteInfo>({
     email: "",
     phone: "",
-    location: { fr: "", ar: "" }
+    location: { fr: "", ar: "" },
+    headerTicker: { fr: "", ar: "" }
   })
 
   // Home Video States
@@ -1115,7 +1116,14 @@ export default function HomePageContentPage() {
       const response = await fetch("/api/site-info")
       const data = await response.json()
       if (data.success && data.siteInfo) {
-        setSiteInfo(data.siteInfo)
+        const s = data.siteInfo as SiteInfo
+        setSiteInfo({
+          ...s,
+          headerTicker: {
+            fr: s.headerTicker?.fr ?? "",
+            ar: s.headerTicker?.ar ?? ""
+          }
+        })
       } else {
         showToast(
           data.message || "Erreur lors du chargement des informations du site",
@@ -1139,14 +1147,35 @@ export default function HomePageContentPage() {
     }
     setSaving(true)
     try {
+      const payload = {
+        email: siteInfo.email.trim().toLowerCase(),
+        phone: siteInfo.phone.trim(),
+        location: {
+          fr: siteInfo.location.fr.trim(),
+          ar: siteInfo.location.ar.trim()
+        },
+        headerTicker: {
+          fr: (siteInfo.headerTicker?.fr ?? "").trim(),
+          ar: (siteInfo.headerTicker?.ar ?? "").trim()
+        }
+      }
       const response = await fetch("/api/site-info", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(siteInfo)
+        body: JSON.stringify(payload)
       })
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        showToast(
+          data.message ||
+            `Erreur ${response.status} lors de la mise à jour`,
+          "error"
+        )
+        return
+      }
       if (data.success) {
         showToast("Informations mises à jour", "success")
+        await fetchSiteInfo()
       } else {
         showToast(data.message || "Erreur", "error")
       }
@@ -2830,6 +2859,62 @@ export default function HomePageContentPage() {
                     className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500"
                     placeholder="+212 6XX XXX XXX"
                   />
+                </div>
+
+                <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-6">
+                  <label className="flex items-center gap-2 text-lg font-semibold mb-2">
+                    <Megaphone className="w-5 h-5 text-orange-600" />
+                    Bandeau défilant (header desktop)
+                  </label>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Texte affiché dans la barre jaune sous le menu, uniquement sur
+                    grands écrans. Laisser vide pour masquer la barre. En français,
+                    en français le défilement va de gauche à droite ; en arabe, de
+                    droite à gauche.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Texte (français)
+                      </label>
+                      <input
+                        type="text"
+                        value={siteInfo.headerTicker?.fr ?? ""}
+                        onChange={(e) =>
+                          setSiteInfo({
+                            ...siteInfo,
+                            headerTicker: {
+                              fr: e.target.value,
+                              ar: siteInfo.headerTicker?.ar ?? ""
+                            }
+                          })
+                        }
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500"
+                        placeholder="Ex. Nouvelle collection disponible…"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Texte (arabe)
+                      </label>
+                      <input
+                        type="text"
+                        value={siteInfo.headerTicker?.ar ?? ""}
+                        onChange={(e) =>
+                          setSiteInfo({
+                            ...siteInfo,
+                            headerTicker: {
+                              fr: siteInfo.headerTicker?.fr ?? "",
+                              ar: e.target.value
+                            }
+                          })
+                        }
+                        dir="rtl"
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500"
+                        placeholder="…"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="bg-gray-50 rounded-xl p-6">

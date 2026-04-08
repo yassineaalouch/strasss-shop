@@ -25,6 +25,10 @@ const SiteInfoSchema = new mongoose.Schema(
         required: [true, "L'adresse en arabe est requise"],
         trim: true
       }
+    },
+    headerTicker: {
+      fr: { type: String, default: "", trim: true },
+      ar: { type: String, default: "", trim: true }
     }
   },
   {
@@ -48,5 +52,11 @@ SiteInfoSchema.statics.getSiteInfo = async function () {
   return siteInfo
 }
 
-export default mongoose.models.SiteInfo || mongoose.model("SiteInfo", SiteInfoSchema)
+// En dev, éviter un modèle Mongoose figé sans les derniers champs (hot reload Next.js)
+if (process.env.NODE_ENV !== "production" && mongoose.models.SiteInfo) {
+  delete mongoose.models.SiteInfo
+}
+
+export default mongoose.models.SiteInfo ||
+  mongoose.model("SiteInfo", SiteInfoSchema)
 

@@ -24,28 +24,44 @@ export async function PUT(request: NextRequest) {
   try {
     await connectToDatabase()
     const body = await request.json()
-    const { email, phone, location } = body
+    const { email, phone, location, headerTicker } = body
 
-    // Validation
-    if (!email || !phone || !location?.fr || !location?.ar) {
+    const emailTrim = typeof email === "string" ? email.trim().toLowerCase() : ""
+    const phoneTrim = typeof phone === "string" ? phone.trim() : ""
+    const locFr =
+      typeof location?.fr === "string" ? location.fr.trim() : ""
+    const locAr =
+      typeof location?.ar === "string" ? location.ar.trim() : ""
+
+    // Validation (après trim : pas d’espaces pour contourner le formulaire)
+    if (!emailTrim || !phoneTrim || !locFr || !locAr) {
       return NextResponse.json(
         { success: false, message: "Tous les champs sont requis" },
         { status: 400 }
       )
     }
 
-    // Update or create site info
+    const tickerFr =
+      headerTicker && typeof headerTicker === "object"
+        ? String(headerTicker.fr ?? "").trim()
+        : ""
+    const tickerAr =
+      headerTicker && typeof headerTicker === "object"
+        ? String(headerTicker.ar ?? "").trim()
+        : ""
+
+    // $set explicite : fusion fiable des sous-documents avec Mongoose 8 / MongoDB
     const siteInfo = await SiteInfo.findOneAndUpdate(
       {},
       {
-        email: email.trim().toLowerCase(),
-        phone: phone.trim(),
-        location: {
-          fr: location.fr.trim(),
-          ar: location.ar.trim()
+        $set: {
+          email: emailTrim,
+          phone: phoneTrim,
+          location: { fr: locFr, ar: locAr },
+          headerTicker: { fr: tickerFr, ar: tickerAr }
         }
       },
-      { upsert: true, new: true, runValidators: true }
+      { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
     )
 
     return NextResponse.json(
