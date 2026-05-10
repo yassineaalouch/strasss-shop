@@ -29,7 +29,8 @@ import {
   Globe,
   ArrowUp,
   ArrowDown,
-  PlayCircle
+  PlayCircle,
+  MessageSquareQuote
 } from "lucide-react"
 import { useToast } from "@/components/ui/Toast"
 import Image from "next/image"
@@ -47,6 +48,7 @@ type TabType =
   | "hero"
   | "categories"
   | "featured-products"
+  | "testimonials"
   | "promo-banner"
   | "site-info"
   | "home-video"
@@ -130,6 +132,17 @@ export default function HomePageContentPage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [productSearch, setProductSearch] = useState("")
 
+  type TestimonialEditorRow = {
+    id: string
+    quote: { fr: string; ar: string }
+    name: { fr: string; ar: string }
+    role: { fr: string; ar: string }
+  }
+
+  const [testimonialItems, setTestimonialItems] = useState<
+    TestimonialEditorRow[]
+  >([])
+
   // Promo Banner States
   const [promoBanner, setPromoBanner] = useState({
     imageDesktop: "",
@@ -195,6 +208,7 @@ export default function HomePageContentPage() {
         fetchAvailableCategories(),
         fetchFeaturedProducts(),
         fetchAllProducts(),
+        fetchTestimonials(),
         fetchSiteInfo(),
         fetchPromoBanner(),
         fetchAllPacks(),
@@ -865,6 +879,108 @@ export default function HomePageContentPage() {
     }
   }
 
+  // ============ TESTIMONIALS ============
+
+  const fetchTestimonials = async () => {
+    try {
+      const response = await fetch("/api/testimonials")
+      const data = await response.json()
+      if (data.success && Array.isArray(data.items)) {
+        setTestimonialItems(
+          data.items.map(
+            (it: {
+              id: string
+              quote: { fr: string; ar: string }
+              name: { fr: string; ar: string }
+              role: { fr: string; ar: string }
+            }) => ({
+              id: it.id,
+              quote: {
+                fr: it.quote?.fr ?? "",
+                ar: it.quote?.ar ?? ""
+              },
+              name: {
+                fr: it.name?.fr ?? "",
+                ar: it.name?.ar ?? ""
+              },
+              role: {
+                fr: it.role?.fr ?? "",
+                ar: it.role?.ar ?? ""
+              }
+            })
+          )
+        )
+      }
+    } catch {
+      showToast("Erreur lors du chargement des avis clients", "error")
+    }
+  }
+
+  const saveTestimonials = async () => {
+    setSaving(true)
+    try {
+      const response = await fetch("/api/testimonials", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: testimonialItems.map(({ quote, name, role }) => ({
+            quote,
+            name,
+            role
+          }))
+        })
+      })
+      const data = await response.json()
+      if (data.success) {
+        showToast("Avis clients enregistrés", "success")
+        await fetchTestimonials()
+      } else {
+        showToast(data.message || "Erreur", "error")
+      }
+    } catch {
+      showToast("Erreur lors de l'enregistrement des avis", "error")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const addTestimonialRow = () => {
+    setTestimonialItems((prev) => [
+      ...prev,
+      {
+        id: `new-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        quote: { fr: "", ar: "" },
+        name: { fr: "", ar: "" },
+        role: { fr: "", ar: "" }
+      }
+    ])
+  }
+
+  const removeTestimonialRow = (id: string) => {
+    if (!confirm("Supprimer cet avis ? Les changements seront appliqués après « Enregistrer ».")) {
+      return
+    }
+    setTestimonialItems((prev) => prev.filter((row) => row.id !== id))
+  }
+
+  const updateTestimonialField = (
+    id: string,
+    field: "quote" | "name" | "role",
+    lang: "fr" | "ar",
+    value: string
+  ) => {
+    setTestimonialItems((prev) =>
+      prev.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              [field]: { ...row[field], [lang]: value }
+            }
+          : row
+      )
+    )
+  }
+
   // ============ PROMO BANNER ============
 
   const fetchAllPacks = async () => {
@@ -1261,6 +1377,19 @@ export default function HomePageContentPage() {
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5" />
                 Produits en Vedette
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab("testimonials")}
+              className={`px-6 py-4 font-medium transition-colors whitespace-nowrap ${
+                activeTab === "testimonials"
+                  ? "border-b-2 border-orange-600 text-orange-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <MessageSquareQuote className="w-5 h-5" />
+                Avis clients
               </div>
             </button>
             <button
@@ -2256,6 +2385,203 @@ export default function HomePageContentPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TESTIMONIALS TAB */}
+          {activeTab === "testimonials" && (
+            <div className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-xl font-bold">Avis clients (page d&apos;accueil)</h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={addTestimonialRow}
+                    className="flex items-center gap-2 px-4 py-2 border-2 border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter un avis
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveTestimonials}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Enregistrement...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Enregistrer
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600">
+                Rédigez les témoignages en français et en arabe. Si vous enregistrez une
+                liste vide, la page utilisera les textes par défaut des fichiers de
+                langue (fallback).
+              </p>
+
+              <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
+                {testimonialItems.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl text-gray-500">
+                    Aucun avis personnalisé — la boutique affiche les avis par défaut.
+                    Cliquez sur « Ajouter un avis » pour créer le premier.
+                  </div>
+                ) : (
+                  testimonialItems.map((row, index) => (
+                    <div
+                      key={row.id}
+                      className="border border-gray-200 rounded-xl p-5 bg-gray-50/80 space-y-4"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-gray-800">
+                          Avis #{index + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeTestimonialRow(row.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Supprimer
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Texte de l&apos;avis (FR)
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={row.quote.fr}
+                            onChange={(e) =>
+                              updateTestimonialField(
+                                row.id,
+                                "quote",
+                                "fr",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 text-sm"
+                            placeholder="Ex. Qualité au rendez-vous…"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            نص الرأي (عربي)
+                          </label>
+                          <textarea
+                            rows={3}
+                            dir="rtl"
+                            value={row.quote.ar}
+                            onChange={(e) =>
+                              updateTestimonialField(
+                                row.id,
+                                "quote",
+                                "ar",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 text-sm"
+                            placeholder="…"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Nom ou initiales (FR)
+                          </label>
+                          <input
+                            type="text"
+                            value={row.name.fr}
+                            onChange={(e) =>
+                              updateTestimonialField(
+                                row.id,
+                                "name",
+                                "fr",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 text-sm"
+                            placeholder="Ex. Samira B."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            الاسم أو الأحرف (عربي)
+                          </label>
+                          <input
+                            type="text"
+                            dir="rtl"
+                            value={row.name.ar}
+                            onChange={(e) =>
+                              updateTestimonialField(
+                                row.id,
+                                "name",
+                                "ar",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Rôle / ville (FR)
+                          </label>
+                          <input
+                            type="text"
+                            value={row.role.fr}
+                            onChange={(e) =>
+                              updateTestimonialField(
+                                row.id,
+                                "role",
+                                "fr",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 text-sm"
+                            placeholder="Ex. Couturière — Meknès"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            الدور / المدينة (عربي)
+                          </label>
+                          <input
+                            type="text"
+                            dir="rtl"
+                            value={row.role.ar}
+                            onChange={(e) =>
+                              updateTestimonialField(
+                                row.id,
+                                "role",
+                                "ar",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           )}
 

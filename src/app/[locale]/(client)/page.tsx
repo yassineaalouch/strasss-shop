@@ -3,6 +3,7 @@ import { CategoriesHomPageSection } from "@/types/category"
 import HeroSection from "@/components/home/HeroSection"
 import ProductCard from "@/components/shop/ProductCard"
 import WhyChooseUs from "@/components/WhyCoseUs"
+import TestimonialsSection from "@/components/home/TestimonialsSection"
 import { getTranslations, getLocale } from "next-intl/server"
 import Image from "next/image"
 import { Link } from "@/i18n/navigation"
@@ -610,6 +611,7 @@ const HomePage: React.FC = async () => {
       <CategoriesSection />
       <PromoBannerSection />
       <FeaturedProducts />
+      <TestimonialsSection />
       <WhyChooseUs />
     </div>
   )

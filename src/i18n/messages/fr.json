@@ -657,6 +657,37 @@
       }
     }
   },
+  "Testimonials": {
+    "title": "Ce que disent nos clients",
+    "subtitle": "Couturières, ateliers et magasins de couture à Casablanca, Rabat, Fès et Meknès : ce qu’ils disent de la qualité des produits, de la livraison et du service.",
+    "items": [
+      {
+        "quote": "La qualité des fournitures correspond à ce qu’on voit en ligne : strass, mercerie, finitions propres. Pour mon travail de couturière, c’est un vrai critère.",
+        "name": "Samira B.",
+        "role": "Couturière — Meknès"
+      },
+      {
+        "quote": "Pour notre atelier, la livraison compte autant que le produit. Colis bien protégé, délais respectés — on peut produire sans retard pour nos clientes.",
+        "name": "Nadia K.",
+        "role": "Atelier de couture — Casablanca"
+      },
+      {
+        "quote": "Service réactif : questions au téléphone ou message, on nous répond vite avec des conseils adaptés au tissu et au projet. Ça nous fait gagner du temps au quotidien.",
+        "name": "Leïla M.",
+        "role": "Salon de couture — Rabat"
+      },
+      {
+        "quote": "Les articles tiennent dans le temps : boutons, fermetures, fils — ce qu’il faut pour du travail sérieux. Nos clientes sentent la différence sur les finitions.",
+        "name": "Houda A.",
+        "role": "Couturière — Fès"
+      },
+      {
+        "quote": "À Meknès, notre magasin de mercerie couture compte sur la fiabilité : suivi de commande clair, livraison dans les temps. Produits et service alignés avec ce qu’on annonce.",
+        "name": "Fatima Z.",
+        "role": "Magasin de mercerie (couture) — Meknès"
+      }
+    ]
+  },
   "WhyChooseUs": {
     "title": "Pourquoi choisir Strass Shop ?",
     "features": {
